@@ -55,7 +55,8 @@ export default function AillmPage() {
   const [selectedCanvasItemIds, setSelectedCanvasItemIds] = useState([]);
   const [editingTextItemId, setEditingTextItemId] = useState(null);
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
-  const [textModalTargetId, setTextModalTargetId] = useState(null);
+  const [textModalTargetId, setTextModalTargetId] = useState(null); // 일반 텍스트/도형 대상
+  const [textModalTableTarget, setTextModalTableTarget] = useState(null); // 표 셀 대상 { tableId, row, col }
   const [textModalContent, setTextModalContent] = useState('');
   const [defaultFillColor, setDefaultFillColor] = useState('#E8F4FD');
   const [defaultLineColor, setDefaultLineColor] = useState('#2f5f9e');
@@ -460,6 +461,7 @@ export default function AillmPage() {
     setActiveCanvasItemId(newItem.id);
     if (type === 'text') {
       setTextModalTargetId(newItem.id);
+      setTextModalTableTarget(null);
       setTextModalContent(preset.text || '');
       setIsTextModalOpen(true);
     }
@@ -3188,6 +3190,48 @@ export default function AillmPage() {
   };
 
   const handleTextModalApply = () => {
+    // 표 셀 편집인 경우
+    if (textModalTableTarget) {
+      const { tableId, row, col } = textModalTableTarget;
+      // 리치텍스트에서 줄바꿈을 \n으로 변환하고, 나머지 태그는 제거
+      let plainText = textModalContent || '';
+      plainText = plainText
+        .replace(/<br\s*\/?>/gi, '\n')                 // <br> -> 줄바꿈
+        .replace(/<\/p>\s*<p>/gi, '\n')                // 문단 사이를 줄바꿈으로
+        .replace(/<\/?p[^>]*>/gi, '')                  // <p>, </p> 태그 제거
+        .replace(/<[^>]*>/g, '')                       // 기타 HTML 태그 제거
+        .replace(/&nbsp;/g, ' ')                       // 공백 엔티티 정리
+        .trim();
+
+      pushCanvasHistory();
+      setCanvasItems((prev) =>
+        prev.map((c) => {
+          if (c.id !== tableId || c.type !== 'table') return c;
+          const rows = c.rows || 1;
+          const cols = c.cols || 1;
+          const baseCells =
+            Array.isArray(c.cells) && c.cells.length === rows
+              ? c.cells.map((r) =>
+                  Array.isArray(r)
+                    ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
+                    : Array(cols).fill('')
+                )
+              : Array.from({ length: rows }, () => Array(cols).fill(''));
+          const nextCells = baseCells.map((r) => [...r]);
+          nextCells[row][col] = plainText;
+          return {
+            ...c,
+            cells: nextCells
+          };
+        })
+      );
+      setIsTextModalOpen(false);
+      setTextModalTargetId(null);
+      setTextModalTableTarget(null);
+      return;
+    }
+
+    // 일반 텍스트/도형 편집인 경우
     if (!textModalTargetId) {
       setIsTextModalOpen(false);
       return;
@@ -3860,6 +3904,7 @@ export default function AillmPage() {
                   setActiveCanvasItemId(item.id);
                   setSelectedCanvasItemIds([item.id]);
                   setTextModalTargetId(item.id);
+                  setTextModalTableTarget(null);
                   setTextModalContent(item.text || '');
                   setIsTextModalOpen(true);
                 }
@@ -3921,53 +3966,43 @@ export default function AillmPage() {
                                     item.textColor ||
                                     defaultTextColor
                                 }}
-                                contentEditable
+                                // 표 셀은 직접 편집하지 않고 모달로만 편집
+                                contentEditable={false}
                                 suppressContentEditableWarning
                                 onMouseDown={(e) => e.stopPropagation()}
                                 onClick={(e) => {
-                                  // 셀 선택 (색상 변경 대상)
+                                  // 셀 선택 (색상/병합 대상)
                                   e.stopPropagation();
                                   setActiveCanvasItemId(item.id);
                                   setSelectedCanvasItemIds([item.id]);
                                   setActiveTableCell({ tableId: item.id, row: rowIdx, col: colIdx });
                                 }}
                                 onDoubleClick={(e) => {
-                                  // 더블클릭 시 셀 안에 바로 커서가 들어가도록 포커스
+                                  // 더블클릭 시 셀 텍스트 편집 모달 오픈
                                   e.stopPropagation();
-                                  const target = e.currentTarget;
-                                  // 이미 contentEditable 이므로 포커스만 주면 됨
-                                  target.focus();
-                                }}
-                                onBlur={(e) => {
-                                  const value = e.target.textContent || '';
-                                  // 셀 내용 편집도 undo 대상이 되도록 히스토리 저장
-                                  pushCanvasHistory();
-                                  setCanvasItems((prev) =>
-                                    prev.map((c) => {
-                                      if (c.id !== item.id || c.type !== 'table') return c;
-                                      const rows = c.rows || 1;
-                                      const cols = c.cols || 1;
-                                      const baseCells =
-                                        Array.isArray(c.cells) && c.cells.length === rows
-                                          ? c.cells.map((r) =>
-                                              Array.isArray(r)
-                                                ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
-                                                : Array(cols).fill('')
-                                            )
-                                          : Array.from({ length: rows }, () => Array(cols).fill(''));
-                                      const nextCells = baseCells.map((r) => [...r]);
-                                      nextCells[rowIdx][colIdx] = value;
-                                      return {
-                                        ...c,
-                                        cells: nextCells
-                                      };
-                                    })
-                                  );
+                                  setActiveCanvasItemId(item.id);
+                                  setSelectedCanvasItemIds([item.id]);
+                                  setActiveTableCell({ tableId: item.id, row: rowIdx, col: colIdx });
+                                  setTextModalTargetId(null);
+                                  setTextModalTableTarget({
+                                    tableId: item.id,
+                                    row: rowIdx,
+                                    col: colIdx
+                                  });
+                                  const currentText =
+                                    (item.cells &&
+                                      item.cells[rowIdx] &&
+                                      item.cells[rowIdx][colIdx]) ||
+                                    '';
+                                  setTextModalContent(currentText);
+                                  setIsTextModalOpen(true);
                                 }}
                               >
-                                {item.cells &&
-                                  item.cells[rowIdx] &&
-                                  item.cells[rowIdx][colIdx]}
+                                <div className={styles.canvasTableCellContent}>
+                                  {item.cells &&
+                                    item.cells[rowIdx] &&
+                                    item.cells[rowIdx][colIdx]}
+                                </div>
                               </td>
                             );
                           })}

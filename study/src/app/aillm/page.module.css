@@ -1008,10 +1008,23 @@
   table-layout: fixed;
 }
 
+.canvasTable tr {
+  /* 최소 높이만 지정하고, 내용이 많으면 자연스럽게 늘어나도록 */
+  min-height: 36px;
+}
+
 .canvasTable td {
   border: 1px solid #4A90E2;
   padding: 2px;
   background: #ffffff;
+  min-height: 36px;
+  vertical-align: top;
+}
+
+.canvasTableCellContent {
+  /* 셀 안에서 여러 줄 줄바꿈 표시 */
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .canvasTableToolbar {
