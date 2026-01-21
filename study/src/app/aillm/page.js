@@ -52,6 +52,8 @@ export default function AillmPage() {
   const [canvasItems, setCanvasItems] = useState([]);
   const [activeCanvasItemId, setActiveCanvasItemId] = useState(null);
   const [selectedCanvasItemIds, setSelectedCanvasItemIds] = useState([]);
+  const [canvasGroups, setCanvasGroups] = useState([]);
+  const [activeCanvasGroupId, setActiveCanvasGroupId] = useState(null);
   const [isDraggingCanvasItem, setIsDraggingCanvasItem] = useState(false);
   const [canvasItemDragStart, setCanvasItemDragStart] = useState({ x: 0, y: 0 });
   const [isResizingCanvasItem, setIsResizingCanvasItem] = useState(false);
@@ -78,6 +80,7 @@ export default function AillmPage() {
   const [lineDrag, setLineDrag] = useState(null);
   const [isSelectingCanvasItems, setIsSelectingCanvasItems] = useState(false);
   const [canvasSelectionRect, setCanvasSelectionRect] = useState(null);
+  const [isGroupMode, setIsGroupMode] = useState(false);
   
   // Memo Pad Button state
   const [memoPadPosition, setMemoPadPosition] = useState({ x: 0, y: 0 });
@@ -262,6 +265,28 @@ export default function AillmPage() {
     }
   }, [canvasLinks, isMounted]);
 
+  // Load / Save canvas groups to localStorage
+  useEffect(() => {
+    if (!isMounted) return;
+    const savedGroups = localStorage.getItem('aillmCanvasGroups');
+    if (savedGroups) {
+      try {
+        const parsed = JSON.parse(savedGroups);
+        if (Array.isArray(parsed)) {
+          setCanvasGroups(parsed);
+        }
+      } catch (e) {
+        console.error('Failed to load canvas groups:', e);
+      }
+    }
+  }, [isMounted]);
+
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem('aillmCanvasGroups', JSON.stringify(canvasGroups));
+    }
+  }, [canvasGroups, isMounted]);
+
   // Load saved templates from localStorage
   useEffect(() => {
     if (!isMounted) return;
@@ -370,7 +395,8 @@ export default function AillmPage() {
     if (!isMounted || isUndoingCanvasRef.current) return;
     const snapshot = {
       items: JSON.parse(JSON.stringify(canvasItems)),
-      links: JSON.parse(JSON.stringify(canvasLinks))
+      links: JSON.parse(JSON.stringify(canvasLinks)),
+      groups: JSON.parse(JSON.stringify(canvasGroups))
     };
     canvasHistoryRef.current.push(snapshot);
     // 새 작업이 생기면 redo 스택은 초기화
@@ -451,59 +477,55 @@ export default function AillmPage() {
   };
 
   const handleDeleteActiveCanvasItem = () => {
-    if (!activeCanvasItemId && !activeCanvasLinkId) return;
+    // 삭제 대상이 전혀 없으면 종료
+    if (!activeCanvasItemId && !activeCanvasLinkId && (!selectedCanvasItemIds || !selectedCanvasItemIds.length)) {
+      return;
+    }
+
     pushCanvasHistory();
-    if (activeCanvasLinkId) {
+
+    // 링크만 선택된 경우: 해당 링크만 삭제
+    if (activeCanvasLinkId && (!selectedCanvasItemIds || !selectedCanvasItemIds.length)) {
       setCanvasLinks((prev) => prev.filter((link) => link.id !== activeCanvasLinkId));
       setActiveCanvasLinkId(null);
       return;
     }
-    if (!activeCanvasItemId) return;
+
+    // 삭제할 도형 ID 목록 (다중 선택이 있으면 그 집합, 없으면 active 하나)
+    const targetIds =
+      selectedCanvasItemIds && selectedCanvasItemIds.length
+        ? selectedCanvasItemIds
+        : activeCanvasItemId
+          ? [activeCanvasItemId]
+          : [];
+    if (!targetIds.length) return;
+
+    const targetIdSet = new Set(targetIds);
+
+    // 1) 연결선 정리: 삭제 대상 도형과 연결된 선들은 모두 삭제
     setCanvasLinks((prev) =>
-      prev.filter((link) => link.fromId !== activeCanvasItemId && link.toId !== activeCanvasItemId)
+      prev.filter((link) => !targetIdSet.has(link.fromId) && !targetIdSet.has(link.toId))
     );
-    setCanvasItems((prev) => {
-      const itemToDelete = prev.find((item) => item.id === activeCanvasItemId);
-      if (!itemToDelete) return prev.filter((item) => item.id !== activeCanvasItemId);
-      // 연결된 선도 삭제 (선 자체를 삭제하거나 연결 해제)
-      return prev
-        .filter((item) => {
-          // 삭제할 아이템 자체는 제거
-          if (item.id === activeCanvasItemId) return false;
-          // 연결된 선은 연결 해제 (선은 유지)
-          if (item.type === 'line' && (item.fromId === activeCanvasItemId || item.toId === activeCanvasItemId)) {
-            // 연결 해제만 하고 선은 유지
-            return true;
-          }
-          return true;
-        })
-        .map((item) => {
-          // 연결 해제
-          if (item.type === 'line') {
-            const remainingItems = prev.filter((i) => i.id !== activeCanvasItemId);
-            if (item.fromId === activeCanvasItemId) {
-              // 시작점 연결 해제, 끝점은 유지
-              const endpoints = getLineEndpoints({ ...item, fromId: null, fromPort: null }, remainingItems);
-              if (endpoints) {
-                const normalized = normalizeLineItem(endpoints.start.x, endpoints.start.y, endpoints.end.x, endpoints.end.y, item.strokeWidth || 3);
-                return { ...item, ...normalized, fromId: null, fromPort: null, startX: endpoints.start.x, startY: endpoints.start.y };
-              }
-              return { ...item, fromId: null, fromPort: null };
-            }
-            if (item.toId === activeCanvasItemId) {
-              // 끝점 연결 해제, 시작점은 유지
-              const endpoints = getLineEndpoints({ ...item, toId: null, toPort: null }, remainingItems);
-              if (endpoints) {
-                const normalized = normalizeLineItem(endpoints.start.x, endpoints.start.y, endpoints.end.x, endpoints.end.y, item.strokeWidth || 3);
-                return { ...item, ...normalized, toId: null, toPort: null, endX: endpoints.end.x, endY: endpoints.end.y };
-              }
-              return { ...item, toId: null, toPort: null };
-            }
-          }
-          return item;
-        });
-    });
+
+    // 2) 도형 삭제
+    setCanvasItems((prev) =>
+      prev.filter((item) => !targetIdSet.has(item.id))
+    );
+
+    // 3) 그룹에서 삭제된 도형 제거, 비어 있는 그룹은 삭제
+    setCanvasGroups((prev) =>
+      prev
+        .map((g) => ({
+          ...g,
+          itemIds: g.itemIds.filter((id) => !targetIdSet.has(id))
+        }))
+        .filter((g) => g.itemIds.length > 0)
+    );
+
     setActiveCanvasItemId(null);
+    setActiveCanvasGroupId(null);
+    setSelectedCanvasItemIds([]);
+    setActiveCanvasLinkId(null);
   };
 
   const handleDuplicateActiveCanvasItem = () => {
@@ -610,8 +632,17 @@ export default function AillmPage() {
     e.stopPropagation();
     setActiveCanvasLinkId(null);
     if (!isConnectMode) {
-      setActiveCanvasItemId(itemId);
-      setSelectedCanvasItemIds([itemId]);
+      // 그룹에 속해 있으면 그룹 전체 선택
+      const group = canvasGroups.find((g) => g.itemIds.includes(itemId));
+      if (group) {
+        setActiveCanvasGroupId(group.id);
+        setActiveCanvasItemId(itemId);
+        setSelectedCanvasItemIds(group.itemIds);
+      } else {
+        setActiveCanvasGroupId(null);
+        setActiveCanvasItemId(itemId);
+        setSelectedCanvasItemIds([itemId]);
+      }
       return;
     }
     const item = canvasItems.find((c) => c.id === itemId);
@@ -1903,11 +1934,27 @@ export default function AillmPage() {
               })
               .map((item) => item.id);
 
-            setSelectedCanvasItemIds(selectedIds);
-            setActiveCanvasItemId(selectedIds[0] ?? null);
+            if (selectedIds.length) {
+              setSelectedCanvasItemIds(selectedIds);
+              setActiveCanvasItemId(selectedIds[0] ?? null);
+
+              // 그룹 모드인 경우: 선택된 도형들로 새 그룹 생성
+              if (isGroupMode) {
+                pushCanvasHistory();
+                const newGroup = {
+                  id: Date.now() + Math.random(),
+                  itemIds: selectedIds
+                };
+                setCanvasGroups((prev) => [...prev, newGroup]);
+                setActiveCanvasGroupId(newGroup.id);
+              }
+            }
           }
         }
         setCanvasSelectionRect(null);
+        if (isGroupMode) {
+          setIsGroupMode(false);
+        }
       }
       setIsDraggingMemoPad(false);
       setDraggingMemo(null);
@@ -1972,7 +2019,8 @@ export default function AillmPage() {
         // 현재 상태를 redo 스택에 저장
         const currentSnapshot = {
           items: JSON.parse(JSON.stringify(canvasItems)),
-          links: JSON.parse(JSON.stringify(canvasLinks))
+          links: JSON.parse(JSON.stringify(canvasLinks)),
+          groups: JSON.parse(JSON.stringify(canvasGroups))
         };
         canvasRedoHistoryRef.current.push(currentSnapshot);
 
@@ -1981,8 +2029,10 @@ export default function AillmPage() {
         isUndoingCanvasRef.current = true;
         setCanvasItems(last.items || []);
         setCanvasLinks(last.links || []);
+        setCanvasGroups(last.groups || []);
         setActiveCanvasItemId(null);
         setActiveCanvasLinkId(null);
+        setActiveCanvasGroupId(null);
         setSelectedCanvasItemIds([]);
         setLineDraft(null);
         setLinkDrag(null);
@@ -2000,7 +2050,8 @@ export default function AillmPage() {
         // 현재 상태를 undo 스택에 저장
         const currentSnapshot = {
           items: JSON.parse(JSON.stringify(canvasItems)),
-          links: JSON.parse(JSON.stringify(canvasLinks))
+          links: JSON.parse(JSON.stringify(canvasLinks)),
+          groups: JSON.parse(JSON.stringify(canvasGroups))
         };
         canvasHistoryRef.current.push(currentSnapshot);
 
@@ -2009,8 +2060,10 @@ export default function AillmPage() {
         isUndoingCanvasRef.current = true;
         setCanvasItems(next.items || []);
         setCanvasLinks(next.links || []);
+        setCanvasGroups(next.groups || []);
         setActiveCanvasItemId(null);
         setActiveCanvasLinkId(null);
+        setActiveCanvasGroupId(null);
         setSelectedCanvasItemIds([]);
         setLineDraft(null);
         setLinkDrag(null);
@@ -2099,7 +2152,7 @@ export default function AillmPage() {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [canvasItems, canvasLinks, selectedCanvasItemIds, activeCanvasItemId]);
+  }, [canvasItems, canvasLinks, canvasGroups, selectedCanvasItemIds, activeCanvasItemId]);
 
   const handleResizeStart = (e) => {
     if (!isCustomMode) return;
@@ -2862,6 +2915,17 @@ export default function AillmPage() {
               >
                 균등-세로
               </button>
+              <button
+                className={`${styles.drawingToolBtn} ${isGroupMode ? styles.drawingToolActive : ''}`}
+                onClick={() => {
+                  setIsGroupMode((prev) => !prev);
+                  setActiveCanvasGroupId(null);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                type="button"
+              >
+                그룹
+              </button>
             </div>
             <div className={styles.drawingToolsGroup}>
               <button
@@ -3134,14 +3198,16 @@ export default function AillmPage() {
               도형/텍스트/이미지 등을 배치할 수 있는 영역입니다.
             </div>
           )}
-          {canvasItems.map((item) => (
+          {canvasItems.map((item) => {
+            const isSelected =
+              activeCanvasItemId === item.id ||
+              (selectedCanvasItemIds && selectedCanvasItemIds.includes(item.id));
+
+            return (
             <div
               key={item.id}
               className={`${styles.canvasItem} ${styles[`canvasItem${item.type}`]} ${
-                (activeCanvasItemId === item.id ||
-                  (selectedCanvasItemIds && selectedCanvasItemIds.includes(item.id))) &&
-                item.type !== 'line' &&
-                item.type !== 'arrow'
+                isSelected && item.type !== 'line' && item.type !== 'arrow'
                   ? styles.canvasItemActive
                   : ''
               }`}
@@ -3258,7 +3324,7 @@ export default function AillmPage() {
               ) : (
                 <span className={styles.canvasItemLabel}>도형</span>
               )}
-              {item.type === 'line' && activeCanvasItemId === item.id && (
+              {item.type === 'line' && isSelected && (
                 (() => {
                   const endpoints = getLineEndpoints(item);
                   const startPoint = endpoints ? endpoints.start : { x: item.startX ?? item.x, y: item.startY ?? item.y };
@@ -3317,7 +3383,7 @@ export default function AillmPage() {
                   />
                 </>
               )}
-              {activeCanvasItemId === item.id && item.type !== 'arrow' && item.type !== 'line' && (
+              {isSelected && item.type !== 'arrow' && item.type !== 'line' && (
                 <>
                   <button
                     className={`${styles.canvasResizeHandle} ${styles.canvasResizeHandleNW}`}
@@ -3342,7 +3408,8 @@ export default function AillmPage() {
                 </>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
