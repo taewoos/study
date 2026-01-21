@@ -1055,10 +1055,21 @@ export default function AillmPage() {
     const rect = getCanvasRect();
     if (!item || !rect) return;
     pushCanvasHistory();
-    setActiveCanvasItemId(itemId);
-    setSelectedCanvasItemIds((prev) =>
-      prev && prev.length && prev.includes(itemId) ? prev : [itemId]
-    );
+    
+    // 그룹에 속해 있으면 그룹 전체 선택
+    const group = canvasGroups.find((g) => g.itemIds.includes(itemId));
+    if (group) {
+      setActiveCanvasGroupId(group.id);
+      setActiveCanvasItemId(itemId);
+      setSelectedCanvasItemIds(group.itemIds);
+    } else {
+      setActiveCanvasGroupId(null);
+      setActiveCanvasItemId(itemId);
+      setSelectedCanvasItemIds((prev) =>
+        prev && prev.length && prev.includes(itemId) ? prev : [itemId]
+      );
+    }
+    
     setIsDraggingCanvasItem(true);
     setCanvasItemDragStart({
       x: e.clientX - rect.left - item.x,
@@ -1083,6 +1094,32 @@ export default function AillmPage() {
       y: item.y,
       width: item.width,
       height: item.height
+    });
+  };
+
+  const handleSendToBack = () => {
+    // 선택된 도형이 없으면 종료
+    if (!activeCanvasItemId && (!selectedCanvasItemIds || !selectedCanvasItemIds.length)) {
+      return;
+    }
+
+    pushCanvasHistory();
+
+    // 맨 뒤로 보낼 도형 ID 목록 (다중 선택이 있으면 그 집합, 없으면 active 하나)
+    const targetIds =
+      selectedCanvasItemIds && selectedCanvasItemIds.length
+        ? selectedCanvasItemIds
+        : activeCanvasItemId
+          ? [activeCanvasItemId]
+          : [];
+    if (!targetIds.length) return;
+
+    setCanvasItems((prev) => {
+      // 선택된 아이템들을 배열에서 제거
+      const itemsToMove = prev.filter((item) => targetIds.includes(item.id));
+      const remainingItems = prev.filter((item) => !targetIds.includes(item.id));
+      // 맨 앞에 배치 (맨 뒤로 렌더링되도록)
+      return [...itemsToMove, ...remainingItems];
     });
   };
 
@@ -3553,6 +3590,14 @@ export default function AillmPage() {
                 type="button"
               >
                 삭제
+              </button>
+              <button
+                className={styles.drawingToolBtn}
+                onClick={handleSendToBack}
+                onMouseDown={(e) => e.stopPropagation()}
+                type="button"
+              >
+                맨 뒤로
               </button>
               <button
                 className={`${styles.drawingToolBtn} ${isGroupMode ? styles.drawingToolActive : ''}`}
