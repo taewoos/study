@@ -51,6 +51,7 @@ export default function AillmPage() {
   // Canvas items state
   const [canvasItems, setCanvasItems] = useState([]);
   const [activeCanvasItemId, setActiveCanvasItemId] = useState(null);
+  const [selectedCanvasItemIds, setSelectedCanvasItemIds] = useState([]);
   const [isDraggingCanvasItem, setIsDraggingCanvasItem] = useState(false);
   const [canvasItemDragStart, setCanvasItemDragStart] = useState({ x: 0, y: 0 });
   const [isResizingCanvasItem, setIsResizingCanvasItem] = useState(false);
@@ -75,6 +76,8 @@ export default function AillmPage() {
   const [connectFrom, setConnectFrom] = useState(null);
   const [linkDrag, setLinkDrag] = useState(null);
   const [lineDrag, setLineDrag] = useState(null);
+  const [isSelectingCanvasItems, setIsSelectingCanvasItems] = useState(false);
+  const [canvasSelectionRect, setCanvasSelectionRect] = useState(null);
   
   // Memo Pad Button state
   const [memoPadPosition, setMemoPadPosition] = useState({ x: 0, y: 0 });
@@ -358,7 +361,28 @@ export default function AillmPage() {
     };
   };
 
+  // Canvas undo/redo history (Ctrl+Z / Ctrl+Y)
+  const canvasHistoryRef = useRef([]);
+  const canvasRedoHistoryRef = useRef([]);
+  const isUndoingCanvasRef = useRef(false);
+
+  const pushCanvasHistory = () => {
+    if (!isMounted || isUndoingCanvasRef.current) return;
+    const snapshot = {
+      items: JSON.parse(JSON.stringify(canvasItems)),
+      links: JSON.parse(JSON.stringify(canvasLinks))
+    };
+    canvasHistoryRef.current.push(snapshot);
+    // 새 작업이 생기면 redo 스택은 초기화
+    canvasRedoHistoryRef.current = [];
+    // 히스토리 최대 50단계까지만 유지
+    if (canvasHistoryRef.current.length > 50) {
+      canvasHistoryRef.current.shift();
+    }
+  };
+
   const handleAddCanvasItem = (type) => {
+    pushCanvasHistory();
     const rect = getCanvasRect();
     const baseOffset = canvasItems.length * 20;
     const defaults = {
@@ -394,7 +418,11 @@ export default function AillmPage() {
     const item = canvasItems.find((c) => c.id === itemId);
     const rect = getCanvasRect();
     if (!item || !rect) return;
+    pushCanvasHistory();
     setActiveCanvasItemId(itemId);
+    setSelectedCanvasItemIds((prev) =>
+      prev && prev.length && prev.includes(itemId) ? prev : [itemId]
+    );
     setIsDraggingCanvasItem(true);
     setCanvasItemDragStart({
       x: e.clientX - rect.left - item.x,
@@ -407,6 +435,7 @@ export default function AillmPage() {
     e.stopPropagation();
     const item = canvasItems.find((c) => c.id === itemId);
     if (!item) return;
+    pushCanvasHistory();
     setActiveCanvasItemId(itemId);
     setIsResizingCanvasItem(true);
     setCanvasResizeStart({
@@ -422,6 +451,8 @@ export default function AillmPage() {
   };
 
   const handleDeleteActiveCanvasItem = () => {
+    if (!activeCanvasItemId && !activeCanvasLinkId) return;
+    pushCanvasHistory();
     if (activeCanvasLinkId) {
       setCanvasLinks((prev) => prev.filter((link) => link.id !== activeCanvasLinkId));
       setActiveCanvasLinkId(null);
@@ -478,6 +509,7 @@ export default function AillmPage() {
   const handleDuplicateActiveCanvasItem = () => {
     const item = canvasItems.find((c) => c.id === activeCanvasItemId);
     if (!item) return;
+    pushCanvasHistory();
     const duplicate = {
       ...item,
       id: Date.now() + Math.random(),
@@ -492,6 +524,7 @@ export default function AillmPage() {
     const rect = getCanvasRect();
     const item = canvasItems.find((c) => c.id === activeCanvasItemId);
     if (!rect || !item) return;
+    pushCanvasHistory();
     let nextX = item.x;
     let nextY = item.y;
     if (direction === 'left') nextX = 0;
@@ -533,6 +566,7 @@ export default function AillmPage() {
         y: axis === 'x' ? item.y : cursor
       };
     });
+    pushCanvasHistory();
     setCanvasItems((prev) =>
       prev.map((item) => updated.find((u) => u.id === item.id) || item)
     );
@@ -540,6 +574,7 @@ export default function AillmPage() {
 
   const handleChangeActiveFill = (value) => {
     if (!activeCanvasItemId) return;
+    pushCanvasHistory();
     setCanvasItems((prev) =>
       prev.map((item) => (item.id === activeCanvasItemId ? { ...item, fill: value } : item))
     );
@@ -547,6 +582,7 @@ export default function AillmPage() {
 
   const handleChangeActiveLinkColor = (value) => {
     if (!activeCanvasLinkId) return;
+    pushCanvasHistory();
     setCanvasLinks((prev) =>
       prev.map((link) => (link.id === activeCanvasLinkId ? { ...link, color: value } : link))
     );
@@ -554,6 +590,7 @@ export default function AillmPage() {
 
   const handleChangeActiveLinkWidth = (value) => {
     if (!activeCanvasLinkId) return;
+    pushCanvasHistory();
     setCanvasLinks((prev) =>
       prev.map((link) =>
         link.id === activeCanvasLinkId ? { ...link, width: Number(value) } : link
@@ -563,6 +600,7 @@ export default function AillmPage() {
 
   const handleChangeActiveLinkLabel = (value) => {
     if (!activeCanvasLinkId) return;
+    pushCanvasHistory();
     setCanvasLinks((prev) =>
       prev.map((link) => (link.id === activeCanvasLinkId ? { ...link, label: value } : link))
     );
@@ -573,6 +611,7 @@ export default function AillmPage() {
     setActiveCanvasLinkId(null);
     if (!isConnectMode) {
       setActiveCanvasItemId(itemId);
+      setSelectedCanvasItemIds([itemId]);
       return;
     }
     const item = canvasItems.find((c) => c.id === itemId);
@@ -587,6 +626,7 @@ export default function AillmPage() {
       return;
     }
     if (connectFrom.id === itemId) return;
+    pushCanvasHistory();
     const newLink = {
       id: Date.now() + Math.random(),
       fromId: connectFrom.id,
@@ -615,6 +655,7 @@ export default function AillmPage() {
       return;
     }
     if (connectFrom.id === itemId) return;
+    pushCanvasHistory();
     const newLink = {
       id: Date.now() + Math.random(),
       fromId: connectFrom.id,
@@ -937,6 +978,7 @@ export default function AillmPage() {
       setLineDraft(null);
       return;
     }
+    pushCanvasHistory();
     const width = Math.max(2, lineDraft.width);
     const height = Math.max(2, lineDraft.height);
     const newItem = {
@@ -980,6 +1022,7 @@ export default function AillmPage() {
     reader.onload = () => {
       try {
         const parsed = JSON.parse(reader.result);
+        pushCanvasHistory();
         if (Array.isArray(parsed)) {
           setCanvasItems(parsed);
           setCanvasLinks([]);
@@ -1006,6 +1049,7 @@ export default function AillmPage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
+      pushCanvasHistory();
       const rect = getCanvasRect();
       const baseOffset = canvasItems.length * 20;
       const startX = rect ? Math.max(0, rect.width * 0.1) : 40;
@@ -1436,6 +1480,23 @@ export default function AillmPage() {
           y: e.clientY - drawingAreaDragStart.y
         });
       }
+      if (isSelectingCanvasItems) {
+        const rect = getCanvasRect();
+        if (rect) {
+          const currentX = e.clientX - rect.left;
+          const currentY = e.clientY - rect.top;
+          setCanvasSelectionRect((prev) => {
+            if (!prev) return null;
+            const startX = prev.startX ?? prev.x;
+            const startY = prev.startY ?? prev.y;
+            const x = Math.min(startX, currentX);
+            const y = Math.min(startY, currentY);
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+            return { ...prev, x, y, width, height, startX, startY };
+          });
+        }
+      }
       if (isDraggingCanvasItem && activeCanvasItemId) {
         const rect = getCanvasRect();
         if (rect) {
@@ -1447,10 +1508,23 @@ export default function AillmPage() {
             const clamped = clampCanvasPosition(nextX, nextY, draggedItem);
             const deltaX = clamped.x - draggedItem.x;
             const deltaY = clamped.y - draggedItem.y;
-            
-            return prev.map((item) => {
+
+            const selectedIds =
+              selectedCanvasItemIds && selectedCanvasItemIds.length
+                ? selectedCanvasItemIds
+                : [activeCanvasItemId];
+            const selectedIdSet = new Set(selectedIds);
+
+            let nextItems = prev.map((item) => {
+              // 활성 아이템 이동
               if (item.id === activeCanvasItemId) {
-                if (item.type === 'line' && item.startX !== undefined && item.endX !== undefined && !item.fromId && !item.toId) {
+                if (
+                  item.type === 'line' &&
+                  item.startX !== undefined &&
+                  item.endX !== undefined &&
+                  !item.fromId &&
+                  !item.toId
+                ) {
                   // 연결되지 않은 선은 전체 이동
                   return {
                     ...item,
@@ -1464,16 +1538,44 @@ export default function AillmPage() {
                 }
                 return { ...item, x: clamped.x, y: clamped.y };
               }
-              // 연결된 선 업데이트
-              if (item.type === 'line' && (item.fromId === activeCanvasItemId || item.toId === activeCanvasItemId)) {
-                const endpoints = getLineEndpoints(item, prev.map((i) => i.id === activeCanvasItemId ? { ...i, x: clamped.x, y: clamped.y } : i));
+
+              // 함께 선택된 다른 도형 이동 (선, 화살표 제외)
+              if (
+                selectedIdSet.has(item.id) &&
+                item.id !== activeCanvasItemId &&
+                item.type !== 'line' &&
+                item.type !== 'arrow'
+              ) {
+                const moved = clampCanvasPosition(item.x + deltaX, item.y + deltaY, item);
+                return { ...item, x: moved.x, y: moved.y };
+              }
+
+              return item;
+            });
+
+            // 선택된 도형과 연결된 선들 업데이트
+            nextItems = nextItems.map((item) => {
+              if (
+                item.type === 'line' &&
+                ((item.fromId && selectedIdSet.has(item.fromId)) ||
+                  (item.toId && selectedIdSet.has(item.toId)))
+              ) {
+                const endpoints = getLineEndpoints(item, nextItems);
                 if (endpoints) {
-                  const normalized = normalizeLineItem(endpoints.start.x, endpoints.start.y, endpoints.end.x, endpoints.end.y, item.strokeWidth || 3);
+                  const normalized = normalizeLineItem(
+                    endpoints.start.x,
+                    endpoints.start.y,
+                    endpoints.end.x,
+                    endpoints.end.y,
+                    item.strokeWidth || 3
+                  );
                   return { ...item, ...normalized };
                 }
               }
               return item;
             });
+
+            return nextItems;
           });
         }
       }
@@ -1779,6 +1881,34 @@ export default function AillmPage() {
       setIsDraggingDrawingArea(false);
       setIsDraggingCanvasItem(false);
       setIsResizingCanvasItem(false);
+      if (isSelectingCanvasItems) {
+        setIsSelectingCanvasItems(false);
+        if (canvasSelectionRect) {
+          const { x, y, width, height } = canvasSelectionRect;
+          if (width > 0 && height > 0) {
+            const selectedIds = canvasItems
+              .filter((item) => {
+                if (item.type === 'line' || item.type === 'arrow') return false;
+                const itemLeft = item.x;
+                const itemRight = item.x + item.width;
+                const itemTop = item.y;
+                const itemBottom = item.y + item.height;
+                // 선택 박스와 도형이 조금이라도 겹치면 선택
+                const intersects =
+                  itemRight >= x &&
+                  itemLeft <= x + width &&
+                  itemBottom >= y &&
+                  itemTop <= y + height;
+                return intersects;
+              })
+              .map((item) => item.id);
+
+            setSelectedCanvasItemIds(selectedIds);
+            setActiveCanvasItemId(selectedIds[0] ?? null);
+          }
+        }
+        setCanvasSelectionRect(null);
+      }
       setIsDraggingMemoPad(false);
       setDraggingMemo(null);
       setLinkDrag(null);
@@ -1788,7 +1918,7 @@ export default function AillmPage() {
       }
     };
 
-    if (isResizing || isResizingVertical || isDraggingPanel || isResizingRight || isResizingRightVertical || isDraggingRightPanel || isDraggingQaWindow || isDraggingInput || isDraggingDrawingArea || isDraggingCanvasItem || isResizingCanvasItem || isDraggingMemoPad || draggingMemo || lineDraft || linkDrag || lineDrag) {
+    if (isResizing || isResizingVertical || isDraggingPanel || isResizingRight || isResizingRightVertical || isDraggingRightPanel || isDraggingQaWindow || isDraggingInput || isDraggingDrawingArea || isDraggingCanvasItem || isResizingCanvasItem || isDraggingMemoPad || draggingMemo || lineDraft || linkDrag || lineDrag || isSelectingCanvasItems) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -1796,7 +1926,7 @@ export default function AillmPage() {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isResizing, isResizingVertical, isDraggingPanel, dragStart, leftPanelPosition, isMinimized, verticalResizeStart, leftPanelHeight, isResizingRight, isResizingRightVertical, isDraggingRightPanel, rightVerticalResizeStart, rightPanelHeight, rightPanelPosition, rightDragStart, isDraggingQaWindow, qaWindowDragStart, qaWindowPosition, isDraggingInput, inputDragStart, inputPosition, isDraggingDrawingArea, drawingAreaDragStart, drawingAreaPosition, isDraggingCanvasItem, activeCanvasItemId, canvasItemDragStart, isResizingCanvasItem, canvasResizeStart, isDraggingMemoPad, memoPadDragStart, memoPadPosition, draggingMemo, memoDragStart, memos, savedPositions, snapToGrid, gridSize, lineDraft, linkDrag, lineDrag, canvasLinks]);
+  }, [isResizing, isResizingVertical, isDraggingPanel, dragStart, leftPanelPosition, isMinimized, verticalResizeStart, leftPanelHeight, isResizingRight, isResizingRightVertical, isDraggingRightPanel, rightVerticalResizeStart, rightPanelHeight, rightPanelPosition, rightDragStart, isDraggingQaWindow, qaWindowDragStart, qaWindowPosition, isDraggingInput, inputDragStart, inputPosition, isDraggingDrawingArea, drawingAreaDragStart, drawingAreaPosition, isDraggingCanvasItem, activeCanvasItemId, canvasItemDragStart, isResizingCanvasItem, canvasResizeStart, isDraggingMemoPad, memoPadDragStart, memoPadPosition, draggingMemo, memoDragStart, memos, savedPositions, snapToGrid, gridSize, lineDraft, linkDrag, lineDrag, canvasLinks, isSelectingCanvasItems, canvasSelectionRect, canvasItems, selectedCanvasItemIds]);
 
   // Handle toolbar drag
   useEffect(() => {
@@ -1822,6 +1952,154 @@ export default function AillmPage() {
       };
     }
   }, [isDraggingToolbar, toolbarDragStart]);
+
+  // Canvas undo/redo, copy/paste (Ctrl+Z / Ctrl+Y / Ctrl+C / Ctrl+V)
+  useEffect(() => {
+    let canvasClipboard = null;
+
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+
+      // Ctrl/Meta 조합만 처리
+      if (!(e.ctrlKey || e.metaKey)) return;
+
+      // Undo: Ctrl+Z
+      if (!e.shiftKey && key === 'z') {
+        const history = canvasHistoryRef.current;
+        if (!history.length) return;
+        e.preventDefault();
+
+        // 현재 상태를 redo 스택에 저장
+        const currentSnapshot = {
+          items: JSON.parse(JSON.stringify(canvasItems)),
+          links: JSON.parse(JSON.stringify(canvasLinks))
+        };
+        canvasRedoHistoryRef.current.push(currentSnapshot);
+
+        const last = history.pop();
+        if (!last) return;
+        isUndoingCanvasRef.current = true;
+        setCanvasItems(last.items || []);
+        setCanvasLinks(last.links || []);
+        setActiveCanvasItemId(null);
+        setActiveCanvasLinkId(null);
+        setSelectedCanvasItemIds([]);
+        setLineDraft(null);
+        setLinkDrag(null);
+        setLineDrag(null);
+        isUndoingCanvasRef.current = false;
+        return;
+      }
+
+      // Redo: Ctrl+Y 또는 Ctrl+Shift+Z
+      if (key === 'y' || (e.shiftKey && key === 'z')) {
+        const redoStack = canvasRedoHistoryRef.current;
+        if (!redoStack.length) return;
+        e.preventDefault();
+
+        // 현재 상태를 undo 스택에 저장
+        const currentSnapshot = {
+          items: JSON.parse(JSON.stringify(canvasItems)),
+          links: JSON.parse(JSON.stringify(canvasLinks))
+        };
+        canvasHistoryRef.current.push(currentSnapshot);
+
+        const next = redoStack.pop();
+        if (!next) return;
+        isUndoingCanvasRef.current = true;
+        setCanvasItems(next.items || []);
+        setCanvasLinks(next.links || []);
+        setActiveCanvasItemId(null);
+        setActiveCanvasLinkId(null);
+        setSelectedCanvasItemIds([]);
+        setLineDraft(null);
+        setLinkDrag(null);
+        setLineDrag(null);
+        isUndoingCanvasRef.current = false;
+        return;
+      }
+
+      // Copy: Ctrl+C
+      if (key === 'c') {
+        if (!canvasItems.length) return;
+        const targetIds =
+          selectedCanvasItemIds && selectedCanvasItemIds.length
+            ? selectedCanvasItemIds
+            : activeCanvasItemId
+              ? [activeCanvasItemId]
+              : [];
+        if (!targetIds.length) return;
+        e.preventDefault();
+
+        const idSet = new Set(targetIds);
+        const itemsToCopy = canvasItems.filter(
+          (item) =>
+            idSet.has(item.id) &&
+            item.type !== 'line' &&
+            item.type !== 'arrow'
+        );
+        if (!itemsToCopy.length) return;
+
+        const linksToCopy = canvasLinks.filter(
+          (link) => idSet.has(link.fromId) && idSet.has(link.toId)
+        );
+
+        canvasClipboard = {
+          items: JSON.parse(JSON.stringify(itemsToCopy)),
+          links: JSON.parse(JSON.stringify(linksToCopy))
+        };
+        return;
+      }
+
+      // Paste: Ctrl+V
+      if (key === 'v') {
+        if (!canvasClipboard || !canvasClipboard.items?.length) return;
+        e.preventDefault();
+
+        pushCanvasHistory();
+
+        // 새 ID 매핑 생성
+        const idMap = new Map();
+        canvasClipboard.items.forEach((item) => {
+          idMap.set(item.id, Date.now() + Math.random());
+        });
+
+        const offset = 24; // 살짝 옆으로 복사
+
+        const newItems = canvasClipboard.items.map((item) => ({
+          ...item,
+          id: idMap.get(item.id),
+          x: snapValue(item.x + offset),
+          y: snapValue(item.y + offset)
+        }));
+
+        const newLinks = (canvasClipboard.links || []).map((link) => {
+          const fromId = idMap.get(link.fromId);
+          const toId = idMap.get(link.toId);
+          if (!fromId || !toId) return null;
+          return {
+            ...link,
+            id: Date.now() + Math.random(),
+            fromId,
+            toId
+          };
+        }).filter(Boolean);
+
+        setCanvasItems((prev) => [...prev, ...newItems]);
+        setCanvasLinks((prev) => [...prev, ...newLinks]);
+        const newIds = newItems.map((i) => i.id);
+        setSelectedCanvasItemIds(newIds);
+        setActiveCanvasItemId(newIds[0] ?? null);
+        setActiveCanvasLinkId(null);
+        return;
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [canvasItems, canvasLinks, selectedCanvasItemIds, activeCanvasItemId]);
 
   const handleResizeStart = (e) => {
     if (!isCustomMode) return;
@@ -2719,12 +2997,37 @@ export default function AillmPage() {
             e.stopPropagation();
             setActiveCanvasItemId(null);
             setActiveCanvasLinkId(null);
+            setSelectedCanvasItemIds([]);
             if (isConnectMode) {
               setIsConnectMode(false);
               setConnectFromId(null);
             }
+            const point = getCanvasPoint(e);
+            if (point) {
+              setIsSelectingCanvasItems(true);
+              setCanvasSelectionRect({
+                x: point.x,
+                y: point.y,
+                width: 0,
+                height: 0,
+                startX: point.x,
+                startY: point.y
+              });
+              setSelectedCanvasItemIds([]);
+            }
           }}
         >
+          {canvasSelectionRect && (
+            <div
+              className={styles.canvasSelectionRect}
+              style={{
+                left: `${canvasSelectionRect.x}px`,
+                top: `${canvasSelectionRect.y}px`,
+                width: `${canvasSelectionRect.width}px`,
+                height: `${canvasSelectionRect.height}px`
+              }}
+            />
+          )}
           <svg className={styles.canvasLinks} aria-hidden="true">
             <defs>
               <marker
@@ -2835,7 +3138,12 @@ export default function AillmPage() {
             <div
               key={item.id}
               className={`${styles.canvasItem} ${styles[`canvasItem${item.type}`]} ${
-                activeCanvasItemId === item.id && item.type !== 'line' && item.type !== 'arrow' ? styles.canvasItemActive : ''
+                (activeCanvasItemId === item.id ||
+                  (selectedCanvasItemIds && selectedCanvasItemIds.includes(item.id))) &&
+                item.type !== 'line' &&
+                item.type !== 'arrow'
+                  ? styles.canvasItemActive
+                  : ''
               }`}
               style={{
                 left: `${item.x}px`,
