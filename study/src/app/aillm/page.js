@@ -485,7 +485,9 @@ export default function AillmPage() {
       // 이후 전역 기본 텍스트 색 변경 시 기존 표 안 텍스트가 같이 변하지 않도록 함
       textColor: defaultTextColor,
       cells: Array.from({ length: safeRows }, () => Array(safeCols).fill('')),
-      cellColors: Array.from({ length: safeRows }, () => Array(safeCols).fill(null))
+      cellColors: Array.from({ length: safeRows }, () => Array(safeCols).fill(null)),
+      cellRowspans: Array.from({ length: safeRows }, () => Array(safeCols).fill(1)),
+      cellColspans: Array.from({ length: safeRows }, () => Array(safeCols).fill(1))
     };
 
     setCanvasItems((prev) => [...prev, newItem]);
@@ -514,6 +516,9 @@ export default function AillmPage() {
                 Array.isArray(r) ? [...r] : Array(cols).fill(null)
               )
             : Array.from({ length: rows }, () => Array(cols).fill(null));
+        // 병합 정보 초기화 (행/열 변경 시 병합 해제)
+        let cellRowspans = Array.from({ length: rows }, () => Array(cols).fill(1));
+        let cellColspans = Array.from({ length: rows }, () => Array(cols).fill(1));
 
         switch (type) {
           // 열 추가
@@ -521,12 +526,16 @@ export default function AillmPage() {
             cols += 1;
             cells = cells.map((row) => [...row, '']);
             cellColors = cellColors.map((row) => [...row, null]);
+            cellRowspans = cellRowspans.map((row) => [...row, 1]);
+            cellColspans = cellColspans.map((row) => [...row, 1]);
             break;
           case 'colLeftPlus':
             cols += 1;
             x -= TABLE_CELL_SIZE;
             cells = cells.map((row) => ['', ...row]);
             cellColors = cellColors.map((row) => [null, ...row]);
+            cellRowspans = cellRowspans.map((row) => [1, ...row]);
+            cellColspans = cellColspans.map((row) => [1, ...row]);
             break;
           // 열 삭제
           case 'colRightMinus':
@@ -534,6 +543,8 @@ export default function AillmPage() {
               cols -= 1;
               cells = cells.map((row) => row.slice(0, cols));
               cellColors = cellColors.map((row) => row.slice(0, cols));
+              cellRowspans = cellRowspans.map((row) => row.slice(0, cols));
+              cellColspans = cellColspans.map((row) => row.slice(0, cols));
             }
             break;
           case 'colLeftMinus':
@@ -542,6 +553,8 @@ export default function AillmPage() {
               x += TABLE_CELL_SIZE;
               cells = cells.map((row) => row.slice(1));
               cellColors = cellColors.map((row) => row.slice(1));
+              cellRowspans = cellRowspans.map((row) => row.slice(1));
+              cellColspans = cellColspans.map((row) => row.slice(1));
             }
             break;
           // 행 추가
@@ -550,11 +563,15 @@ export default function AillmPage() {
             y -= TABLE_CELL_SIZE;
             cells = [Array(cols).fill(''), ...cells];
             cellColors = [Array(cols).fill(null), ...cellColors];
+            cellRowspans = [Array(cols).fill(1), ...cellRowspans];
+            cellColspans = [Array(cols).fill(1), ...cellColspans];
             break;
           case 'rowBottomPlus':
             rows += 1;
             cells = [...cells, Array(cols).fill('')];
             cellColors = [...cellColors, Array(cols).fill(null)];
+            cellRowspans = [...cellRowspans, Array(cols).fill(1)];
+            cellColspans = [...cellColspans, Array(cols).fill(1)];
             break;
           // 행 삭제
           case 'rowTopMinus':
@@ -563,6 +580,8 @@ export default function AillmPage() {
               y += TABLE_CELL_SIZE;
               cells = cells.slice(1);
               cellColors = cellColors.slice(1);
+              cellRowspans = cellRowspans.slice(1);
+              cellColspans = cellColspans.slice(1);
             }
             break;
           case 'rowBottomMinus':
@@ -570,6 +589,8 @@ export default function AillmPage() {
               rows -= 1;
               cells = cells.slice(0, rows);
               cellColors = cellColors.slice(0, rows);
+              cellRowspans = cellRowspans.slice(0, rows);
+              cellColspans = cellColspans.slice(0, rows);
             }
             break;
           default:
@@ -584,8 +605,412 @@ export default function AillmPage() {
           cols,
           cells,
           cellColors,
+          cellRowspans,
+          cellColspans,
           width: cols * TABLE_CELL_SIZE,
           height: rows * TABLE_CELL_SIZE
+        };
+      })
+    );
+  };
+
+  // 셀이 병합 범위에 포함되어 있는지 확인
+  const isCellMerged = (item, row, col) => {
+    if (!item.cellRowspans || !item.cellColspans) return false;
+    const rows = item.rows || 1;
+    const cols = item.cols || 1;
+    if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
+
+    // 위쪽이나 왼쪽 셀의 병합 범위에 포함되는지 확인
+    for (let r = 0; r <= row; r++) {
+      for (let c = 0; c <= col; c++) {
+        if (r === row && c === col) continue;
+        const rowspan = item.cellRowspans[r]?.[c] || 1;
+        const colspan = item.cellColspans[r]?.[c] || 1;
+        if (
+          r <= row &&
+          row < r + rowspan &&
+          c <= col &&
+          col < c + colspan &&
+          (r !== row || c !== col)
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // 선택한 셀이 병합 범위에 포함되어 있으면 병합의 시작 위치를 찾음
+  const findMergeStart = (item, row, col) => {
+    if (!item.cellRowspans || !item.cellColspans) return { row, col };
+    const rows = item.rows || 1;
+    const cols = item.cols || 1;
+
+    // 위쪽이나 왼쪽 셀의 병합 범위에 포함되는지 확인하고 시작 위치 반환
+    for (let r = 0; r <= row; r++) {
+      for (let c = 0; c <= col; c++) {
+        const rowspan = item.cellRowspans[r]?.[c] || 1;
+        const colspan = item.cellColspans[r]?.[c] || 1;
+        if (
+          r <= row &&
+          row < r + rowspan &&
+          c <= col &&
+          col < c + colspan
+        ) {
+          return { row: r, col: c };
+        }
+      }
+    }
+    return { row, col };
+  };
+
+  const handleMergeCellRight = (tableId) => {
+    if (!activeTableCell || activeTableCell.tableId !== tableId) return;
+    const { row, col } = activeTableCell;
+    pushCanvasHistory();
+    setCanvasItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== tableId || item.type !== 'table') return item;
+        const rows = item.rows || 1;
+        const cols = item.cols || 1;
+
+        // 병합의 시작 위치 찾기
+        const startPos = findMergeStart(item, row, col);
+        const startRow = startPos.row;
+        const startCol = startPos.col;
+
+        // 현재 병합의 colspan 확인
+        const currentColspan = item.cellColspans?.[startRow]?.[startCol] || 1;
+        const mergeEndCol = startCol + currentColspan - 1;
+
+        // 오른쪽 끝이면 병합 불가
+        if (mergeEndCol >= cols - 1) return item;
+
+        const nextCol = mergeEndCol + 1;
+
+        // 오른쪽 셀이 병합 범위에 포함되어 있으면 병합 불가
+        if (isCellMerged(item, startRow, nextCol)) return item;
+
+        const baseRowspans =
+          Array.isArray(item.cellRowspans) && item.cellRowspans.length === rows
+            ? item.cellRowspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+        const baseColspans =
+          Array.isArray(item.cellColspans) && item.cellColspans.length === rows
+            ? item.cellColspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+
+        const nextRowspans = baseRowspans.map((r) => [...r]);
+        const nextColspans = baseColspans.map((r) => [...r]);
+
+        // 병합의 시작 셀의 colspan 증가
+        nextColspans[startRow][startCol] = currentColspan + 1;
+
+        // 오른쪽 셀의 내용을 시작 셀에 추가
+        const baseCells =
+          Array.isArray(item.cells) && item.cells.length === rows
+            ? item.cells.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
+                  : Array(cols).fill('')
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(''));
+        const nextCells = baseCells.map((r) => [...r]);
+        if (nextCells[startRow][nextCol]) {
+          nextCells[startRow][startCol] = (nextCells[startRow][startCol] || '') + (nextCells[startRow][nextCol] || '');
+          nextCells[startRow][nextCol] = '';
+        }
+
+        return {
+          ...item,
+          cells: nextCells,
+          cellColspans: nextColspans,
+          cellRowspans: nextRowspans
+        };
+      })
+    );
+  };
+
+  const handleMergeCellDown = (tableId) => {
+    if (!activeTableCell || activeTableCell.tableId !== tableId) return;
+    const { row, col } = activeTableCell;
+    pushCanvasHistory();
+    setCanvasItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== tableId || item.type !== 'table') return item;
+        const rows = item.rows || 1;
+        const cols = item.cols || 1;
+
+        // 병합의 시작 위치 찾기
+        const startPos = findMergeStart(item, row, col);
+        const startRow = startPos.row;
+        const startCol = startPos.col;
+
+        // 현재 병합의 rowspan 확인
+        const currentRowspan = item.cellRowspans?.[startRow]?.[startCol] || 1;
+        const mergeEndRow = startRow + currentRowspan - 1;
+
+        // 아래 끝이면 병합 불가
+        if (mergeEndRow >= rows - 1) return item;
+
+        const nextRow = mergeEndRow + 1;
+
+        // 아래 셀이 병합 범위에 포함되어 있으면 병합 불가
+        if (isCellMerged(item, nextRow, startCol)) return item;
+
+        const baseRowspans =
+          Array.isArray(item.cellRowspans) && item.cellRowspans.length === rows
+            ? item.cellRowspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+        const baseColspans =
+          Array.isArray(item.cellColspans) && item.cellColspans.length === rows
+            ? item.cellColspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+
+        const nextRowspans = baseRowspans.map((r) => [...r]);
+        const nextColspans = baseColspans.map((r) => [...r]);
+
+        // 병합의 시작 셀의 rowspan 증가
+        nextRowspans[startRow][startCol] = currentRowspan + 1;
+
+        // 아래 셀의 내용을 시작 셀에 추가
+        const baseCells =
+          Array.isArray(item.cells) && item.cells.length === rows
+            ? item.cells.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
+                  : Array(cols).fill('')
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(''));
+        const nextCells = baseCells.map((r) => [...r]);
+        if (nextCells[nextRow] && nextCells[nextRow][startCol]) {
+          nextCells[startRow][startCol] = (nextCells[startRow][startCol] || '') + (nextCells[nextRow][startCol] || '');
+          nextCells[nextRow][startCol] = '';
+        }
+
+        return {
+          ...item,
+          cells: nextCells,
+          cellRowspans: nextRowspans,
+          cellColspans: nextColspans
+        };
+      })
+    );
+  };
+
+  const handleMergeCellLeft = (tableId) => {
+    if (!activeTableCell || activeTableCell.tableId !== tableId) return;
+    const { row, col } = activeTableCell;
+    pushCanvasHistory();
+    setCanvasItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== tableId || item.type !== 'table') return item;
+        const rows = item.rows || 1;
+        const cols = item.cols || 1;
+
+        // 병합의 시작 위치 찾기
+        const startPos = findMergeStart(item, row, col);
+        const startRow = startPos.row;
+        const startCol = startPos.col;
+
+        // 왼쪽 끝이면 병합 불가
+        if (startCol <= 0) return item;
+
+        const prevCol = startCol - 1;
+
+        // 왼쪽 셀이 병합 범위에 포함되어 있으면 병합 불가
+        if (isCellMerged(item, startRow, prevCol)) return item;
+
+        const baseRowspans =
+          Array.isArray(item.cellRowspans) && item.cellRowspans.length === rows
+            ? item.cellRowspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+        const baseColspans =
+          Array.isArray(item.cellColspans) && item.cellColspans.length === rows
+            ? item.cellColspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+
+        const nextRowspans = baseRowspans.map((r) => [...r]);
+        const nextColspans = baseColspans.map((r) => [...r]);
+
+        // 현재 병합의 colspan 확인
+        const currentColspan = nextColspans[startRow][startCol] || 1;
+
+        // 왼쪽 셀의 colspan 증가 (현재 병합 크기만큼)
+        const leftColspan = nextColspans[startRow][prevCol] || 1;
+        nextColspans[startRow][prevCol] = leftColspan + currentColspan;
+
+        // 현재 병합의 시작 셀을 초기화 (왼쪽 셀로 병합됨)
+        nextColspans[startRow][startCol] = 1;
+
+        // 현재 병합의 내용을 왼쪽 셀에 추가
+        const baseCells =
+          Array.isArray(item.cells) && item.cells.length === rows
+            ? item.cells.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
+                  : Array(cols).fill('')
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(''));
+        const nextCells = baseCells.map((r) => [...r]);
+        if (nextCells[startRow][startCol]) {
+          nextCells[startRow][prevCol] =
+            (nextCells[startRow][prevCol] || '') + (nextCells[startRow][startCol] || '');
+          nextCells[startRow][startCol] = '';
+        }
+
+        return {
+          ...item,
+          cells: nextCells,
+          cellColspans: nextColspans,
+          cellRowspans: nextRowspans
+        };
+      })
+    );
+  };
+
+  const handleMergeCellUp = (tableId) => {
+    if (!activeTableCell || activeTableCell.tableId !== tableId) return;
+    const { row, col } = activeTableCell;
+    pushCanvasHistory();
+    setCanvasItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== tableId || item.type !== 'table') return item;
+        const rows = item.rows || 1;
+        const cols = item.cols || 1;
+
+        // 병합의 시작 위치 찾기
+        const startPos = findMergeStart(item, row, col);
+        const startRow = startPos.row;
+        const startCol = startPos.col;
+
+        // 위쪽 끝이면 병합 불가
+        if (startRow <= 0) return item;
+
+        const prevRow = startRow - 1;
+
+        // 위쪽 셀이 병합 범위에 포함되어 있으면 병합 불가
+        if (isCellMerged(item, prevRow, startCol)) return item;
+
+        const baseRowspans =
+          Array.isArray(item.cellRowspans) && item.cellRowspans.length === rows
+            ? item.cellRowspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+        const baseColspans =
+          Array.isArray(item.cellColspans) && item.cellColspans.length === rows
+            ? item.cellColspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+
+        const nextRowspans = baseRowspans.map((r) => [...r]);
+        const nextColspans = baseColspans.map((r) => [...r]);
+
+        // 현재 병합의 rowspan 확인
+        const currentRowspan = nextRowspans[startRow][startCol] || 1;
+
+        // 위쪽 셀의 rowspan 증가 (현재 병합 크기만큼)
+        const upRowspan = nextRowspans[prevRow][startCol] || 1;
+        nextRowspans[prevRow][startCol] = upRowspan + currentRowspan;
+
+        // 현재 병합의 시작 셀을 초기화 (위쪽 셀로 병합됨)
+        nextRowspans[startRow][startCol] = 1;
+
+        // 현재 병합의 내용을 위쪽 셀에 추가
+        const baseCells =
+          Array.isArray(item.cells) && item.cells.length === rows
+            ? item.cells.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
+                  : Array(cols).fill('')
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(''));
+        const nextCells = baseCells.map((r) => [...r]);
+        if (nextCells[startRow] && nextCells[startRow][startCol]) {
+          nextCells[prevRow][startCol] =
+            (nextCells[prevRow][startCol] || '') + (nextCells[startRow][startCol] || '');
+          nextCells[startRow][startCol] = '';
+        }
+
+        return {
+          ...item,
+          cells: nextCells,
+          cellRowspans: nextRowspans,
+          cellColspans: nextColspans
+        };
+      })
+    );
+  };
+
+  const handleUnmergeCell = (tableId) => {
+    if (!activeTableCell || activeTableCell.tableId !== tableId) return;
+    const { row, col } = activeTableCell;
+    pushCanvasHistory();
+    setCanvasItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== tableId || item.type !== 'table') return item;
+        const rows = item.rows || 1;
+        const cols = item.cols || 1;
+
+        const baseRowspans =
+          Array.isArray(item.cellRowspans) && item.cellRowspans.length === rows
+            ? item.cellRowspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+        const baseColspans =
+          Array.isArray(item.cellColspans) && item.cellColspans.length === rows
+            ? item.cellColspans.map((r) =>
+                Array.isArray(r)
+                  ? [...r, ...Array(Math.max(0, cols - r.length)).fill(1)]
+                  : Array(cols).fill(1)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(1));
+
+        const nextRowspans = baseRowspans.map((r) => [...r]);
+        const nextColspans = baseColspans.map((r) => [...r]);
+
+        // 현재 셀의 병합 해제
+        nextRowspans[row][col] = 1;
+        nextColspans[row][col] = 1;
+
+        return {
+          ...item,
+          cellRowspans: nextRowspans,
+          cellColspans: nextColspans
         };
       })
     );
@@ -3546,67 +3971,98 @@ export default function AillmPage() {
                     <tbody>
                       {Array.from({ length: item.rows || 1 }).map((_, rowIdx) => (
                         <tr key={rowIdx}>
-                          {Array.from({ length: item.cols || 1 }).map((_, colIdx) => (
-                            <td
-                              key={colIdx}
-                              style={{
-                                borderColor: item.borderColor || defaultBorderColor,
-                                color:
-                                  (item.cellColors &&
-                                    item.cellColors[rowIdx] &&
-                                    item.cellColors[rowIdx][colIdx]) ||
-                                  item.textColor ||
-                                  defaultTextColor
-                              }}
-                              contentEditable
-                              suppressContentEditableWarning
-                              onMouseDown={(e) => e.stopPropagation()}
-                              onClick={(e) => {
-                                // 셀 선택 (색상 변경 대상)
-                                e.stopPropagation();
-                                setActiveCanvasItemId(item.id);
-                                setSelectedCanvasItemIds([item.id]);
-                                setActiveTableCell({ tableId: item.id, row: rowIdx, col: colIdx });
-                              }}
-                              onDoubleClick={(e) => {
-                                // 더블클릭 시 셀 안에 바로 커서가 들어가도록 포커스
-                                e.stopPropagation();
-                                const target = e.currentTarget;
-                                // 이미 contentEditable 이므로 포커스만 주면 됨
-                                target.focus();
-                              }}
-                              onBlur={(e) => {
-                                const value = e.target.textContent || '';
-                                // 셀 내용 편집도 undo 대상이 되도록 히스토리 저장
-                                pushCanvasHistory();
-                                setCanvasItems((prev) =>
-                                  prev.map((c) => {
-                                    if (c.id !== item.id || c.type !== 'table') return c;
-                                    const rows = c.rows || 1;
-                                    const cols = c.cols || 1;
-                                    const baseCells =
-                                      Array.isArray(c.cells) && c.cells.length === rows
-                                        ? c.cells.map((r) =>
-                                            Array.isArray(r)
-                                              ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
-                                              : Array(cols).fill('')
-                                          )
-                                        : Array.from({ length: rows }, () => Array(cols).fill(''));
-                                    const nextCells = baseCells.map((r) => [...r]);
-                                    nextCells[rowIdx][colIdx] = value;
-                                    return {
-                                      ...c,
-                                      cells: nextCells
-                                    };
-                                  })
-                                );
-                              }}
-                            >
-                              {item.cells &&
-                                item.cells[rowIdx] &&
-                                item.cells[rowIdx][colIdx]}
-                            </td>
-                          ))}
+                          {Array.from({ length: item.cols || 1 }).map((_, colIdx) => {
+                            // 병합된 셀인지 확인 (다른 셀의 병합 범위에 포함된 경우)
+                            const isMerged = (() => {
+                              for (let r = 0; r <= rowIdx; r++) {
+                                for (let c = 0; c <= colIdx; c++) {
+                                  if (r === rowIdx && c === colIdx) continue;
+                                  const rowspan = item.cellRowspans?.[r]?.[c] || 1;
+                                  const colspan = item.cellColspans?.[r]?.[c] || 1;
+                                  if (
+                                    r <= rowIdx &&
+                                    rowIdx < r + rowspan &&
+                                    c <= colIdx &&
+                                    colIdx < c + colspan &&
+                                    (r !== rowIdx || c !== colIdx)
+                                  ) {
+                                    return true;
+                                  }
+                                }
+                              }
+                              return false;
+                            })();
+
+                            // 병합된 셀은 렌더링하지 않음
+                            if (isMerged) return null;
+
+                            const rowspan = item.cellRowspans?.[rowIdx]?.[colIdx] || 1;
+                            const colspan = item.cellColspans?.[rowIdx]?.[colIdx] || 1;
+
+                            return (
+                              <td
+                                key={colIdx}
+                                rowSpan={rowspan > 1 ? rowspan : undefined}
+                                colSpan={colspan > 1 ? colspan : undefined}
+                                style={{
+                                  borderColor: item.borderColor || defaultBorderColor,
+                                  color:
+                                    (item.cellColors &&
+                                      item.cellColors[rowIdx] &&
+                                      item.cellColors[rowIdx][colIdx]) ||
+                                    item.textColor ||
+                                    defaultTextColor
+                                }}
+                                contentEditable
+                                suppressContentEditableWarning
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  // 셀 선택 (색상 변경 대상)
+                                  e.stopPropagation();
+                                  setActiveCanvasItemId(item.id);
+                                  setSelectedCanvasItemIds([item.id]);
+                                  setActiveTableCell({ tableId: item.id, row: rowIdx, col: colIdx });
+                                }}
+                                onDoubleClick={(e) => {
+                                  // 더블클릭 시 셀 안에 바로 커서가 들어가도록 포커스
+                                  e.stopPropagation();
+                                  const target = e.currentTarget;
+                                  // 이미 contentEditable 이므로 포커스만 주면 됨
+                                  target.focus();
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.textContent || '';
+                                  // 셀 내용 편집도 undo 대상이 되도록 히스토리 저장
+                                  pushCanvasHistory();
+                                  setCanvasItems((prev) =>
+                                    prev.map((c) => {
+                                      if (c.id !== item.id || c.type !== 'table') return c;
+                                      const rows = c.rows || 1;
+                                      const cols = c.cols || 1;
+                                      const baseCells =
+                                        Array.isArray(c.cells) && c.cells.length === rows
+                                          ? c.cells.map((r) =>
+                                              Array.isArray(r)
+                                                ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
+                                                : Array(cols).fill('')
+                                            )
+                                          : Array.from({ length: rows }, () => Array(cols).fill(''));
+                                      const nextCells = baseCells.map((r) => [...r]);
+                                      nextCells[rowIdx][colIdx] = value;
+                                      return {
+                                        ...c,
+                                        cells: nextCells
+                                      };
+                                    })
+                                  );
+                                }}
+                              >
+                                {item.cells &&
+                                  item.cells[rowIdx] &&
+                                  item.cells[rowIdx][colIdx]}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>
@@ -3702,6 +4158,98 @@ export default function AillmPage() {
                             }}
                           >
                             아래 행-
+                          </button>
+                        <button
+                          type="button"
+                          className={styles.canvasTableToolbarBtn}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMergeCellLeft(item.id);
+                          }}
+                          disabled={
+                            !activeTableCell ||
+                            activeTableCell.tableId !== item.id ||
+                            (() => {
+                              const startPos = findMergeStart(item, activeTableCell.row, activeTableCell.col);
+                              return startPos.col <= 0;
+                            })()
+                          }
+                        >
+                          왼쪽 병합
+                        </button>
+                          <button
+                            type="button"
+                            className={styles.canvasTableToolbarBtn}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMergeCellRight(item.id);
+                            }}
+                            disabled={
+                              !activeTableCell ||
+                              activeTableCell.tableId !== item.id ||
+                              (() => {
+                                const startPos = findMergeStart(item, activeTableCell.row, activeTableCell.col);
+                                const currentColspan = item.cellColspans?.[startPos.row]?.[startPos.col] || 1;
+                                return startPos.col + currentColspan >= (item.cols || 1);
+                              })()
+                            }
+                          >
+                            오른쪽 병합
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.canvasTableToolbarBtn}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMergeCellUp(item.id);
+                          }}
+                          disabled={
+                            !activeTableCell ||
+                            activeTableCell.tableId !== item.id ||
+                            (() => {
+                              const startPos = findMergeStart(item, activeTableCell.row, activeTableCell.col);
+                              return startPos.row <= 0;
+                            })()
+                          }
+                        >
+                          위 병합
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.canvasTableToolbarBtn}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMergeCellDown(item.id);
+                            }}
+                            disabled={
+                              !activeTableCell ||
+                              activeTableCell.tableId !== item.id ||
+                              (() => {
+                                const startPos = findMergeStart(item, activeTableCell.row, activeTableCell.col);
+                                const currentRowspan = item.cellRowspans?.[startPos.row]?.[startPos.col] || 1;
+                                return startPos.row + currentRowspan >= (item.rows || 1);
+                              })()
+                            }
+                          >
+                            아래 병합
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.canvasTableToolbarBtn}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnmergeCell(item.id);
+                            }}
+                            disabled={
+                              !activeTableCell || activeTableCell.tableId !== item.id
+                            }
+                          >
+                            병합 해제
                           </button>
                           <button
                             type="button"
