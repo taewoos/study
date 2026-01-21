@@ -1,0 +1,53 @@
+=== 프론트엔드 ===
+- Next.js
+- React
+
+=== 백엔드 ===
+- FastAPI
+- Python
+
+=== 데이터베이스 ===
+- MongoDB (프론트 관련 데이터)
+- ChromaDB (벡터 DB, 임베딩 저장)
+
+=== 배포 & 인프라 ===
+- Vercel (배포)
+- Docker (컨테이너화)
+- PM2 (프로세스 관리, 자동 실행)
+
+=== 인증 & 보안 ===
+- 이메일 인증 (회원가입/로그인)
+- JWT (토큰 기반 인증)
+- 보안 처리 (폐쇄망/대기업 기준)
+
+=== AI/ML 기술 ===
+- RAG (Retrieval-Augmented Generation)
+- LLM (Large Language Model)
+- 임베딩 (Embedding)
+- 파인튜닝 (Fine-tuning)
+- GPT API (OpenAI API)
+- 자체 모델 생성 (1B 파라미터)
+
+=== OCR ===
+- 이미지 OCR 처리
+- 범용 OCR
+- 특정 기능용 OCR
+
+=== 음성 처리 ===
+- STT (Speech-to-Text)
+- 보이스 연동
+
+=== 자동화 & 연동 ===
+- RPA (Robotic Process Automation)
+- ERP 연동
+- 세금계산서 자동 발행
+
+=== 프로토콜 ===
+- MCP (Model Context Protocol)
+- REST API
+- WebSocket (실시간 통신 가능)
+
+=== 기타 ===
+- 권한 관리 시스템
+- 이미지 처리
+- 문서 관리 시스템
