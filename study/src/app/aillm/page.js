@@ -57,6 +57,7 @@ export default function AillmPage() {
   const [defaultLineColor, setDefaultLineColor] = useState('#2f5f9e');
   const [defaultTextColor, setDefaultTextColor] = useState('#111111');
   const [defaultBorderColor, setDefaultBorderColor] = useState('#4A90E2');
+  const [defaultStrokeWidth, setDefaultStrokeWidth] = useState(3);
   const [canvasGroups, setCanvasGroups] = useState([]);
   const [activeCanvasGroupId, setActiveCanvasGroupId] = useState(null);
   const [isDraggingCanvasItem, setIsDraggingCanvasItem] = useState(false);
@@ -689,13 +690,45 @@ export default function AillmPage() {
   };
 
   const handleChangeActiveLinkWidth = (value) => {
-    if (!activeCanvasLinkId) return;
+    const numeric = Number(value);
+
+    const hasActiveLink = !!activeCanvasLinkId;
+    const activeLineItem =
+      activeCanvasItemId &&
+      canvasItems.find(
+        (item) =>
+          item.id === activeCanvasItemId &&
+          (item.type === 'line' || item.type === 'arrow')
+      );
+
+    // 선택된 게 하나도 없어도 기본 굵기는 항상 변경
+    setDefaultStrokeWidth(numeric);
+
+    // 선택된 링크/선/화살표가 없으면 여기서 끝 (기본값만 변경)
+    if (!hasActiveLink && !activeLineItem) return;
+
     pushCanvasHistory();
-    setCanvasLinks((prev) =>
-      prev.map((link) =>
-        link.id === activeCanvasLinkId ? { ...link, width: Number(value) } : link
-      )
-    );
+
+    // 연결선 굵기 변경
+    if (hasActiveLink) {
+      setCanvasLinks((prev) =>
+        prev.map((link) =>
+          link.id === activeCanvasLinkId ? { ...link, width: numeric } : link
+        )
+      );
+    }
+
+    // 선/화살표 도형 굵기 변경
+    if (activeLineItem) {
+      setCanvasItems((prev) =>
+        prev.map((item) =>
+          item.id === activeCanvasItemId &&
+          (item.type === 'line' || item.type === 'arrow')
+            ? { ...item, strokeWidth: numeric }
+            : item
+        )
+      );
+    }
   };
 
   const handleChangeActiveLinkLabel = (value) => {
@@ -1103,7 +1136,7 @@ export default function AillmPage() {
       endY: lineDraft.endY,
       text: '',
       fill: defaultLineColor,
-      strokeWidth: 3,
+      strokeWidth: defaultStrokeWidth,
       src: ''
     };
     setCanvasItems((prev) => [...prev, newItem]);
@@ -3036,11 +3069,19 @@ export default function AillmPage() {
                 굵기
                 <select
                   className={styles.drawingSelect}
-                  value={canvasLinks.find((link) => link.id === activeCanvasLinkId)?.width || 3}
+                  value={
+                    canvasLinks.find((link) => link.id === activeCanvasLinkId)?.width ||
+                    canvasItems.find(
+                      (item) =>
+                        item.id === activeCanvasItemId &&
+                        (item.type === 'line' || item.type === 'arrow')
+                    )?.strokeWidth ||
+                    defaultStrokeWidth
+                  }
                   onChange={(e) => handleChangeActiveLinkWidth(e.target.value)}
                   onMouseDown={(e) => e.stopPropagation()}
-                  disabled={!activeCanvasLinkId}
                 >
+                  <option value={1}>1</option>
                   <option value={2}>2</option>
                   <option value={3}>3</option>
                   <option value={4}>4</option>
