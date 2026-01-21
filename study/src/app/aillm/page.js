@@ -130,6 +130,7 @@ export default function AillmPage() {
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
+  const [editingTableId, setEditingTableId] = useState(null);
   
   const leftPanelRef = useRef(null);
   const rightPanelRef = useRef(null);
@@ -454,6 +455,8 @@ export default function AillmPage() {
     setActiveCanvasItemId(newItem.id);
   };
 
+  const TABLE_CELL_SIZE = 36;
+
   const handleAddTable = (rows, cols) => {
     const safeRows = !Number.isNaN(rows) && rows > 0 ? rows : 1;
     const safeCols = !Number.isNaN(cols) && cols > 0 ? cols : 1;
@@ -461,9 +464,8 @@ export default function AillmPage() {
     pushCanvasHistory();
     const rect = getCanvasRect();
     const baseOffset = canvasItems.length * 20;
-    const cellSize = 36;
-    const width = safeCols * cellSize;
-    const height = safeRows * cellSize;
+    const width = safeCols * TABLE_CELL_SIZE;
+    const height = safeRows * TABLE_CELL_SIZE;
     const startX = rect ? Math.max(0, rect.width * 0.1) : 40;
     const startY = rect ? Math.max(0, rect.height * 0.1) : 40;
 
@@ -482,6 +484,75 @@ export default function AillmPage() {
 
     setCanvasItems((prev) => [...prev, newItem]);
     setActiveCanvasItemId(newItem.id);
+  };
+
+  const handleModifyTable = (tableId, type) => {
+    pushCanvasHistory();
+    setCanvasItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== tableId || item.type !== 'table') return item;
+
+        let rows = item.rows || 1;
+        let cols = item.cols || 1;
+        let x = item.x;
+        let y = item.y;
+
+        switch (type) {
+          // 열 추가
+          case 'colRightPlus':
+            cols += 1;
+            break;
+          case 'colLeftPlus':
+            cols += 1;
+            x -= TABLE_CELL_SIZE;
+            break;
+          // 열 삭제
+          case 'colRightMinus':
+            if (cols > 1) {
+              cols -= 1;
+            }
+            break;
+          case 'colLeftMinus':
+            if (cols > 1) {
+              cols -= 1;
+              x += TABLE_CELL_SIZE;
+            }
+            break;
+          // 행 추가
+          case 'rowTopPlus':
+            rows += 1;
+            y -= TABLE_CELL_SIZE;
+            break;
+          case 'rowBottomPlus':
+            rows += 1;
+            break;
+          // 행 삭제
+          case 'rowTopMinus':
+            if (rows > 1) {
+              rows -= 1;
+              y += TABLE_CELL_SIZE;
+            }
+            break;
+          case 'rowBottomMinus':
+            if (rows > 1) {
+              rows -= 1;
+            }
+            break;
+          default:
+            break;
+        }
+
+        return {
+          ...item,
+          x,
+          y,
+          rows,
+          cols,
+          width: cols * TABLE_CELL_SIZE,
+          height: rows * TABLE_CELL_SIZE
+        };
+      })
+    );
   };
 
   const handleOpenTableModal = () => {
@@ -681,7 +752,7 @@ export default function AillmPage() {
     setCanvasItems((prev) =>
       prev.map((item) =>
         targetSet.has(item.id) &&
-        (item.type === 'rect' || item.type === 'circle' || item.type === 'text')
+        (item.type === 'rect' || item.type === 'circle' || item.type === 'text' || item.type === 'table')
           ? { ...item, borderColor: value }
           : item
       )
@@ -3365,17 +3436,141 @@ export default function AillmPage() {
               ) : item.type === 'image' ? (
                 <img src={item.src} alt="canvas" className={styles.canvasImage} draggable="false" />
               ) : item.type === 'table' ? (
-                <table className={styles.canvasTable}>
-                  <tbody>
-                    {Array.from({ length: item.rows || 1 }).map((_, rowIdx) => (
-                      <tr key={rowIdx}>
-                        {Array.from({ length: item.cols || 1 }).map((_, colIdx) => (
-                          <td key={colIdx} />
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <>
+                  <table className={styles.canvasTable}>
+                    <tbody>
+                      {Array.from({ length: item.rows || 1 }).map((_, rowIdx) => (
+                        <tr key={rowIdx}>
+                          {Array.from({ length: item.cols || 1 }).map((_, colIdx) => (
+                            <td
+                              key={colIdx}
+                              style={{ borderColor: item.borderColor || defaultBorderColor }}
+                            />
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {isSelected && (
+                    <div className={styles.canvasTableToolbar}>
+                      {editingTableId === item.id ? (
+                        <>
+                          <button
+                            type="button"
+                            className={styles.canvasTableToolbarBtn}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleModifyTable(item.id, 'colRightPlus');
+                            }}
+                          >
+                            오른쪽 열+
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.canvasTableToolbarBtn}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleModifyTable(item.id, 'colLeftPlus');
+                            }}
+                          >
+                            왼쪽 열+
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.canvasTableToolbarBtn}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleModifyTable(item.id, 'rowTopPlus');
+                            }}
+                          >
+                            위 행+
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.canvasTableToolbarBtn}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleModifyTable(item.id, 'rowBottomPlus');
+                            }}
+                          >
+                            아래 행+
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.canvasTableToolbarBtn} ${styles.canvasTableToolbarDelete}`}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleModifyTable(item.id, 'colRightMinus');
+                            }}
+                          >
+                            오른쪽 열-
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.canvasTableToolbarBtn} ${styles.canvasTableToolbarDelete}`}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleModifyTable(item.id, 'colLeftMinus');
+                            }}
+                          >
+                            왼쪽 열-
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.canvasTableToolbarBtn} ${styles.canvasTableToolbarDelete}`}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleModifyTable(item.id, 'rowTopMinus');
+                            }}
+                          >
+                            위 행-
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.canvasTableToolbarBtn} ${styles.canvasTableToolbarDelete}`}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleModifyTable(item.id, 'rowBottomMinus');
+                            }}
+                          >
+                            아래 행-
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.canvasTableToolbarBtn} ${styles.canvasTableToolbarClose}`}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingTableId(null);
+                            }}
+                          >
+                            닫기
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.canvasTableToolbarBtn}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTableId(item.id);
+                          }}
+                        >
+                          수정
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
               ) : item.type === 'arrow' ? (
                 <svg className={styles.canvasArrow} viewBox={`0 0 ${item.width} ${item.height}`}>
                   <defs>

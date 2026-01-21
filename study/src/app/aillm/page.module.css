@@ -1001,6 +1001,56 @@
   background: #ffffff;
 }
 
+.canvasTableToolbar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  gap: 4px;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+
+.canvasTableToolbarBtn {
+  border: 1px solid #e0e0e0;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1;
+  color: #555;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.canvasTableToolbarBtn:hover {
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
+.canvasTableToolbarClose {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.canvasTableToolbarClose:hover {
+  background: #ff6b6b;
+  color: #ffffff;
+}
+
+.canvasTableToolbarDelete {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.canvasTableToolbarDelete:hover {
+  background: #ff6b6b;
+  color: #ffffff;
+}
+
 
 /* Memo Pad Button */
 .memoPadButton {
