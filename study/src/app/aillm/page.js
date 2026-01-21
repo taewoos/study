@@ -618,8 +618,10 @@ export default function AillmPage() {
           cellColors,
           cellRowspans,
           cellColspans,
-          width: cols * TABLE_CELL_SIZE,
-          height: rows * TABLE_CELL_SIZE
+          // 표 크기는 사용자가 조절한 값을 그대로 유지하고,
+          // 행/열 개수만 변경되도록 한다.
+          width: item.width,
+          height: item.height
         };
       })
     );
@@ -4515,7 +4517,6 @@ export default function AillmPage() {
       {isTableModalOpen && (
         <div
           className={styles.templateModalOverlay}
-          onClick={() => setIsTableModalOpen(false)}
         >
           <div
             className={styles.templateModal}
