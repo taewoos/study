@@ -4503,10 +4503,9 @@ export default function AillmPage() {
       {isTextModalOpen && (
         <div
           className={styles.templateModalOverlay}
-          onClick={() => setIsTextModalOpen(false)}
         >
           <div
-            className={styles.templateModal}
+            className={`${styles.templateModal} ${styles.textEditorModal}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.templateModalHeader}>
@@ -4519,7 +4518,7 @@ export default function AillmPage() {
                 ×
               </button>
             </div>
-            <div className={styles.templateModalBody}>
+            <div className={`${styles.templateModalBody} ${styles.textEditorBody}`}>
               <RichTextEditor
                 value={textModalContent}
                 onChange={setTextModalContent}

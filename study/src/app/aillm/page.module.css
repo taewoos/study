@@ -326,6 +326,19 @@
   flex-direction: column;
 }
 
+/* Text Editor 전용 모달 - 더 크게 사용 */
+.textEditorModal {
+  width: 800px;
+  max-width: 100%;
+  max-height: 80vh;
+}
+
+.textEditorBody {
+  min-height: 220px;
+  max-height: 50vh;
+  overflow: auto;
+}
+
 .templateModalHeader {
   display: flex;
   align-items: center;
