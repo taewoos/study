@@ -126,6 +126,10 @@ export default function AillmPage() {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [savedTemplates, setSavedTemplates] = useState([]);
+  // Table modal state
+  const [isTableModalOpen, setIsTableModalOpen] = useState(false);
+  const [tableRows, setTableRows] = useState(3);
+  const [tableCols, setTableCols] = useState(3);
   
   const leftPanelRef = useRef(null);
   const rightPanelRef = useRef(null);
@@ -437,7 +441,10 @@ export default function AillmPage() {
       text: preset.text,
       fill: preset.fill,
       src: '',
-      textColor: type === 'text' ? defaultTextColor : undefined,
+      textColor:
+        type === 'arrow' || type === 'line' || type === 'image'
+          ? undefined
+          : defaultTextColor,
       borderColor:
         type === 'rect' || type === 'circle' || type === 'text'
           ? defaultBorderColor
@@ -445,6 +452,53 @@ export default function AillmPage() {
     };
     setCanvasItems((prev) => [...prev, newItem]);
     setActiveCanvasItemId(newItem.id);
+  };
+
+  const handleAddTable = (rows, cols) => {
+    const safeRows = !Number.isNaN(rows) && rows > 0 ? rows : 1;
+    const safeCols = !Number.isNaN(cols) && cols > 0 ? cols : 1;
+
+    pushCanvasHistory();
+    const rect = getCanvasRect();
+    const baseOffset = canvasItems.length * 20;
+    const cellSize = 36;
+    const width = safeCols * cellSize;
+    const height = safeRows * cellSize;
+    const startX = rect ? Math.max(0, rect.width * 0.1) : 40;
+    const startY = rect ? Math.max(0, rect.height * 0.1) : 40;
+
+    const newItem = {
+      id: Date.now() + Math.random(),
+      type: 'table',
+      x: snapValue(startX + baseOffset),
+      y: snapValue(startY + baseOffset),
+      width,
+      height,
+      rows: safeRows,
+      cols: safeCols,
+      fill: '#FFFFFF',
+      borderColor: defaultBorderColor
+    };
+
+    setCanvasItems((prev) => [...prev, newItem]);
+    setActiveCanvasItemId(newItem.id);
+  };
+
+  const handleOpenTableModal = () => {
+    setTableRows(3);
+    setTableCols(3);
+    setIsTableModalOpen(true);
+  };
+
+  const handleConfirmTableModal = () => {
+    const rows = parseInt(tableRows, 10);
+    const cols = parseInt(tableCols, 10);
+    if (Number.isNaN(rows) || Number.isNaN(cols) || rows <= 0 || cols <= 0) {
+      alert('행과 열은 1 이상의 숫자로 입력해주세요.');
+      return;
+    }
+    handleAddTable(rows, cols);
+    setIsTableModalOpen(false);
   };
 
   const handleCanvasItemDragStart = (e, itemId) => {
@@ -556,58 +610,6 @@ export default function AillmPage() {
     setActiveCanvasItemId(duplicate.id);
   };
 
-  const handleAlignActiveItem = (direction) => {
-    const rect = getCanvasRect();
-    const item = canvasItems.find((c) => c.id === activeCanvasItemId);
-    if (!rect || !item) return;
-    pushCanvasHistory();
-    let nextX = item.x;
-    let nextY = item.y;
-    if (direction === 'left') nextX = 0;
-    if (direction === 'center') nextX = (rect.width - item.width) / 2;
-    if (direction === 'right') nextX = rect.width - item.width;
-    if (direction === 'top') nextY = 0;
-    if (direction === 'middle') nextY = (rect.height - item.height) / 2;
-    if (direction === 'bottom') nextY = rect.height - item.height;
-    const clamped = clampCanvasPosition(nextX, nextY, item);
-    setCanvasItems((prev) =>
-      prev.map((c) => (c.id === item.id ? { ...c, x: clamped.x, y: clamped.y } : c))
-    );
-  };
-
-  const handleDistributeItems = (axis) => {
-    const items = canvasItems.filter(
-      (item) => !['line', 'arrow'].includes(item.type)
-    );
-    if (items.length < 3) return;
-    const sorted = [...items].sort((a, b) => (axis === 'x' ? a.x - b.x : a.y - b.y));
-    const first = sorted[0];
-    const last = sorted[sorted.length - 1];
-    const totalSpan =
-      axis === 'x'
-        ? last.x + last.width - first.x
-        : last.y + last.height - first.y;
-    const totalSize = sorted.reduce(
-      (acc, item) => acc + (axis === 'x' ? item.width : item.height),
-      0
-    );
-    const gap = (totalSpan - totalSize) / (sorted.length - 1);
-    let cursor = axis === 'x' ? first.x : first.y;
-    const updated = sorted.map((item, index) => {
-      if (index === 0) return item;
-      cursor += axis === 'x' ? sorted[index - 1].width + gap : sorted[index - 1].height + gap;
-      return {
-        ...item,
-        x: axis === 'x' ? cursor : item.x,
-        y: axis === 'x' ? item.y : cursor
-      };
-    });
-    pushCanvasHistory();
-    setCanvasItems((prev) =>
-      prev.map((item) => updated.find((u) => u.id === item.id) || item)
-    );
-  };
-
   const handleChangeActiveFill = (value) => {
     // 기본 채우기 색 업데이트 (선택된 도형이 없어도 반영)
     setDefaultFillColor(value);
@@ -625,7 +627,7 @@ export default function AillmPage() {
     pushCanvasHistory();
     setCanvasItems((prev) =>
       prev.map((item) =>
-        item.id === activeCanvasItemId && item.type === 'text'
+        item.id === activeCanvasItemId
           ? { ...item, textColor: value }
           : item
       )
@@ -2930,6 +2932,16 @@ export default function AillmPage() {
               </button>
               <button
                 className={styles.drawingToolBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenTableModal();
+                }}
+                type="button"
+              >
+                표
+              </button>
+              <button
+                className={styles.drawingToolBtn}
                 onClick={() => canvasFileInputRef.current?.click()}
                 onMouseDown={(e) => e.stopPropagation()}
                 type="button"
@@ -2960,70 +2972,6 @@ export default function AillmPage() {
                 type="button"
               >
                 삭제
-              </button>
-              <button
-                className={styles.drawingToolBtn}
-                onClick={() => handleAlignActiveItem('left')}
-                onMouseDown={(e) => e.stopPropagation()}
-                type="button"
-              >
-                좌
-              </button>
-              <button
-                className={styles.drawingToolBtn}
-                onClick={() => handleAlignActiveItem('center')}
-                onMouseDown={(e) => e.stopPropagation()}
-                type="button"
-              >
-                가운데
-              </button>
-              <button
-                className={styles.drawingToolBtn}
-                onClick={() => handleAlignActiveItem('right')}
-                onMouseDown={(e) => e.stopPropagation()}
-                type="button"
-              >
-                우
-              </button>
-              <button
-                className={styles.drawingToolBtn}
-                onClick={() => handleAlignActiveItem('top')}
-                onMouseDown={(e) => e.stopPropagation()}
-                type="button"
-              >
-                상
-              </button>
-              <button
-                className={styles.drawingToolBtn}
-                onClick={() => handleAlignActiveItem('middle')}
-                onMouseDown={(e) => e.stopPropagation()}
-                type="button"
-              >
-                중
-              </button>
-              <button
-                className={styles.drawingToolBtn}
-                onClick={() => handleAlignActiveItem('bottom')}
-                onMouseDown={(e) => e.stopPropagation()}
-                type="button"
-              >
-                하
-              </button>
-              <button
-                className={styles.drawingToolBtn}
-                onClick={() => handleDistributeItems('x')}
-                onMouseDown={(e) => e.stopPropagation()}
-                type="button"
-              >
-                균등-가로
-              </button>
-              <button
-                className={styles.drawingToolBtn}
-                onClick={() => handleDistributeItems('y')}
-                onMouseDown={(e) => e.stopPropagation()}
-                type="button"
-              >
-                균등-세로
               </button>
               <button
                 className={`${styles.drawingToolBtn} ${isGroupMode ? styles.drawingToolActive : ''}`}
@@ -3416,6 +3364,18 @@ export default function AillmPage() {
                 )
               ) : item.type === 'image' ? (
                 <img src={item.src} alt="canvas" className={styles.canvasImage} draggable="false" />
+              ) : item.type === 'table' ? (
+                <table className={styles.canvasTable}>
+                  <tbody>
+                    {Array.from({ length: item.rows || 1 }).map((_, rowIdx) => (
+                      <tr key={rowIdx}>
+                        {Array.from({ length: item.cols || 1 }).map((_, colIdx) => (
+                          <td key={colIdx} />
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               ) : item.type === 'arrow' ? (
                 <svg className={styles.canvasArrow} viewBox={`0 0 ${item.width} ${item.height}`}>
                   <defs>
@@ -3490,6 +3450,7 @@ export default function AillmPage() {
                 activeCanvasItemId === item.id ? (
                   <input
                     className={styles.canvasShapeTextInput}
+                    style={{ color: item.textColor || defaultTextColor }}
                     value={item.text || ''}
                     onChange={(e) =>
                       setCanvasItems((prev) =>
@@ -3500,7 +3461,12 @@ export default function AillmPage() {
                     onMouseDown={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <span className={styles.canvasItemLabel}>{item.text || ''}</span>
+                  <span
+                    className={styles.canvasItemLabel}
+                    style={{ color: item.textColor || defaultTextColor }}
+                  >
+                    {item.text || ''}
+                  </span>
                 )
               ) : (
                 <span className={styles.canvasItemLabel}>도형</span>
@@ -3667,6 +3633,72 @@ export default function AillmPage() {
                     저장
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isTableModalOpen && (
+        <div
+          className={styles.templateModalOverlay}
+          onClick={() => setIsTableModalOpen(false)}
+        >
+          <div
+            className={styles.templateModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.templateModalHeader}>
+              <h3 className={styles.templateModalTitle}>표 만들기</h3>
+              <button
+                className={styles.templateModalClose}
+                onClick={() => setIsTableModalOpen(false)}
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.templateModalBody}>
+              <div className={styles.templateSection}>
+                <div className={styles.templateSectionTitle}>행 / 열 개수</div>
+                <div className={styles.tableInputRow}>
+                  <label className={styles.tableLabel}>
+                    행
+                    <input
+                      type="number"
+                      min="1"
+                      className={styles.templateInput}
+                      value={tableRows}
+                      onChange={(e) => setTableRows(e.target.value)}
+                    />
+                  </label>
+                  <label className={styles.tableLabel}>
+                    열
+                    <input
+                      type="number"
+                      min="1"
+                      className={styles.templateInput}
+                      value={tableCols}
+                      onChange={(e) => setTableCols(e.target.value)}
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className={styles.tableModalFooter}>
+                <button
+                  className={styles.templateDelete}
+                  onClick={() => setIsTableModalOpen(false)}
+                  type="button"
+                >
+                  취소
+                </button>
+                <button
+                  className={styles.templateSaveBtn}
+                  onClick={handleConfirmTableModal}
+                  type="button"
+                >
+                  생성
+                </button>
               </div>
             </div>
           </div>
