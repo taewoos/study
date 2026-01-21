@@ -1,35 +1,31 @@
 .container {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background: #f6f7f9;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Sidebar */
-.sidebar {
-  width: 260px;
+/* Top Header with Navigation */
+.topHeader {
   background: #ffffff;
-  border-right: 1px solid #e5e5e5;
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s ease;
-  position: fixed;
-  height: 100vh;
-  left: 0;
-  top: 0;
-  z-index: 100;
-}
-
-.sidebarCollapsed {
-  width: 80px;
-}
-
-.sidebarHeader {
-  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 16px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e5e5e5;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
 }
 
 .logo {
@@ -58,78 +54,49 @@
   white-space: nowrap;
 }
 
-.sidebarCollapsed .logoText {
-  display: none;
-}
-
-.sidebarToggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: #666;
+/* Top Navigation */
+.topNav {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: transform 0.2s;
-}
-
-.sidebarCollapsed .sidebarToggle {
-  transform: rotate(180deg);
-}
-
-.nav {
+  gap: 8px;
   flex: 1;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  justify-content: center;
 }
 
-.navItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 8px;
+.topNavItem {
+  padding: 8px 16px;
   color: #666;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
-.navItem:hover {
-  background: #f5f5f5;
+.topNavItem:hover {
   color: #1a1a1a;
+  background: #f5f5f5;
 }
 
-.navItemActive {
-  background: #e8f4fd;
+.topNavItemActive {
   color: #4A90E2;
+  background: #e8f4fd;
 }
 
-.sidebarCollapsed .navItem span {
-  display: none;
-}
-
-.sidebarCollapsed .navItem {
-  justify-content: center;
-  padding: 10px;
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 /* Main */
 .main {
   flex: 1;
-  margin-left: 260px;
-  padding: 24px 32px 40px;
+  padding: 88px 32px 40px; /* 헤더 높이만큼 위 여백 */
 }
 
-.sidebarCollapsed ~ .main {
-  margin-left: 80px;
-}
-
-.header {
+.pageHeader {
   margin-bottom: 18px;
 }
 

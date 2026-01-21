@@ -24,7 +24,7 @@ export default function HomePage() {
   );
 
   return (
-    <AppShell styles={styles} title="Home" activeNav="home" headerActions={headerActions}>
+    <AppShell styles={styles} title="MyPage" activeNav="mypage" headerActions={headerActions}>
       {/* Payment Status Section */}
           <section className={`${styles.section} ${styles.paymentSection}`}>
             <div className={styles.sectionHeader}>

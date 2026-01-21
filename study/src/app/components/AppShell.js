@@ -13,16 +13,10 @@ export function AppShell({ styles, title, activeNav, headerActions, children }) 
         </div>
         <nav className={styles.topNav}>
           <a
-            href="/home"
-            className={`${styles.topNavItem} ${activeNav === 'home' ? styles.topNavItemActive : ''}`}
+            href="/company"
+            className={`${styles.topNavItem} ${activeNav === 'company' ? styles.topNavItemActive : ''}`}
           >
-            HOME
-          </a>
-          <a
-            href="/rpa"
-            className={`${styles.topNavItem} ${activeNav === 'rpa' ? styles.topNavItemActive : ''}`}
-          >
-            RPA
+            COMANY
           </a>
           <a
             href="/aillm"
@@ -37,6 +31,12 @@ export function AppShell({ styles, title, activeNav, headerActions, children }) 
             AI OCR
           </a>
           <a
+            href="/rpa"
+            className={`${styles.topNavItem} ${activeNav === 'rpa' ? styles.topNavItemActive : ''}`}
+          >
+            RPA
+          </a>
+          <a
             href="/inquiry"
             className={`${styles.topNavItem} ${activeNav === 'inquiry' ? styles.topNavItemActive : ''}`}
           >
@@ -47,6 +47,12 @@ export function AppShell({ styles, title, activeNav, headerActions, children }) 
             className={`${styles.topNavItem} ${activeNav === 'settings' ? styles.topNavItemActive : ''}`}
           >
             SETTING
+          </a>
+          <a
+            href="/mypage"
+            className={`${styles.topNavItem} ${activeNav === 'mypage' ? styles.topNavItemActive : ''}`}
+          >
+            MYPAGE
           </a>
         </nav>
         <div className={styles.headerRight}>

@@ -1,7 +1,8 @@
-'use client';
+ 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import styles from './page.module.css';
+import { AppShell } from '../../components/AppShell';
 
 const PROJECTS = [
   {
@@ -24,7 +25,6 @@ const PROJECTS = [
 ];
 
 export default function RPAProjectPage({ params }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const projectId = Number(params?.id);
 
   const project = useMemo(
@@ -32,56 +32,15 @@ export default function RPAProjectPage({ params }) {
     [projectId]
   );
 
+  const headerActions = null;
+
   return (
-    <div className={styles.container}>
-      {/* Left Sidebar */}
-      <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
-        <div className={styles.sidebarHeader}>
-          <div className={styles.logo}>
-            <div className={styles.logoIcon}>SS</div>
-            <span className={styles.logoText}>시와소프트</span>
-          </div>
-          <button
-            className={styles.sidebarToggle}
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            aria-label="Toggle sidebar"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-        </div>
-
-        <nav className={styles.nav}>
-          <a href="/home" className={styles.navItem}>
-            <span>HOME</span>
-          </a>
-          <a href="/rpa" className={`${styles.navItem} ${styles.navItemActive}`}>
-            <span>RPA</span>
-          </a>
-          <a href="/aillm" className={styles.navItem}>
-            <span>AI LLM</span>
-          </a>
-          <a href="/ocr" className={styles.navItem}>
-            <span>AI OCR</span>
-          </a>
-          <a href="/inquiry" className={styles.navItem}>
-            <span>INQUIRY</span>
-          </a>
-          <a href="/settings" className={styles.navItem}>
-            <span>SETTING</span>
-          </a>
-        </nav>
-      </aside>
-
+    <AppShell styles={styles} title={project.summary} activeNav="rpa" headerActions={headerActions}>
       <main className={styles.main}>
-        <header className={styles.header}>
-          <div className={styles.headerTop}>
-            <a href="/rpa" className={styles.backLink}>←</a>
-            <span className={styles.headerTitle}>{project.summary}</span>
-          </div>
+        <div className={styles.pageHeader}>
+          <a href="/rpa" className={styles.backLink}>← RPA Analyst</a>
           <div className={styles.headerSubtitle}>{project.title}</div>
-        </header>
+        </div>
 
         <section className={styles.cards}>
           {project.tasks.map((task) => (
@@ -109,6 +68,6 @@ export default function RPAProjectPage({ params }) {
           </div>
         </section>
       </main>
-    </div>
+    </AppShell>
   );
 }
