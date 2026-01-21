@@ -1,103 +1,31 @@
 'use client';
 
-import { useState } from 'react';
 import styles from './page.module.css';
+import { AppShell } from '../components/AppShell';
 
 export default function HomePage() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const headerActions = (
+    <>
+      <button className={styles.headerButton}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+          <polyline points="22,6 12,13 2,6" />
+        </svg>
+        <span>문의하기</span>
+      </button>
+      <button className={styles.headerButton}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>알림 0</span>
+      </button>
+    </>
+  );
 
   return (
-    <div className={styles.container}>
-      {/* Left Sidebar */}
-      <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
-        <div className={styles.sidebarHeader}>
-          <div className={styles.logo}>
-            <div className={styles.logoIcon}>SS</div>
-            <span className={styles.logoText}>시와소프트</span>
-          </div>
-          <button 
-            className={styles.sidebarToggle}
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            aria-label="Toggle sidebar"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
-          </button>
-        </div>
-        
-        <nav className={styles.nav}>
-          <a href="/home" className={`${styles.navItem} ${styles.navItemActive}`}>
-            <svg className={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-            <span>HOME</span>
-          </a>
-          <a href="/rpa" className={styles.navItem}>
-            <svg className={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-            <span>RPA</span>
-          </a>
-          <a href="/chatbot" className={styles.navItem}>
-            <svg className={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            <span>AI LLM</span>
-          </a>
-          <a href="/ocr" className={styles.navItem}>
-            <svg className={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            <span>AI OCR</span>
-          </a>
-          <a href="/inquiry" className={styles.navItem}>
-            <svg className={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <span>INQUIRY</span>
-          </a>
-          <a href="/settings" className={styles.navItem}>
-            <svg className={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"/>
-            </svg>
-            <span>SETTING</span>
-          </a>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className={styles.main}>
-        {/* Header */}
-        <header className={styles.header}>
-          <h1 className={styles.pageTitle}>Home</h1>
-          <div className={styles.headerActions}>
-            <button className={styles.headerButton}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-              </svg>
-              <span>문의하기</span>
-            </button>
-            <button className={styles.headerButton}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
-              <span>알림 0</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Content Area */}
-        <div className={styles.content}>
-          {/* Payment Status Section */}
+    <AppShell styles={styles} title="Home" activeNav="home" headerActions={headerActions}>
+      {/* Payment Status Section */}
           <section className={`${styles.section} ${styles.paymentSection}`}>
             <div className={styles.sectionHeader}>
               <div>
@@ -317,8 +245,6 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-        </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }
