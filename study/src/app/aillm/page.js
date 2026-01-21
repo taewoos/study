@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import styles from './page.module.css';
+import { RichTextEditor } from '../../components/RichTextEditor';
 
 export default function AillmPage() {
   // Left panel state
@@ -53,6 +54,9 @@ export default function AillmPage() {
   const [activeCanvasItemId, setActiveCanvasItemId] = useState(null);
   const [selectedCanvasItemIds, setSelectedCanvasItemIds] = useState([]);
   const [editingTextItemId, setEditingTextItemId] = useState(null);
+  const [isTextModalOpen, setIsTextModalOpen] = useState(false);
+  const [textModalTargetId, setTextModalTargetId] = useState(null);
+  const [textModalContent, setTextModalContent] = useState('');
   const [defaultFillColor, setDefaultFillColor] = useState('#E8F4FD');
   const [defaultLineColor, setDefaultLineColor] = useState('#2f5f9e');
   const [defaultTextColor, setDefaultTextColor] = useState('#111111');
@@ -454,6 +458,11 @@ export default function AillmPage() {
     };
     setCanvasItems((prev) => [...prev, newItem]);
     setActiveCanvasItemId(newItem.id);
+    if (type === 'text') {
+      setTextModalTargetId(newItem.id);
+      setTextModalContent(preset.text || '');
+      setIsTextModalOpen(true);
+    }
   };
 
   const TABLE_CELL_SIZE = 36;
@@ -1152,68 +1161,7 @@ export default function AillmPage() {
     );
   };
 
-  const handleChangeActiveTextColor = (value) => {
-    // 표 셀을 선택한 경우에는 기본 텍스트 색을 건드리지 않고, 해당 셀만 색 변경
-    const activeItem = canvasItems.find((item) => item.id === activeCanvasItemId);
-    const isTable = activeItem?.type === 'table';
-    const isCellTarget =
-      isTable &&
-      activeTableCell &&
-      activeTableCell.tableId &&
-      activeCanvasItemId &&
-      activeTableCell.tableId === activeCanvasItemId;
-
-    if (!isCellTarget) {
-      // 셀 단위가 아닐 때만 기본 텍스트 색 업데이트
-      setDefaultTextColor(value);
-    }
-
-    if (!activeCanvasItemId) return;
-    pushCanvasHistory();
-
-    setCanvasItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== activeCanvasItemId) return item;
-
-        // 표 + 셀 선택된 경우: 그 셀만 색상 변경 (각 셀은 독립적)
-        if (isCellTarget && item.type === 'table' && activeTableCell.tableId === item.id) {
-          const { row, col } = activeTableCell;
-          const rows = item.rows || 1;
-          const cols = item.cols || 1;
-          const baseCellColors =
-            Array.isArray(item.cellColors) && item.cellColors.length === rows
-              ? item.cellColors.map((r) =>
-                  Array.isArray(r)
-                    ? [...r, ...Array(Math.max(0, cols - r.length)).fill(null)]
-                    : Array(cols).fill(null)
-                )
-              : Array.from({ length: rows }, () => Array(cols).fill(null));
-          const nextCellColors = baseCellColors.map((r) => [...r]);
-          if (row >= 0 && row < rows && col >= 0 && col < cols) {
-            nextCellColors[row][col] = value;
-          }
-          return {
-            ...item,
-            cellColors: nextCellColors
-          };
-        }
-
-        // 표 전체 선택된 경우: 표의 기본 텍스트 색 변경 (셀별 색이 없는 셀들에 적용)
-        if (item.type === 'table' && !isCellTarget) {
-          return {
-            ...item,
-            textColor: value
-          };
-        }
-
-        // 그 외 도형: 도형 전체 텍스트 색 변경
-        return {
-          ...item,
-          textColor: value
-        };
-      })
-    );
-  };
+  // 텍스트 색 변경 툴은 제거됨 (기본 텍스트 색은 도형/표 생성 시점 기준으로만 사용)
 
   const handleChangeActiveLinkColor = (value) => {
     // 기본 선 색 업데이트
@@ -3238,6 +3186,19 @@ export default function AillmPage() {
   const handleMemoContentChange = (id, content) => {
     setMemos(memos.map(m => m.id === id ? { ...m, content } : m));
   };
+
+  const handleTextModalApply = () => {
+    if (!textModalTargetId) {
+      setIsTextModalOpen(false);
+      return;
+    }
+    pushCanvasHistory();
+    setCanvasItems((prev) =>
+      prev.map((c) => (c.id === textModalTargetId ? { ...c, text: textModalContent } : c))
+    );
+    setIsTextModalOpen(false);
+    setTextModalTargetId(null);
+  };
   
   const handleMemoTitleChange = (id, title) => {
     setMemos(memos.map(m => m.id === id ? { ...m, title } : m));
@@ -3655,38 +3616,6 @@ export default function AillmPage() {
                   onMouseDown={(e) => e.stopPropagation()}
                 />
               </label>
-              <label className={styles.drawingColorLabel}>
-                텍스트색
-                <input
-                  type="color"
-                  className={styles.drawingColorInput}
-                value={(() => {
-                  const activeItem = canvasItems.find(
-                    (item) => item.id === activeCanvasItemId
-                  );
-
-                  // 표 + 셀 선택된 경우: 해당 셀의 색상 기준으로 도구 색상 표시
-                  if (
-                    activeItem &&
-                    activeItem.type === 'table' &&
-                    activeTableCell &&
-                    activeTableCell.tableId === activeItem.id
-                  ) {
-                    const { row, col } = activeTableCell;
-                    const cellColor =
-                      activeItem.cellColors &&
-                      activeItem.cellColors[row] &&
-                      activeItem.cellColors[row][col];
-                    return cellColor || activeItem.textColor || defaultTextColor;
-                  }
-
-                  // 그 외: 도형(또는 표)의 textColor -> 기본 텍스트색 순으로 표시
-                  return activeItem?.textColor || defaultTextColor;
-                })()}
-                  onChange={(e) => handleChangeActiveTextColor(e.target.value)}
-                  onMouseDown={(e) => e.stopPropagation()}
-                />
-              </label>
               <button
                 className={`${styles.drawingToolBtn} ${showCanvasGrid ? styles.drawingToolActive : ''}`}
                 onClick={() => setShowCanvasGrid((prev) => !prev)}
@@ -3927,42 +3856,21 @@ export default function AillmPage() {
               onClick={(e) => handleCanvasItemClick(e, item.id)}
               onDoubleClick={(e) => {
                 e.stopPropagation();
-                if (item.type === 'text') {
+                if (item.type === 'text' || item.type === 'rect' || item.type === 'circle') {
                   setActiveCanvasItemId(item.id);
                   setSelectedCanvasItemIds([item.id]);
-                  setEditingTextItemId(item.id);
+                  setTextModalTargetId(item.id);
+                  setTextModalContent(item.text || '');
+                  setIsTextModalOpen(true);
                 }
               }}
             >
               {item.type === 'text' ? (
-                editingTextItemId === item.id ? (
-                  <input
-                    className={styles.canvasTextInput}
-                    style={{ color: item.textColor || defaultTextColor }}
-                    autoFocus
-                    value={item.text}
-                    onChange={(e) =>
-                      setCanvasItems((prev) =>
-                        prev.map((c) => (c.id === item.id ? { ...c, text: e.target.value } : c))
-                      )
-                    }
-                    onBlur={() => setEditingTextItemId((prev) => (prev === item.id ? null : prev))}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        setEditingTextItemId((prev) => (prev === item.id ? null : prev));
-                      }
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <span
-                    className={styles.canvasItemLabel}
-                    style={{ color: item.textColor || defaultTextColor }}
-                  >
-                    {item.text || '텍스트'}
-                  </span>
-                )
+                <span
+                  className={styles.canvasItemLabel}
+                  style={{ color: item.textColor || defaultTextColor }}
+                  dangerouslySetInnerHTML={{ __html: item.text || '텍스트' }}
+                />
               ) : item.type === 'image' ? (
                 <img src={item.src} alt="canvas" className={styles.canvasImage} draggable="false" />
               ) : item.type === 'table' ? (
@@ -4350,27 +4258,11 @@ export default function AillmPage() {
                   );
                 })()
               ) : item.type === 'rect' || item.type === 'circle' ? (
-                activeCanvasItemId === item.id ? (
-                  <input
-                    className={styles.canvasShapeTextInput}
-                    style={{ color: item.textColor || defaultTextColor }}
-                    value={item.text || ''}
-                    onChange={(e) =>
-                      setCanvasItems((prev) =>
-                        prev.map((c) => (c.id === item.id ? { ...c, text: e.target.value } : c))
-                      )
-                    }
-                    placeholder="텍스트 입력"
-                    onMouseDown={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <span
-                    className={styles.canvasItemLabel}
-                    style={{ color: item.textColor || defaultTextColor }}
-                  >
-                    {item.text || ''}
-                  </span>
-                )
+                <span
+                  className={styles.canvasItemLabel}
+                  style={{ color: item.textColor || defaultTextColor }}
+                  dangerouslySetInnerHTML={{ __html: item.text || '' }}
+                />
               ) : (
                 <span className={styles.canvasItemLabel}>도형</span>
               )}
@@ -4603,6 +4495,53 @@ export default function AillmPage() {
                   생성
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isTextModalOpen && (
+        <div
+          className={styles.templateModalOverlay}
+          onClick={() => setIsTextModalOpen(false)}
+        >
+          <div
+            className={styles.templateModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.templateModalHeader}>
+              <h3 className={styles.templateModalTitle}>텍스트 편집</h3>
+              <button
+                className={styles.templateModalClose}
+                onClick={() => setIsTextModalOpen(false)}
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.templateModalBody}>
+              <RichTextEditor
+                value={textModalContent}
+                onChange={setTextModalContent}
+                className={styles.memoWindowTextarea}
+                placeholder="텍스트를 입력하세요..."
+              />
+            </div>
+            <div className={styles.tableModalFooter}>
+              <button
+                className={styles.templateDelete}
+                onClick={() => setIsTextModalOpen(false)}
+                type="button"
+              >
+                취소
+              </button>
+              <button
+                className={styles.templateSaveBtn}
+                onClick={handleTextModalApply}
+                type="button"
+              >
+                적용
+              </button>
             </div>
           </div>
         </div>
