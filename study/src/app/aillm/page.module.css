@@ -807,7 +807,10 @@
 }
 
 .canvasItemtext {
-  border-radius: 8px;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  color: #111;
 }
 
 .canvasItemarrow {
@@ -817,6 +820,12 @@
 
 .canvasItemline {
   border: none;
+  background: transparent;
+}
+
+.canvasItemActive.canvasItemtext {
+  border: 1px dashed #4A90E2;
+  box-shadow: none;
   background: transparent;
 }
 

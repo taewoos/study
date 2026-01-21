@@ -52,6 +52,11 @@ export default function AillmPage() {
   const [canvasItems, setCanvasItems] = useState([]);
   const [activeCanvasItemId, setActiveCanvasItemId] = useState(null);
   const [selectedCanvasItemIds, setSelectedCanvasItemIds] = useState([]);
+  const [editingTextItemId, setEditingTextItemId] = useState(null);
+  const [defaultFillColor, setDefaultFillColor] = useState('#E8F4FD');
+  const [defaultLineColor, setDefaultLineColor] = useState('#2f5f9e');
+  const [defaultTextColor, setDefaultTextColor] = useState('#111111');
+  const [defaultBorderColor, setDefaultBorderColor] = useState('#4A90E2');
   const [canvasGroups, setCanvasGroups] = useState([]);
   const [activeCanvasGroupId, setActiveCanvasGroupId] = useState(null);
   const [isDraggingCanvasItem, setIsDraggingCanvasItem] = useState(false);
@@ -412,10 +417,10 @@ export default function AillmPage() {
     const rect = getCanvasRect();
     const baseOffset = canvasItems.length * 20;
     const defaults = {
-      rect: { width: 160, height: 120, text: '', fill: '#E8F4FD' },
-      circle: { width: 140, height: 140, text: '', fill: '#E8F4FD' },
+      rect: { width: 160, height: 120, text: '', fill: defaultFillColor },
+      circle: { width: 140, height: 140, text: '', fill: defaultFillColor },
       text: { width: 200, height: 56, text: '텍스트 입력', fill: '#FFFFFF' },
-      arrow: { width: 220, height: 80, text: '', fill: '#2f5f9e' },
+      arrow: { width: 220, height: 80, text: '', fill: defaultLineColor },
       image: { width: 240, height: 160, text: '', fill: '#FFFFFF' }
     };
     const preset = defaults[type] || defaults.rect;
@@ -430,7 +435,12 @@ export default function AillmPage() {
       height: preset.height,
       text: preset.text,
       fill: preset.fill,
-      src: ''
+      src: '',
+      textColor: type === 'text' ? defaultTextColor : undefined,
+      borderColor:
+        type === 'rect' || type === 'circle' || type === 'text'
+          ? defaultBorderColor
+          : undefined
     };
     setCanvasItems((prev) => [...prev, newItem]);
     setActiveCanvasItemId(newItem.id);
@@ -442,6 +452,8 @@ export default function AillmPage() {
     e.preventDefault();
     e.stopPropagation();
     const item = canvasItems.find((c) => c.id === itemId);
+    // 텍스트 편집 중에는 드래그 비활성화
+    if (item?.type === 'text' && editingTextItemId === itemId) return;
     const rect = getCanvasRect();
     if (!item || !rect) return;
     pushCanvasHistory();
@@ -526,6 +538,7 @@ export default function AillmPage() {
     setActiveCanvasGroupId(null);
     setSelectedCanvasItemIds([]);
     setActiveCanvasLinkId(null);
+    setEditingTextItemId(null);
   };
 
   const handleDuplicateActiveCanvasItem = () => {
@@ -595,6 +608,8 @@ export default function AillmPage() {
   };
 
   const handleChangeActiveFill = (value) => {
+    // 기본 채우기 색 업데이트 (선택된 도형이 없어도 반영)
+    setDefaultFillColor(value);
     if (!activeCanvasItemId) return;
     pushCanvasHistory();
     setCanvasItems((prev) =>
@@ -602,12 +617,75 @@ export default function AillmPage() {
     );
   };
 
-  const handleChangeActiveLinkColor = (value) => {
-    if (!activeCanvasLinkId) return;
+  const handleChangeActiveTextColor = (value) => {
+    // 기본 텍스트 색 업데이트
+    setDefaultTextColor(value);
+    if (!activeCanvasItemId) return;
     pushCanvasHistory();
-    setCanvasLinks((prev) =>
-      prev.map((link) => (link.id === activeCanvasLinkId ? { ...link, color: value } : link))
+    setCanvasItems((prev) =>
+      prev.map((item) =>
+        item.id === activeCanvasItemId && item.type === 'text'
+          ? { ...item, textColor: value }
+          : item
+      )
     );
+  };
+
+  const handleChangeActiveLinkColor = (value) => {
+    // 기본 선 색 업데이트
+    setDefaultLineColor(value);
+    // 히스토리 저장 (선/화살표/라인 모두에 적용될 수 있으므로 한 번만)
+    pushCanvasHistory();
+
+    // 연결선 색 변경
+    if (activeCanvasLinkId) {
+      setCanvasLinks((prev) =>
+        prev.map((link) =>
+          link.id === activeCanvasLinkId ? { ...link, color: value } : link
+        )
+      );
+    }
+
+    // 화살표/자유선 도형 색 변경
+    if (activeCanvasItemId) {
+      setCanvasItems((prev) =>
+        prev.map((item) =>
+          item.id === activeCanvasItemId && (item.type === 'arrow' || item.type === 'line')
+            ? { ...item, fill: value }
+            : item
+        )
+      );
+    }
+  };
+
+  const handleChangeActiveBorderColor = (value) => {
+    const targetIds =
+      selectedCanvasItemIds && selectedCanvasItemIds.length
+        ? selectedCanvasItemIds
+        : activeCanvasItemId
+          ? [activeCanvasItemId]
+          : [];
+
+    // 선택된 도형이 없으면: 기본 테두리 색만 변경 (기존 도형은 그대로)
+    if (!targetIds.length) {
+      setDefaultBorderColor(value);
+      return;
+    }
+
+    // 선택된 도형이 있는 경우: 해당 도형들만 변경
+    const targetSet = new Set(targetIds);
+    pushCanvasHistory();
+    setCanvasItems((prev) =>
+      prev.map((item) =>
+        targetSet.has(item.id) &&
+        (item.type === 'rect' || item.type === 'circle' || item.type === 'text')
+          ? { ...item, borderColor: value }
+          : item
+      )
+    );
+
+    // 이후에 새로 만드는 도형의 기본 테두리 색도 이 값으로 설정
+    setDefaultBorderColor(value);
   };
 
   const handleChangeActiveLinkWidth = (value) => {
@@ -664,7 +742,7 @@ export default function AillmPage() {
       fromPort: connectFrom.port,
       toId: itemId,
       toPort: nearestPort,
-      color: '#2f5f9e',
+      color: defaultLineColor,
       width: 3,
       label: ''
     };
@@ -693,7 +771,7 @@ export default function AillmPage() {
       fromPort: connectFrom.port,
       toId: itemId,
       toPort: port,
-      color: '#2f5f9e',
+      color: defaultLineColor,
       width: 3,
       label: ''
     };
@@ -1024,7 +1102,7 @@ export default function AillmPage() {
       endX: lineDraft.endX,
       endY: lineDraft.endY,
       text: '',
-      fill: '#2f5f9e',
+      fill: defaultLineColor,
       strokeWidth: 3,
       src: ''
     };
@@ -1919,12 +1997,11 @@ export default function AillmPage() {
           if (width > 0 && height > 0) {
             const selectedIds = canvasItems
               .filter((item) => {
-                if (item.type === 'line' || item.type === 'arrow') return false;
                 const itemLeft = item.x;
                 const itemRight = item.x + item.width;
                 const itemTop = item.y;
                 const itemBottom = item.y + item.height;
-                // 선택 박스와 도형이 조금이라도 겹치면 선택
+                // 선택 박스와 도형/선/화살표가 조금이라도 겹치면 선택
                 const intersects =
                   itemRight >= x &&
                   itemLeft <= x + width &&
@@ -2948,11 +3025,11 @@ export default function AillmPage() {
                   type="color"
                   className={styles.drawingColorInput}
                   value={
-                    canvasLinks.find((link) => link.id === activeCanvasLinkId)?.color || '#2f5f9e'
+                    canvasLinks.find((link) => link.id === activeCanvasLinkId)?.color ||
+                    defaultLineColor
                   }
                   onChange={(e) => handleChangeActiveLinkColor(e.target.value)}
                   onMouseDown={(e) => e.stopPropagation()}
-                  disabled={!activeCanvasLinkId}
                 />
               </label>
               <label className={styles.drawingColorLabel}>
@@ -2987,11 +3064,37 @@ export default function AillmPage() {
                   type="color"
                   className={styles.drawingColorInput}
                   value={
-                    canvasItems.find((item) => item.id === activeCanvasItemId)?.fill || '#E8F4FD'
+                    canvasItems.find((item) => item.id === activeCanvasItemId)?.fill ||
+                    defaultFillColor
                   }
                   onChange={(e) => handleChangeActiveFill(e.target.value)}
                   onMouseDown={(e) => e.stopPropagation()}
-                  disabled={!activeCanvasItemId}
+                />
+              </label>
+              <label className={styles.drawingColorLabel}>
+                테두리
+                <input
+                  type="color"
+                  className={styles.drawingColorInput}
+                  value={
+                    canvasItems.find((item) => item.id === activeCanvasItemId)?.borderColor ||
+                    defaultBorderColor
+                  }
+                  onChange={(e) => handleChangeActiveBorderColor(e.target.value)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                />
+              </label>
+              <label className={styles.drawingColorLabel}>
+                텍스트색
+                <input
+                  type="color"
+                  className={styles.drawingColorInput}
+                  value={
+                    canvasItems.find((item) => item.id === activeCanvasItemId)?.textColor ||
+                    defaultTextColor
+                  }
+                  onChange={(e) => handleChangeActiveTextColor(e.target.value)}
+                  onMouseDown={(e) => e.stopPropagation()}
                 />
               </label>
               <button
@@ -3093,19 +3196,6 @@ export default function AillmPage() {
             />
           )}
           <svg className={styles.canvasLinks} aria-hidden="true">
-            <defs>
-              <marker
-                id="link-arrow"
-                markerWidth="10"
-                markerHeight="10"
-                refX="8"
-                refY="3"
-                orient="auto"
-                markerUnits="strokeWidth"
-              >
-                <path d="M0,0 L0,6 L9,3 z" fill="#2f5f9e" />
-              </marker>
-            </defs>
             {canvasLinks.map((link) => {
               const path = getConnectionPath(link);
               const endpoints = getLinkEndpoints(link);
@@ -3114,12 +3204,28 @@ export default function AillmPage() {
               if (!path) return null;
               return (
                 <g key={link.id}>
+                  <defs>
+                    <marker
+                      id={`link-arrow-${link.id}`}
+                      markerWidth="10"
+                      markerHeight="10"
+                      refX="8"
+                      refY="3"
+                      orient="auto"
+                      markerUnits="strokeWidth"
+                    >
+                      <path
+                        d="M0,0 L0,6 L9,3 z"
+                        fill={link.color || defaultLineColor}
+                      />
+                    </marker>
+                  </defs>
                   <path
                     d={path}
                     fill="none"
-                    stroke={link.id === activeCanvasLinkId ? '#4A90E2' : link.color || '#2f5f9e'}
+                    stroke={link.color || defaultLineColor}
                     strokeWidth={link.id === activeCanvasLinkId ? (link.width || 3) + 1 : link.width || 3}
-                    markerEnd="url(#link-arrow)"
+                    markerEnd={`url(#link-arrow-${link.id})`}
                     className={styles.canvasLinkLine}
                     onMouseDown={(e) => {
                       e.stopPropagation();
@@ -3217,25 +3323,56 @@ export default function AillmPage() {
                 width: `${item.width}px`,
                 height: `${item.height}px`,
                 backgroundColor:
-                  item.type === 'arrow' || item.type === 'line' ? 'transparent' : item.fill || undefined,
+                  item.type === 'arrow' || item.type === 'line' || item.type === 'text'
+                    ? 'transparent'
+                    : item.fill || undefined,
                 border: item.type === 'arrow' || item.type === 'line' ? 'none' : undefined,
-                borderColor: item.type === 'arrow' || item.type === 'line' ? 'transparent' : undefined,
+                borderColor:
+                  item.type === 'arrow' || item.type === 'line'
+                    ? 'transparent'
+                    : item.borderColor || '#4A90E2',
                 boxShadow: item.type === 'arrow' || item.type === 'line' ? 'none' : undefined
               }}
               onMouseDown={(e) => handleCanvasItemDragStart(e, item.id)}
               onClick={(e) => handleCanvasItemClick(e, item.id)}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                if (item.type === 'text') {
+                  setActiveCanvasItemId(item.id);
+                  setSelectedCanvasItemIds([item.id]);
+                  setEditingTextItemId(item.id);
+                }
+              }}
             >
               {item.type === 'text' ? (
-                <input
-                  className={styles.canvasTextInput}
-                  value={item.text}
-                  onChange={(e) =>
-                    setCanvasItems((prev) =>
-                      prev.map((c) => (c.id === item.id ? { ...c, text: e.target.value } : c))
-                    )
-                  }
-                  onMouseDown={(e) => e.stopPropagation()}
-                />
+                editingTextItemId === item.id ? (
+                  <input
+                    className={styles.canvasTextInput}
+                    style={{ color: item.textColor || defaultTextColor }}
+                    autoFocus
+                    value={item.text}
+                    onChange={(e) =>
+                      setCanvasItems((prev) =>
+                        prev.map((c) => (c.id === item.id ? { ...c, text: e.target.value } : c))
+                      )
+                    }
+                    onBlur={() => setEditingTextItemId((prev) => (prev === item.id ? null : prev))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        setEditingTextItemId((prev) => (prev === item.id ? null : prev));
+                      }
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <span
+                    className={styles.canvasItemLabel}
+                    style={{ color: item.textColor || defaultTextColor }}
+                  >
+                    {item.text || '텍스트'}
+                  </span>
+                )
               ) : item.type === 'image' ? (
                 <img src={item.src} alt="canvas" className={styles.canvasImage} draggable="false" />
               ) : item.type === 'arrow' ? (
@@ -3250,7 +3387,10 @@ export default function AillmPage() {
                       orient="auto"
                       markerUnits="strokeWidth"
                     >
-                      <path d="M0,0 L0,6 L9,3 z" fill="#2f5f9e" />
+                      <path
+                        d="M0,0 L0,6 L9,3 z"
+                        fill={item.fill || defaultLineColor}
+                      />
                     </marker>
                   </defs>
                   <line
@@ -3258,7 +3398,7 @@ export default function AillmPage() {
                     y1="0"
                     x2={item.width}
                     y2={item.height}
-                    stroke={item.fill || '#2f5f9e'}
+                    stroke={item.fill || defaultLineColor}
                     strokeWidth="3"
                     markerEnd={`url(#arrow-${item.id})`}
                   />
