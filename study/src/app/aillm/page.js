@@ -131,6 +131,7 @@ export default function AillmPage() {
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
   const [editingTableId, setEditingTableId] = useState(null);
+  const [activeTableCell, setActiveTableCell] = useState(null); // { tableId, row, col }
   
   const leftPanelRef = useRef(null);
   const rightPanelRef = useRef(null);
@@ -479,7 +480,12 @@ export default function AillmPage() {
       rows: safeRows,
       cols: safeCols,
       fill: '#FFFFFF',
-      borderColor: defaultBorderColor
+      borderColor: defaultBorderColor,
+      // 테이블 생성 시점의 텍스트 색을 고정해서,
+      // 이후 전역 기본 텍스트 색 변경 시 기존 표 안 텍스트가 같이 변하지 않도록 함
+      textColor: defaultTextColor,
+      cells: Array.from({ length: safeRows }, () => Array(safeCols).fill('')),
+      cellColors: Array.from({ length: safeRows }, () => Array(safeCols).fill(null))
     };
 
     setCanvasItems((prev) => [...prev, newItem]);
@@ -496,46 +502,74 @@ export default function AillmPage() {
         let cols = item.cols || 1;
         let x = item.x;
         let y = item.y;
+        let cells =
+          Array.isArray(item.cells) && item.cells.length === rows
+            ? item.cells.map((r) =>
+                Array.isArray(r) ? [...r] : Array(cols).fill('')
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(''));
+        let cellColors =
+          Array.isArray(item.cellColors) && item.cellColors.length === rows
+            ? item.cellColors.map((r) =>
+                Array.isArray(r) ? [...r] : Array(cols).fill(null)
+              )
+            : Array.from({ length: rows }, () => Array(cols).fill(null));
 
         switch (type) {
           // 열 추가
           case 'colRightPlus':
             cols += 1;
+            cells = cells.map((row) => [...row, '']);
+            cellColors = cellColors.map((row) => [...row, null]);
             break;
           case 'colLeftPlus':
             cols += 1;
             x -= TABLE_CELL_SIZE;
+            cells = cells.map((row) => ['', ...row]);
+            cellColors = cellColors.map((row) => [null, ...row]);
             break;
           // 열 삭제
           case 'colRightMinus':
             if (cols > 1) {
               cols -= 1;
+              cells = cells.map((row) => row.slice(0, cols));
+              cellColors = cellColors.map((row) => row.slice(0, cols));
             }
             break;
           case 'colLeftMinus':
             if (cols > 1) {
               cols -= 1;
               x += TABLE_CELL_SIZE;
+              cells = cells.map((row) => row.slice(1));
+              cellColors = cellColors.map((row) => row.slice(1));
             }
             break;
           // 행 추가
           case 'rowTopPlus':
             rows += 1;
             y -= TABLE_CELL_SIZE;
+            cells = [Array(cols).fill(''), ...cells];
+            cellColors = [Array(cols).fill(null), ...cellColors];
             break;
           case 'rowBottomPlus':
             rows += 1;
+            cells = [...cells, Array(cols).fill('')];
+            cellColors = [...cellColors, Array(cols).fill(null)];
             break;
           // 행 삭제
           case 'rowTopMinus':
             if (rows > 1) {
               rows -= 1;
               y += TABLE_CELL_SIZE;
+              cells = cells.slice(1);
+              cellColors = cellColors.slice(1);
             }
             break;
           case 'rowBottomMinus':
             if (rows > 1) {
               rows -= 1;
+              cells = cells.slice(0, rows);
+              cellColors = cellColors.slice(0, rows);
             }
             break;
           default:
@@ -548,6 +582,8 @@ export default function AillmPage() {
           y,
           rows,
           cols,
+          cells,
+          cellColors,
           width: cols * TABLE_CELL_SIZE,
           height: rows * TABLE_CELL_SIZE
         };
@@ -692,16 +728,65 @@ export default function AillmPage() {
   };
 
   const handleChangeActiveTextColor = (value) => {
-    // 기본 텍스트 색 업데이트
-    setDefaultTextColor(value);
+    // 표 셀을 선택한 경우에는 기본 텍스트 색을 건드리지 않고, 해당 셀만 색 변경
+    const activeItem = canvasItems.find((item) => item.id === activeCanvasItemId);
+    const isTable = activeItem?.type === 'table';
+    const isCellTarget =
+      isTable &&
+      activeTableCell &&
+      activeTableCell.tableId &&
+      activeCanvasItemId &&
+      activeTableCell.tableId === activeCanvasItemId;
+
+    if (!isCellTarget) {
+      // 셀 단위가 아닐 때만 기본 텍스트 색 업데이트
+      setDefaultTextColor(value);
+    }
+
     if (!activeCanvasItemId) return;
     pushCanvasHistory();
+
     setCanvasItems((prev) =>
-      prev.map((item) =>
-        item.id === activeCanvasItemId
-          ? { ...item, textColor: value }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id !== activeCanvasItemId) return item;
+
+        // 표 + 셀 선택된 경우: 그 셀만 색상 변경 (각 셀은 독립적)
+        if (isCellTarget && item.type === 'table' && activeTableCell.tableId === item.id) {
+          const { row, col } = activeTableCell;
+          const rows = item.rows || 1;
+          const cols = item.cols || 1;
+          const baseCellColors =
+            Array.isArray(item.cellColors) && item.cellColors.length === rows
+              ? item.cellColors.map((r) =>
+                  Array.isArray(r)
+                    ? [...r, ...Array(Math.max(0, cols - r.length)).fill(null)]
+                    : Array(cols).fill(null)
+                )
+              : Array.from({ length: rows }, () => Array(cols).fill(null));
+          const nextCellColors = baseCellColors.map((r) => [...r]);
+          if (row >= 0 && row < rows && col >= 0 && col < cols) {
+            nextCellColors[row][col] = value;
+          }
+          return {
+            ...item,
+            cellColors: nextCellColors
+          };
+        }
+
+        // 표 전체 선택된 경우: 표의 기본 텍스트 색 변경 (셀별 색이 없는 셀들에 적용)
+        if (item.type === 'table' && !isCellTarget) {
+          return {
+            ...item,
+            textColor: value
+          };
+        }
+
+        // 그 외 도형: 도형 전체 텍스트 색 변경
+        return {
+          ...item,
+          textColor: value
+        };
+      })
     );
   };
 
@@ -815,6 +900,7 @@ export default function AillmPage() {
   const handleCanvasItemClick = (e, itemId) => {
     e.stopPropagation();
     setActiveCanvasLinkId(null);
+    setActiveTableCell(null);
     if (!isConnectMode) {
       // 그룹에 속해 있으면 그룹 전체 선택
       const group = canvasGroups.find((g) => g.itemIds.includes(itemId));
@@ -3149,10 +3235,29 @@ export default function AillmPage() {
                 <input
                   type="color"
                   className={styles.drawingColorInput}
-                  value={
-                    canvasItems.find((item) => item.id === activeCanvasItemId)?.textColor ||
-                    defaultTextColor
+                value={(() => {
+                  const activeItem = canvasItems.find(
+                    (item) => item.id === activeCanvasItemId
+                  );
+
+                  // 표 + 셀 선택된 경우: 해당 셀의 색상 기준으로 도구 색상 표시
+                  if (
+                    activeItem &&
+                    activeItem.type === 'table' &&
+                    activeTableCell &&
+                    activeTableCell.tableId === activeItem.id
+                  ) {
+                    const { row, col } = activeTableCell;
+                    const cellColor =
+                      activeItem.cellColors &&
+                      activeItem.cellColors[row] &&
+                      activeItem.cellColors[row][col];
+                    return cellColor || activeItem.textColor || defaultTextColor;
                   }
+
+                  // 그 외: 도형(또는 표)의 textColor -> 기본 텍스트색 순으로 표시
+                  return activeItem?.textColor || defaultTextColor;
+                })()}
                   onChange={(e) => handleChangeActiveTextColor(e.target.value)}
                   onMouseDown={(e) => e.stopPropagation()}
                 />
@@ -3444,8 +3549,63 @@ export default function AillmPage() {
                           {Array.from({ length: item.cols || 1 }).map((_, colIdx) => (
                             <td
                               key={colIdx}
-                              style={{ borderColor: item.borderColor || defaultBorderColor }}
-                            />
+                              style={{
+                                borderColor: item.borderColor || defaultBorderColor,
+                                color:
+                                  (item.cellColors &&
+                                    item.cellColors[rowIdx] &&
+                                    item.cellColors[rowIdx][colIdx]) ||
+                                  item.textColor ||
+                                  defaultTextColor
+                              }}
+                              contentEditable
+                              suppressContentEditableWarning
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                // 셀 선택 (색상 변경 대상)
+                                e.stopPropagation();
+                                setActiveCanvasItemId(item.id);
+                                setSelectedCanvasItemIds([item.id]);
+                                setActiveTableCell({ tableId: item.id, row: rowIdx, col: colIdx });
+                              }}
+                              onDoubleClick={(e) => {
+                                // 더블클릭 시 셀 안에 바로 커서가 들어가도록 포커스
+                                e.stopPropagation();
+                                const target = e.currentTarget;
+                                // 이미 contentEditable 이므로 포커스만 주면 됨
+                                target.focus();
+                              }}
+                              onBlur={(e) => {
+                                const value = e.target.textContent || '';
+                                // 셀 내용 편집도 undo 대상이 되도록 히스토리 저장
+                                pushCanvasHistory();
+                                setCanvasItems((prev) =>
+                                  prev.map((c) => {
+                                    if (c.id !== item.id || c.type !== 'table') return c;
+                                    const rows = c.rows || 1;
+                                    const cols = c.cols || 1;
+                                    const baseCells =
+                                      Array.isArray(c.cells) && c.cells.length === rows
+                                        ? c.cells.map((r) =>
+                                            Array.isArray(r)
+                                              ? [...r, ...Array(Math.max(0, cols - r.length)).fill('')]
+                                              : Array(cols).fill('')
+                                          )
+                                        : Array.from({ length: rows }, () => Array(cols).fill(''));
+                                    const nextCells = baseCells.map((r) => [...r]);
+                                    nextCells[rowIdx][colIdx] = value;
+                                    return {
+                                      ...c,
+                                      cells: nextCells
+                                    };
+                                  })
+                                );
+                              }}
+                            >
+                              {item.cells &&
+                                item.cells[rowIdx] &&
+                                item.cells[rowIdx][colIdx]}
+                            </td>
                           ))}
                         </tr>
                       ))}

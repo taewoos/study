@@ -1005,11 +1005,13 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  display: inline-flex;
+  transform: none;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  padding: 2px 4px;
+  padding: 4px;
   background: rgba(255, 255, 255, 0.92);
-  border-radius: 999px;
+  border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
   z-index: 2;
 }
