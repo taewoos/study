@@ -3193,15 +3193,9 @@ export default function AillmPage() {
     // 표 셀 편집인 경우
     if (textModalTableTarget) {
       const { tableId, row, col } = textModalTableTarget;
-      // 리치텍스트에서 줄바꿈을 \n으로 변환하고, 나머지 태그는 제거
-      let plainText = textModalContent || '';
-      plainText = plainText
-        .replace(/<br\s*\/?>/gi, '\n')                 // <br> -> 줄바꿈
-        .replace(/<\/p>\s*<p>/gi, '\n')                // 문단 사이를 줄바꿈으로
-        .replace(/<\/?p[^>]*>/gi, '')                  // <p>, </p> 태그 제거
-        .replace(/<[^>]*>/g, '')                       // 기타 HTML 태그 제거
-        .replace(/&nbsp;/g, ' ')                       // 공백 엔티티 정리
-        .trim();
+
+      // 리치텍스트 HTML 전체를 그대로 저장해서 색상/스타일을 유지
+      const html = (textModalContent || '').trim();
 
       pushCanvasHistory();
       setCanvasItems((prev) =>
@@ -3218,7 +3212,7 @@ export default function AillmPage() {
                 )
               : Array.from({ length: rows }, () => Array(cols).fill(''));
           const nextCells = baseCells.map((r) => [...r]);
-          nextCells[row][col] = plainText;
+          nextCells[row][col] = html;
           return {
             ...c,
             cells: nextCells
@@ -3969,7 +3963,6 @@ export default function AillmPage() {
                                 // 표 셀은 직접 편집하지 않고 모달로만 편집
                                 contentEditable={false}
                                 suppressContentEditableWarning
-                                onMouseDown={(e) => e.stopPropagation()}
                                 onClick={(e) => {
                                   // 셀 선택 (색상/병합 대상)
                                   e.stopPropagation();
@@ -3998,11 +3991,16 @@ export default function AillmPage() {
                                   setIsTextModalOpen(true);
                                 }}
                               >
-                                <div className={styles.canvasTableCellContent}>
-                                  {item.cells &&
-                                    item.cells[rowIdx] &&
-                                    item.cells[rowIdx][colIdx]}
-                                </div>
+                                <div
+                                  className={styles.canvasTableCellContent}
+                                  dangerouslySetInnerHTML={{
+                                    __html:
+                                      (item.cells &&
+                                        item.cells[rowIdx] &&
+                                        item.cells[rowIdx][colIdx]) ||
+                                      ''
+                                  }}
+                                />
                               </td>
                             );
                           })}

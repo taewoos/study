@@ -1022,9 +1022,13 @@
 }
 
 .canvasTableCellContent {
-  /* 셀 안에서 여러 줄 줄바꿈 표시 */
-  white-space: pre-wrap;
+  /* 셀 안에서 여러 줄/스타일을 자연스럽게 표시 */
+  white-space: normal;
   word-break: break-word;
+}
+
+.canvasTableCellContent p {
+  margin: 0;
 }
 
 .canvasTableToolbar {
