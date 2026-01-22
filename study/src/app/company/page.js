@@ -83,18 +83,197 @@ export default function CompanyPage() {
     setSelectedFeature(feature);
   };
 
+  // 한글을 자모 단위로 분리하는 함수
+  const decomposeHangul = (char) => {
+    const code = char.charCodeAt(0);
+    if (code < 0xAC00 || code > 0xD7A3) {
+      // 한글이 아니면 그대로 반환
+      return [char];
+    }
+    
+    const base = code - 0xAC00;
+    const cho = Math.floor(base / (21 * 28));
+    const jung = Math.floor((base % (21 * 28)) / 28);
+    const jong = base % 28;
+    
+    const choList = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+    const jungList = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
+    const jongList = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+    
+    const result = [choList[cho], jungList[jung]];
+    if (jong > 0) {
+      result.push(jongList[jong]);
+    }
+    return result;
+  };
+
+  // 텍스트를 글자별 자모 배열로 변환 (각 글자의 자모를 그룹화)
+  const textToJamoGroups = (text) => {
+    const groups = [];
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char === ' ') {
+        groups.push({ type: 'space', jamos: [' '], original: ' ' });
+      } else {
+        const jamos = decomposeHangul(char);
+        groups.push({ type: 'hangul', jamos: jamos, original: char });
+      }
+    }
+    return groups;
+  };
+
+  // 자모 그룹 배열을 텍스트로 조합 (진행 중인 자모 포함)
+  const combineJamoGroups = (groups, jamoCount) => {
+    let result = '';
+    let currentJamoIndex = 0;
+    
+    for (const group of groups) {
+      if (group.type === 'space') {
+        if (currentJamoIndex < jamoCount) {
+          result += ' ';
+          currentJamoIndex++;
+        }
+        continue;
+      }
+      
+      // 이 그룹의 자모 개수
+      const groupJamoCount = group.jamos.length;
+      
+      // 이 그룹에 속한 자모가 몇 개나 표시되어야 하는지
+      const remainingJamos = jamoCount - currentJamoIndex;
+      
+      if (remainingJamos <= 0) {
+        break;
+      }
+      
+      if (remainingJamos >= groupJamoCount) {
+        // 이 그룹의 모든 자모가 표시됨 - 완성된 글자로 조합
+        result += group.original;
+        currentJamoIndex += groupJamoCount;
+      } else {
+        // 이 그룹의 일부 자모만 표시됨 - 자모를 조합 시도
+        const displayedJamos = group.jamos.slice(0, remainingJamos);
+        const combined = tryCombineJamos(displayedJamos);
+        result += combined;
+        currentJamoIndex += remainingJamos;
+        break; // 더 이상 표시할 자모가 없음
+      }
+    }
+    
+    return result;
+  };
+
+  // 자모 배열을 조합 시도 (가능한 만큼만 조합)
+  const tryCombineJamos = (jamoArray) => {
+    if (jamoArray.length === 0) return '';
+    
+    let result = '';
+    let i = 0;
+    
+    while (i < jamoArray.length) {
+      const choList = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+      const choIndex = choList.indexOf(jamoArray[i]);
+      
+      if (choIndex === -1) {
+        // 초성이 아니면 그대로 추가 (영문, 숫자 등)
+        result += jamoArray[i];
+        i++;
+        continue;
+      }
+      
+      // 중성 확인
+      if (i + 1 >= jamoArray.length) {
+        // 중성이 없으면 초성만 표시
+        result += jamoArray[i];
+        i++;
+        break; // 더 이상 조합할 수 없음
+      }
+      
+      const jungList = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
+      const jungIndex = jungList.indexOf(jamoArray[i + 1]);
+      
+      if (jungIndex === -1) {
+        // 중성이 아니면 초성만 표시하고 중단
+        result += jamoArray[i];
+        i++;
+        break; // 더 이상 조합할 수 없음
+      }
+      
+      // 종성 확인
+      let jongIndex = 0;
+      let hasJong = false;
+      if (i + 2 < jamoArray.length) {
+        const jongList = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+        const tempJongIndex = jongList.indexOf(jamoArray[i + 2]);
+        if (tempJongIndex !== -1) {
+          jongIndex = tempJongIndex;
+          hasJong = true;
+        }
+      }
+      
+      if (hasJong) {
+        // 초성 + 중성 + 종성 조합
+        const charCode = 0xAC00 + (choIndex * 21 * 28) + (jungIndex * 28) + jongIndex;
+        result += String.fromCharCode(charCode);
+        i += 3;
+      } else {
+        // 초성 + 중성만 조합
+        const charCode = 0xAC00 + (choIndex * 21 * 28) + (jungIndex * 28);
+        result += String.fromCharCode(charCode);
+        i += 2;
+      }
+      
+      // 한 글자만 조합하고 중단 (다음 글자의 자모와 섞이지 않도록)
+      break;
+    }
+    
+    // 조합되지 않은 자모 추가 (진행 중인 자모)
+    while (i < jamoArray.length) {
+      result += jamoArray[i];
+      i++;
+    }
+    
+    return result;
+  };
+
   useEffect(() => {
     const createFloatingText = () => {
       const randomText = sloganTexts[Math.floor(Math.random() * sloganTexts.length)];
-      // 슬로건 텍스트 영역을 피한 위치 (상단 20%와 하단 30% 영역)
-      const top = Math.random() < 0.5 
-        ? Math.random() * 15 + 5  // 상단 5% ~ 20%
-        : Math.random() * 25 + 70; // 하단 70% ~ 95%
+      // 슬로건 텍스트와 시작하기 버튼 영역을 피한 위치
+      // 중앙 영역(30% ~ 70%)을 피하고 상단 또는 하단에 배치
+      let top;
+      const randomValue = Math.random();
+      if (randomValue < 0.5) {
+        // 상단 영역: 5% ~ 25%
+        top = Math.random() * 20 + 5;
+      } else {
+        // 하단 영역: 75% ~ 95%
+        top = Math.random() * 20 + 75;
+      }
+      
+      // 좌우 위치도 중앙 영역을 피하도록 조정 (중앙 40% ~ 60% 영역 피하기)
+      let left;
+      const leftRandom = Math.random();
+      if (leftRandom < 0.5) {
+        // 좌측 영역: 10% ~ 35%
+        left = Math.random() * 25 + 10;
+      } else {
+        // 우측 영역: 65% ~ 90%
+        left = Math.random() * 25 + 65;
+      }
+      
+      // 텍스트를 글자별 자모 그룹으로 변환
+      const jamoGroups = textToJamoGroups(randomText);
+      // 전체 자모 개수 계산
+      const totalJamoCount = jamoGroups.reduce((sum, group) => sum + group.jamos.length, 0);
+      
       return {
         id: Math.random(),
         text: randomText,
-        displayedText: '',
-        left: Math.random() * 70 + 15, // 15% ~ 85%
+        jamoGroups: jamoGroups,
+        totalJamoCount: totalJamoCount,
+        displayedJamoCount: 0,
+        left: left,
         top: top,
         delay: Math.random() * 300,
         isTyping: true,
@@ -105,14 +284,18 @@ export default function CompanyPage() {
     const initialTexts = [createFloatingText(), createFloatingText()];
     setFloatingTexts(initialTexts);
 
-    // 타자 효과를 위한 인터벌
+    // 타자 효과를 위한 인터벌 (자모 단위로 타이핑)
     const typingInterval = setInterval(() => {
       setFloatingTexts((prev) => {
         return prev.map((item) => {
-          if (item.isTyping && item.displayedText.length < item.text.length) {
+          if (item.isTyping && item.displayedJamoCount < item.totalJamoCount) {
+            const newCount = item.displayedJamoCount + 1;
+            const displayedText = combineJamoGroups(item.jamoGroups, newCount);
+            
             return {
               ...item,
-              displayedText: item.text.substring(0, item.displayedText.length + 1),
+              displayedText: displayedText,
+              displayedJamoCount: newCount,
             };
           } else if (item.isTyping) {
             return {
@@ -123,7 +306,7 @@ export default function CompanyPage() {
           return item;
         });
       });
-    }, 100);
+    }, 80); // 자모 단위로 빠르게 타이핑
 
     // 주기적으로 텍스트 교체
     const replaceInterval = setInterval(() => {
