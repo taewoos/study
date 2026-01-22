@@ -151,10 +151,62 @@
 
 /* Slogan Section - GPT Style */
 .sloganSection {
-  background: #ffffff;
+  background: #f5f5f5;
   padding: 120px 32px 100px;
   text-align: center;
   border-bottom: 1px solid #e5e5e5;
+  position: relative;
+  overflow: hidden;
+}
+
+.floatingText {
+  position: absolute;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(26, 26, 26, 0.6);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: textFloat 6s ease-in-out forwards;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+.floatingText {
+  animation: textFloat 6s ease-in-out forwards;
+}
+
+@keyframes textFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-10px);
+  }
+}
+
+.cursor {
+  display: inline-block;
+  animation: blink 1s infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
 }
 
 .sloganContent {
@@ -261,25 +313,244 @@
   width: 100%;
 }
 
-/* Main Description */
-.mainDescription {
-  background: #fafafa;
-  border: 2px solid #666666;
-  border-radius: 8px;
-  padding: 40px;
-  min-height: 500px;
-  margin-left: -80px;
-  margin-right: -80px;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
 .mainDescriptionTitle {
   font-size: 32px;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 24px 0;
+  margin: 0 0 48px 0;
   letter-spacing: -0.02em;
+  text-align: center;
+}
+
+/* Feature Cards Grid */
+.featureCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-left: -80px;
+  margin-right: -80px;
+  max-width: calc(100% + 160px);
+}
+
+.featureCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 1.3;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  transform: scale(0.95);
+  height: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.featureCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4A90E2 0%, #50C878 50%, #FF6B6B 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.featureCard:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  transform: scale(0.97) translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.featureCard:hover::before {
+  opacity: 1;
+}
+
+.featureCardImage {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.featureCardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.featureCard:hover .featureCardImage img {
+  transform: scale(1.05);
+}
+
+.featureCardText {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 12px 18px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  z-index: 1;
+  transition: background 0.3s ease;
+}
+
+.featureCard:hover .featureCardText {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
+}
+
+.featureCardText .featureCardTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff !important;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+  text-align: left;
+  align-self: flex-start;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.featureCardText .featureCardDescription {
+  font-size: 16px;
+  line-height: 1.4;
+  color: #ffffff !important;
+  margin: 0;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.featureCardTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 1000px;
+  max-height: 85vh;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modalCloseButton {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 50%;
+  color: #666666;
+  font-size: 24px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s;
+}
+
+.modalCloseButton:hover {
+  background: #e5e5e5;
+  color: #1a1a1a;
+  transform: rotate(90deg);
+}
+
+.modalContent {
+  padding: 60px 50px 50px;
+  overflow-y: auto;
+  max-height: 85vh;
+}
+
+.modalTitle {
+  font-size: 42px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 32px 0;
+  letter-spacing: -0.02em;
+}
+
+.modalBody {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #333333;
+}
+
+.modalBody p {
+  margin: 0 0 20px 0;
+}
+
+.modalBody p:last-child {
+  margin-bottom: 0;
 }
 
 .mainDescriptionText {
