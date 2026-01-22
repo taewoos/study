@@ -237,30 +237,64 @@ export default function CompanyPage() {
   };
 
   useEffect(() => {
-    const createFloatingText = () => {
-      const randomText = sloganTexts[Math.floor(Math.random() * sloganTexts.length)];
-      // 슬로건 텍스트와 시작하기 버튼 영역을 피한 위치
-      // 중앙 영역(30% ~ 70%)을 피하고 상단 또는 하단에 배치
-      let top;
-      const randomValue = Math.random();
-      if (randomValue < 0.5) {
-        // 상단 영역: 5% ~ 25%
-        top = Math.random() * 20 + 5;
-      } else {
-        // 하단 영역: 75% ~ 95%
-        top = Math.random() * 20 + 75;
-      }
+    // 두 점 사이의 거리 계산 (유클리드 거리)
+    const getDistance = (x1, y1, x2, y2) => {
+      return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    };
+
+    // 기존 텍스트들과 충분한 거리를 두는 위치 찾기
+    const findValidPosition = (existingTexts, minDistance = 12) => {
+      let attempts = 0;
+      const maxAttempts = 50;
       
-      // 좌우 위치도 중앙 영역을 피하도록 조정 (중앙 40% ~ 60% 영역 피하기)
-      let left;
-      const leftRandom = Math.random();
-      if (leftRandom < 0.5) {
-        // 좌측 영역: 10% ~ 35%
-        left = Math.random() * 25 + 10;
-      } else {
-        // 우측 영역: 65% ~ 90%
-        left = Math.random() * 25 + 65;
+      while (attempts < maxAttempts) {
+        // 슬로건 텍스트와 시작하기 버튼 영역을 피한 위치
+        // 중앙 영역(30% ~ 70%)을 피하고 상단 또는 하단에 배치
+        let top;
+        const randomValue = Math.random();
+        if (randomValue < 0.5) {
+          // 상단 영역: 5% ~ 25%
+          top = Math.random() * 20 + 5;
+        } else {
+          // 하단 영역: 75% ~ 95%
+          top = Math.random() * 20 + 75;
+        }
+        
+        // 좌우 위치도 중앙 영역을 피하도록 조정 (중앙 40% ~ 60% 영역 피하기)
+        let left;
+        const leftRandom = Math.random();
+        if (leftRandom < 0.5) {
+          // 좌측 영역: 10% ~ 35%
+          left = Math.random() * 25 + 10;
+        } else {
+          // 우측 영역: 65% ~ 90%
+          left = Math.random() * 25 + 65;
+        }
+
+        // 기존 텍스트들과의 거리 체크
+        const tooClose = existingTexts.some((existing) => {
+          const distance = getDistance(left, top, existing.left, existing.top);
+          return distance < minDistance;
+        });
+
+        if (!tooClose) {
+          return { left, top };
+        }
+
+        attempts++;
       }
+
+      // 최대 시도 횟수 초과 시 그냥 랜덤 위치 반환
+      const randomValue = Math.random();
+      let top = randomValue < 0.5 ? Math.random() * 20 + 5 : Math.random() * 20 + 75;
+      const leftRandom = Math.random();
+      let left = leftRandom < 0.5 ? Math.random() * 25 + 10 : Math.random() * 25 + 65;
+      return { left, top };
+    };
+
+    const createFloatingText = (existingTexts = []) => {
+      const randomText = sloganTexts[Math.floor(Math.random() * sloganTexts.length)];
+      const { left, top } = findValidPosition(existingTexts);
       
       // 텍스트를 글자별 자모 그룹으로 변환
       const jamoGroups = textToJamoGroups(randomText);
@@ -288,7 +322,7 @@ export default function CompanyPage() {
     };
 
     // 초기 1개 생성
-    setFloatingTexts([createFloatingText()]);
+    setFloatingTexts([createFloatingText([])]);
 
     // 타자 효과를 위한 인터벌 (자모 단위로 타이핑)
     const typingInterval = setInterval(() => {
@@ -346,7 +380,9 @@ export default function CompanyPage() {
         if (spawnCount === 0) {
           return updated;
         }
-        const nextItems = Array.from({ length: spawnCount }, () => createFloatingText());
+        // 기존 텍스트들의 위치 정보를 전달하여 겹치지 않는 위치에 생성
+        const existingPositions = updated.map((item) => ({ left: item.left, top: item.top }));
+        const nextItems = Array.from({ length: spawnCount }, () => createFloatingText(existingPositions));
         return [...updated, ...nextItems];
       });
     }, 50);
