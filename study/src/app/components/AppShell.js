@@ -1,16 +1,18 @@
 'use client';
 
-export function AppShell({ styles, title, activeNav, headerActions, children }) {
+export function AppShell({ styles, title, activeNav, headerActions, children, showLogo = true }) {
   return (
     <div className={styles.container}>
       {/* Top Header with Navigation */}
       <header className={styles.topHeader}>
-        <div className={styles.headerLeft}>
-          <div className={styles.logo}>
-            <div className={styles.logoIcon}>SS</div>
-            <span className={styles.logoText}>시와소프트</span>
+        {showLogo && (
+          <div className={styles.headerLeft}>
+            <div className={styles.logo}>
+              <div className={styles.logoIcon}>SS</div>
+              <span className={styles.logoText}>시와소프트</span>
+            </div>
           </div>
-        </div>
+        )}
         <nav className={styles.topNav}>
           <a
             href="/company"
@@ -55,9 +57,11 @@ export function AppShell({ styles, title, activeNav, headerActions, children }) 
             MYPAGE
           </a>
         </nav>
-        <div className={styles.headerRight}>
-          {headerActions}
-        </div>
+        {headerActions && (
+          <div className={styles.headerRight}>
+            {headerActions}
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
