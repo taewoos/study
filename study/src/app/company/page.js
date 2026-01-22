@@ -133,7 +133,7 @@ export default function CompanyPage() {
         newTexts.push(createFloatingText());
         return newTexts;
       });
-    }, 6000);
+    }, 3000);
 
     return () => {
       clearInterval(typingInterval);
