@@ -267,6 +267,9 @@ export default function CompanyPage() {
       // 전체 자모 개수 계산
       const totalJamoCount = jamoGroups.reduce((sum, group) => sum + group.jamos.length, 0);
       
+      const now = Date.now();
+      const startDelay = Math.random() * 500 + 200; // 200~700ms 지연
+      
       return {
         id: Math.random(),
         text: randomText,
@@ -275,52 +278,108 @@ export default function CompanyPage() {
         displayedJamoCount: 0,
         left: left,
         top: top,
-        delay: Math.random() * 300,
+        startTime: now + startDelay, // 시작 시간
+        lastTypingTime: 0, // 마지막 타이핑 시간
         isTyping: true,
+        completedAt: null,
+        isFading: false,
+        spawnedNext: false,
       };
     };
 
-    // 초기 2개 생성
-    const initialTexts = [createFloatingText(), createFloatingText()];
-    setFloatingTexts(initialTexts);
+    // 초기 1개 생성
+    setFloatingTexts([createFloatingText()]);
 
     // 타자 효과를 위한 인터벌 (자모 단위로 타이핑)
     const typingInterval = setInterval(() => {
+      const now = Date.now();
       setFloatingTexts((prev) => {
         return prev.map((item) => {
+          // 시작 시간이 지나지 않았으면 타이핑하지 않음
+          if (now < item.startTime) {
+            return item;
+          }
+          
+          // 타이핑 속도 조절 (각 자모마다 100~150ms 간격)
+          const timeSinceLastTyping = now - item.lastTypingTime;
+          const typingSpeed = 100; // 평균 100ms마다 한 자모씩
+          
           if (item.isTyping && item.displayedJamoCount < item.totalJamoCount) {
-            const newCount = item.displayedJamoCount + 1;
-            const displayedText = combineJamoGroups(item.jamoGroups, newCount);
-            
-            return {
-              ...item,
-              displayedText: displayedText,
-              displayedJamoCount: newCount,
-            };
-          } else if (item.isTyping) {
-            return {
-              ...item,
-              isTyping: false,
-            };
+            // 마지막 타이핑으로부터 충분한 시간이 지났을 때만 타이핑
+            if (timeSinceLastTyping >= typingSpeed) {
+              const newCount = item.displayedJamoCount + 1;
+              const displayedText = combineJamoGroups(item.jamoGroups, newCount);
+              
+              return {
+                ...item,
+                displayedText: displayedText,
+                displayedJamoCount: newCount,
+                lastTypingTime: now,
+                isTyping: newCount < item.totalJamoCount,
+                completedAt: newCount === item.totalJamoCount ? now : item.completedAt,
+              };
+            }
+            return item;
           }
           return item;
         });
       });
-    }, 80); // 자모 단위로 빠르게 타이핑
+    }, 50); // 50ms마다 체크 (더 부드러운 애니메이션)
 
-    // 주기적으로 텍스트 교체
-    const replaceInterval = setInterval(() => {
+    // 타이핑 완료 0.1초 뒤 다음 텍스트 생성
+    const spawnInterval = setInterval(() => {
+      const now = Date.now();
       setFloatingTexts((prev) => {
-        // 하나 제거하고 새로 추가
-        const newTexts = prev.slice(1);
-        newTexts.push(createFloatingText());
-        return newTexts;
+        let spawnCount = 0;
+        const updated = prev.map((item) => {
+          if (
+            item.completedAt &&
+            item.displayedJamoCount >= item.totalJamoCount &&
+            !item.spawnedNext &&
+            now - item.completedAt >= 100
+          ) {
+            spawnCount += 1;
+            return { ...item, spawnedNext: true };
+          }
+          return item;
+        });
+        if (spawnCount === 0) {
+          return updated;
+        }
+        const nextItems = Array.from({ length: spawnCount }, () => createFloatingText());
+        return [...updated, ...nextItems];
       });
-    }, 3000);
+    }, 50);
+
+    // 타이핑 완료 후 3초 뒤 삭제 (페이드아웃 포함)
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      setFloatingTexts((prev) =>
+        prev
+          .map((item) => {
+            if (
+              item.completedAt &&
+              item.displayedJamoCount >= item.totalJamoCount &&
+              !item.isFading &&
+              now - item.completedAt >= 2500
+            ) {
+              return { ...item, isFading: true };
+            }
+            return item;
+          })
+          .filter(
+            (item) =>
+              !item.completedAt ||
+              item.displayedJamoCount < item.totalJamoCount ||
+              now - item.completedAt < 3000
+          )
+      );
+    }, 100);
 
     return () => {
       clearInterval(typingInterval);
-      clearInterval(replaceInterval);
+      clearInterval(spawnInterval);
+      clearInterval(cleanupInterval);
     };
   }, []);
 
@@ -331,7 +390,7 @@ export default function CompanyPage() {
         {floatingTexts.map((item) => (
           <div
             key={item.id}
-            className={styles.floatingText}
+            className={`${styles.floatingText} ${item.isFading ? styles.floatingTextFade : ''}`}
             style={{
               left: `${item.left}%`,
               top: `${item.top}%`,

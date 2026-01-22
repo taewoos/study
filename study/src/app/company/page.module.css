@@ -166,33 +166,25 @@
   color: rgba(26, 26, 26, 0.6);
   pointer-events: none;
   white-space: nowrap;
-  animation: textFloat 3s ease-in-out forwards;
   transform: translate(-50%, -50%);
-  opacity: 0;
+  opacity: 1;
 }
 
-.floatingText {
-  animation: textFloat 3s ease-in-out forwards;
+.floatingTextFade {
+  animation: textFadeOut 0.5s ease forwards;
 }
 
-@keyframes textFloat {
+@keyframes textFadeOut {
   0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) translateY(10px);
-  }
-  10% {
     opacity: 1;
-    transform: translate(-50%, -50%) translateY(0);
-  }
-  85% {
-    opacity: 1;
-    transform: translate(-50%, -50%) translateY(0);
+    transform: translate(-50%, -50%);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) translateY(-10px);
+    transform: translate(-50%, -50%) translateY(-8px);
   }
 }
+
 
 .cursor {
   display: inline-block;
