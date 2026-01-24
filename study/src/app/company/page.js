@@ -134,12 +134,231 @@ const credentialItems = [
   { title: '인증', subtitle: '품질/ISMS 준비', imageSrc: '/uploads/aillm.png' },
 ];
 
+const aiAgentDefinitionSteps = ['목표를 입력받아', '계획', '도구 호출', '상태 갱신', '평가/수정', '자율 실행 루프'];
+const aiAgentDemoVideoSrc = '/uploads/aiagent-demo.mp4';
+
+const aiAgentUseCases = [
+  {
+    title: '세금 계산서 발행 Agent',
+    desc: '설명할 내용 정리중',
+    videoSrc: '/uploads/aiagent-case-01.mp4',
+    arch: {
+      diagramSrc: '/uploads/세금계산서발행.png',
+      // Diagram reference: ERP data→embedding(VectorDB) → intent agent → (issue/modify invoice) → user confirm → RPA 실행/ERP 수정
+      flow: [
+        'ERP Data 수집·임베딩 (Vector DB 저장)',
+        '사용자 명령',
+        '사용자 의도 분류',
+        '의도분류 Agent: 세금계산서 발행/수정',
+        '세금계산서 발행(안) 생성',
+        '사용자 confirm',
+        '세금계산서 발행 실행(RPA 자동화)',
+        'ERP 계산서 내역 수정(RPA 자동화)',
+        '감사/로그',
+      ],
+      components: [
+        'ERP/회계 시스템',
+        '전처리 파이프라인(수집/정제)',
+        '임베딩 모델',
+        'Vector DB(RAG 인덱스)',
+        'LLM(의도분류 Agent + 응답/플랜)',
+        '사용자 확인(HITL)',
+        'RPA 실행기(발행/수정 자동화)',
+        '감사 로그/모니터링',
+      ],
+    },
+  },
+  {
+    title: '문서 전처리 Aget',
+    desc: '설명할 내용 정리중',
+    videoSrc: '/uploads/aiagent-case-02.mp4',
+    arch: {
+      diagramSrc: '/uploads/문서.png',
+      flow: ['업로드', 'OCR/파싱', '정합성 검사', '태깅/분류', '저장/인덱싱'],
+      components: ['Agent Orchestrator(LLM)', 'OCR 엔진', '파일 스토리지', '메타데이터 DB', '검색 인덱스(Vector/Keyword)', '품질/오류 리포트'],
+    },
+  },
+  {
+    title: '문서·계약 검토 보조',
+    desc: '설명할 내용 정리중',
+    videoSrc: '/uploads/aiagent-case-03.mp4',
+    arch: {
+      flow: ['문서 업로드', '조항 추출', '근거 검색(RAG)', '리스크 체크', '리포트 생성'],
+      components: ['Agent Orchestrator(LLM)', '문서 파서', '정책/템플릿 지식베이스', 'RAG 검색', 'HITL 검토(옵션)', '결과 리포트/다운로드'],
+    },
+  },
+  {
+    title: '내부 지식 검색/정리',
+    desc: '설명할 내용 정리중',
+    videoSrc: '/uploads/aiagent-case-04.mp4',
+    arch: {
+      flow: ['질문', '문서 검색', '근거 요약', '답변 생성', '업무 생성/공유'],
+      components: ['Agent Orchestrator(LLM)', '사내 문서 커넥터(Drive/Notion/Wiki)', '검색 인덱스(RAG)', '권한 필터', '슬랙/메일 공유', '대화 로그/피드백'],
+    },
+  },
+  {
+    title: '보고서·회의록 자동 생성',
+    desc: '설명할 내용 정리중.',
+    videoSrc: '/uploads/aiagent-case-05.mp4',
+    arch: {
+      flow: ['데이터 수집', '요약/분석', '템플릿 채움', '검토', '배포/공유'],
+      components: ['Agent Orchestrator(LLM)', '데이터 소스(API/DB)', '리포트 템플릿', 'HITL 검토(옵션)', 'PDF/문서 생성기', '공유(메일/드라이브)'],
+    },
+  },
+  {
+    title: '시스템 연동 업무 자동화',
+    desc: '설명할 내용 정리중',
+    videoSrc: '/uploads/aiagent-case-06.mp4',
+    arch: {
+      flow: ['이벤트(Webhook)', '계획/분기', '도구 실행', '상태 업데이트', '알림/리포트'],
+      components: ['Agent Orchestrator(LLM)', 'Workflow 엔진', '외부 시스템 커넥터(CRM/ERP/Slack)', '재시도/큐(옵션)', '감사 로그', '모니터링'],
+    },
+  },
+];
+
 export default function CompanyPage() {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [floatingTexts, setFloatingTexts] = useState([]);
+  const [activeAiAgentUseCaseIndex, setActiveAiAgentUseCaseIndex] = useState(0);
 
   const handleFeatureClick = (feature) => {
     setSelectedFeature(feature);
+    if (feature === 'aiagent') {
+      setActiveAiAgentUseCaseIndex(0);
+    }
+  };
+
+  const renderModalBody = () => {
+    if (!selectedFeature) return null;
+
+    if (selectedFeature === 'aiagent') {
+      const activeUseCase =
+        aiAgentUseCases[activeAiAgentUseCaseIndex] || aiAgentUseCases[0];
+      const activeVideoSrc = activeUseCase?.videoSrc || aiAgentDemoVideoSrc;
+      const activeArch = activeUseCase?.arch || {
+        diagramSrc: '',
+        flow: ['입력', '계획', '도구 호출', '상태 갱신', '완료'],
+        components: ['Agent Orchestrator(LLM)', 'Tool/API', 'DB/Storage', 'Auth/Policy', 'Observability'],
+      };
+
+      return (
+        <>
+          <h3>정의 및 구성요소</h3>
+          <div className={styles.agentStepper} aria-label="AI Agent loop steps">
+            {aiAgentDefinitionSteps.map((step) => (
+              <div key={step} className={styles.agentStep}>
+                {step}
+              </div>
+            ))}
+          </div>
+
+          <h3>Agent 사용 예시</h3>
+          <div className={styles.useCaseGrid}>
+            {aiAgentUseCases.map((c, idx) => (
+              <button
+                key={c.title}
+                type="button"
+                className={`${styles.useCaseCard} ${idx === activeAiAgentUseCaseIndex ? styles.useCaseCardActive : ''}`}
+                onClick={() => setActiveAiAgentUseCaseIndex(idx)}
+                aria-pressed={idx === activeAiAgentUseCaseIndex}
+              >
+                <div className={styles.useCaseTitle}>{c.title}</div>
+                <div className={styles.useCaseDesc}>{c.desc}</div>
+              </button>
+            ))}
+          </div>
+
+          <h3>사용 예시 영상</h3>
+          <div className={styles.modalVideoTitle}>
+            선택된 예시: <strong>{activeUseCase?.title}</strong>
+          </div>
+          <div className={styles.modalVideoWrap}>
+            <video
+              key={activeVideoSrc}
+              className={styles.modalVideo}
+              controls
+              playsInline
+              preload="metadata"
+            >
+              <source src={activeVideoSrc} type="video/mp4" />
+              브라우저가 video 태그를 지원하지 않습니다.
+            </video>
+          </div>
+
+          <h3>아키텍처</h3>
+          <div className={styles.agentArchWrap}>
+            <div className={styles.agentArchHeader}>
+              <div className={styles.agentArchHeaderTitle}>{activeUseCase?.title}</div>
+              <div className={styles.agentArchHeaderSub}>선택된 예시에 따라 구성/흐름이 바뀝니다.</div>
+            </div>
+
+            <div className={styles.agentArchGrid}>
+              <div className={styles.agentArchPanel}>
+                <div className={styles.agentArchPanelTitle}>Flow</div>
+                {activeArch.diagramSrc ? (
+                  <div className={styles.agentArchDiagramWrap}>
+                    <a
+                      className={styles.agentArchDiagramLink}
+                      href={activeArch.diagramSrc}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <img
+                        className={styles.agentArchDiagram}
+                        src={activeArch.diagramSrc}
+                        alt={`${activeUseCase?.title || 'AI Agent'} 플로우 다이어그램`}
+                      />
+                    </a>
+                    <div className={styles.agentArchDiagramHint}>이미지를 클릭하면 크게 볼 수 있어요.</div>
+                  </div>
+                ) : (
+                  <div className={styles.agentArchFlow} aria-label="Architecture flow">
+                    {activeArch.flow.map((step, idx) => (
+                      <div key={`${step}-${idx}`} className={styles.agentArchFlowItem}>
+                        <div className={styles.agentArchNode}>{step}</div>
+                        {idx < activeArch.flow.length - 1 && (
+                          <div className={styles.agentArchArrow} aria-hidden="true">
+                            →
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.agentArchPanel}>
+                <div className={styles.agentArchPanelTitle}>Components</div>
+                <ul className={styles.agentArchList}>
+                  {activeArch.components.map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    const data = featureDescriptions[selectedFeature];
+    if (data?.description?.length) {
+      return (
+        <>
+          {data.description.map((p) => (
+            <p key={p}>{p}</p>
+          ))}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <p>이곳에 상세 설명이 들어갈 예정입니다.</p>
+        <p>각 기능에 대한 자세한 내용을 여기에 작성하실 수 있습니다.</p>
+        <p>추가 정보나 설명을 원하는 만큼 추가할 수 있습니다.</p>
+      </>
+    );
   };
 
   // 한글을 자모 단위로 분리하는 함수
@@ -517,7 +736,7 @@ export default function CompanyPage() {
           <div className={styles.featureCardsGrid}>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('aillm')}>
               <div className={styles.featureCardImage}>
-                <img src="/uploads/aillm.png" alt="Ai LLM" />
+                <img src="/uploads/ail.png" alt="Ai LLM" />
                 <div className={styles.featureCardText}>
                   <h3 className={styles.featureCardTitle}>Ai LLM</h3>
                   <p className={styles.featureCardDescription}>대규모 언어 모델을 활용한 지능형 AI 솔루션</p>
@@ -526,7 +745,7 @@ export default function CompanyPage() {
             </div>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('aiagent')}>
               <div className={styles.featureCardImage}>
-                <img src="https://via.placeholder.com/300x200/50C878/ffffff?text=Ai+Agent" alt="Ai Agent" />
+                <img src="/uploads/aiagent.png" alt="Ai Agent" />
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>Ai Agent</h3>
@@ -534,15 +753,16 @@ export default function CompanyPage() {
             </div>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('aiocr')}>
               <div className={styles.featureCardImage}>
-                <img src="https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Ai+OCR" alt="Ai OCR" />
+              <img src="/uploads/aiocr.png" alt="Ai OCR" />
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>Ai OCR</h3>
+
               </div>
             </div>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('finetuning')}>
               <div className={styles.featureCardImage}>
-                <img src="https://via.placeholder.com/300x200/9B59B6/ffffff?text=Fine-tuning" alt="Fine-tuning" />
+              <img src="/uploads/Fine-tung.png" alt="Fine-tuning" />
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>Fine-tuning</h3>
@@ -550,7 +770,7 @@ export default function CompanyPage() {
             </div>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('rpa')}>
               <div className={styles.featureCardImage}>
-                <img src="https://via.placeholder.com/300x200/F39C12/ffffff?text=RPA" alt="RPA" />
+              <img src="/uploads/rpa.png" alt="RPA" />
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>RPA</h3>
@@ -563,52 +783,6 @@ export default function CompanyPage() {
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>Model Custom</h3>
               </div>
-            </div>
-          </div>
-
-          {/* 요금제 카드 3개 */}
-          <div className={styles.pricingSection}>
-            <div className={styles.pricingHeader}>
-              <h2 className={styles.pricingTitle}>요금제</h2>
-              <p className={styles.pricingSubtitle}>
-                필요한 만큼 선택하고, 확장하면서 비용을 최적화하세요.
-              </p>
-            </div>
-            <div className={styles.pricingGrid}>
-              {pricingPlans.map((plan) => (
-                <div
-                  key={plan.key}
-                  className={`${styles.pricingCard} ${styles[`pricingCardTone_${plan.tone}`]} ${
-                    plan.highlight ? styles.pricingCardHighlight : ''
-                  }`}
-                >
-                  {plan.highlight && <div className={styles.pricingBadge}>추천</div>}
-                  <div className={styles.pricingCardTop}>
-                    <h3 className={styles.pricingCardName}>{plan.name}</h3>
-                    <p className={styles.pricingCardDesc}>{plan.description}</p>
-                  </div>
-                  <div className={styles.pricingPriceRow}>
-                    <span className={styles.pricingPrice}>{plan.price}</span>
-                    {plan.period && <span className={styles.pricingPeriod}>{plan.period}</span>}
-                  </div>
-                  <ul className={styles.pricingList}>
-                    {plan.features.map((f) => (
-                      <li key={f}>{f}</li>
-                    ))}
-                  </ul>
-                  <div className={styles.pricingActions}>
-                    {plan.key === 'enterprise' ? (
-                      <button className={styles.pricingButtonSecondary} type="button">
-                        상담 요청
-                      </button>
-                    ) : (
-                      <button className={styles.pricingButtonPrimary} type="button">
-                        시작하기
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -663,6 +837,183 @@ export default function CompanyPage() {
             </div>
           </div>
 
+          {/* Urgency / Trend + Risk removal + Testimonial */}
+          <div className={styles.pricingExtra}>
+            <section className={styles.pricingExtraSection}>
+              <div className={styles.pricingExtraHeader}>
+                <p className={styles.pricingExtraEyebrow}>WHY NOW</p>
+                <h3 className={styles.pricingExtraTitle}>"Why" 지금 시작해야 하나</h3>
+                <div className={styles.pricingExtraCopy}>
+                  <p>자동화는 ‘언젠가’가 아니라 ‘지금’ 시작할수록 비용이 줄어듭니다.</p>
+                </div>
+              </div>
+
+              <div className={styles.urgencyPoints}>
+                <div className={styles.urgencyPoint}>
+                  <div className={styles.urgencyPointTitle}>업무량 증가</div>
+                  <div className={styles.urgencyPointDesc}>처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.</div>
+                </div>
+                <div className={styles.urgencyPoint}>
+                  <div className={styles.urgencyPointTitle}>인건비 상승</div>
+                  <div className={styles.urgencyPointDesc}>반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.</div>
+                </div>
+                <div className={styles.urgencyPoint}>
+                  <div className={styles.urgencyPointTitle}>속도 경쟁</div>
+                  <div className={styles.urgencyPointDesc}>고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.</div>
+                </div>
+              </div>
+            </section>
+
+            {/* Risk removal (Barrier 0) */}
+            <section className={styles.pricingExtraSection}>
+              <div className={styles.pricingExtraHeader}>
+                <p className={styles.pricingExtraEyebrow}>RISK REMOVAL</p>
+                <h3 className={styles.pricingExtraTitle}>도입 장벽 "Low Risk"</h3>
+                <p className={styles.pricingExtraSub}>
+                  시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.
+                </p>
+              </div>
+
+              <div className={styles.barrierGrid}>
+                <div className={styles.barrierCard}>
+                  <div className={styles.barrierTitle}>초기 세팅 지원</div>
+                  <div className={styles.barrierDesc}>업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.</div>
+                </div>
+                <div className={styles.barrierCard}>
+                  <div className={styles.barrierTitle}>기존 시스템 연동</div>
+                  <div className={styles.barrierDesc}>API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.</div>
+                </div>
+                <div className={styles.barrierCard}>
+                  <div className={styles.barrierTitle}>단계적 확장</div>
+                  <div className={styles.barrierDesc}>작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.</div>
+                </div>
+              </div>
+            </section>
+
+            {/* Testimonial */}
+            <section className={styles.pricingExtraSection}>
+              <div className={styles.pricingExtraHeader}>
+                <p className={styles.pricingExtraEyebrow}>TESTIMONIAL</p>
+                <h3 className={styles.pricingExtraTitle}>Customer review</h3>
+                <p className={styles.pricingExtraSub}>현장에서 느끼는 변화는 ‘숫자’보다 먼저 체감됩니다.</p>
+              </div>
+
+              <div className={styles.testimonialGrid}>
+                <figure className={styles.testimonialCard}>
+                  <blockquote className={styles.testimonialQuote}>
+                    “반복 업무가 사라지니, 팀이 ‘중요한 일’에 집중할 수 있게 됐어요.”
+                  </blockquote>
+                  <figcaption className={styles.testimonialMeta}>운영팀장</figcaption>
+                </figure>
+                <figure className={styles.testimonialCard}>
+                  <blockquote className={styles.testimonialQuote}>
+                    “처리 속도는 빨라졌는데 품질은 더 좋아졌습니다. 고객 응대가 달라졌어요.”
+                  </blockquote>
+                  <figcaption className={styles.testimonialMeta}>CS 매니저</figcaption>
+                </figure>
+                <figure className={styles.testimonialCard}>
+                  <blockquote className={styles.testimonialQuote}>
+                    “도입이 어렵지 않았고, 결과가 빨리 보여서 내부 설득이 쉬웠습니다.”
+                  </blockquote>
+                  <figcaption className={styles.testimonialMeta}>기획팀</figcaption>
+                </figure>
+              </div>
+            </section>
+          </div>
+
+          {/* 요금제 카드 3개 */}
+          <div className={styles.pricingSection}>
+            <div className={styles.pricingHeader}>
+              <h2 className={styles.pricingTitle}>요금제</h2>
+              <p className={styles.pricingSubtitle}>
+                필요한 만큼 선택하고, 확장하면서 비용을 최적화하세요.
+              </p>
+            </div>
+            <div className={styles.pricingGrid}>
+              {pricingPlans.map((plan) => (
+                <div
+                  key={plan.key}
+                  className={`${styles.pricingCard} ${styles[`pricingCardTone_${plan.tone}`]} ${
+                    plan.highlight ? styles.pricingCardHighlight : ''
+                  }`}
+                >
+                  {plan.highlight && <div className={styles.pricingBadge}>추천</div>}
+                  <div className={styles.pricingCardTop}>
+                    <h3 className={styles.pricingCardName}>{plan.name}</h3>
+                    <p className={styles.pricingCardDesc}>{plan.description}</p>
+                  </div>
+                  <div className={styles.pricingPriceRow}>
+                    <span className={styles.pricingPrice}>{plan.price}</span>
+                    {plan.period && <span className={styles.pricingPeriod}>{plan.period}</span>}
+                  </div>
+                  <ul className={styles.pricingList}>
+                    {plan.features.map((f) => (
+                      <li key={f}>{f}</li>
+                    ))}
+                  </ul>
+                  <div className={styles.pricingActions}>
+                    {plan.key === 'enterprise' ? (
+                      <button className={styles.pricingButtonSecondary} type="button">
+                        상담 요청
+                      </button>
+                    ) : (
+                      <button className={styles.pricingButtonPrimary} type="button">
+                        시작하기
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Branding + ROI (below pricing cards) */}
+            <div className={styles.pricingAfter}>
+              <div className={styles.pricingAfterGrid}>
+                <div className={styles.pricingAfterCard}>
+                  <p className={styles.pricingAfterEyebrow}>BRAND PROMISE</p>
+                  <h3 className={styles.pricingAfterTitle}>일이 매끄럽게 흐르는 경험</h3>
+                  <p className={styles.pricingAfterDesc}>
+                    반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.
+                  </p>
+                  <div className={styles.promisePills}>
+                    <span className={styles.promisePill}>빠르게</span>
+                    <span className={styles.promisePill}>정확하게</span>
+                    <span className={styles.promisePill}>안전하게</span>
+                  </div>
+                </div>
+
+                <div className={`${styles.pricingAfterCard} ${styles.pricingAfterCardRoi}`}>
+                  <p className={styles.pricingAfterEyebrow}>ROI SNAPSHOT</p>
+                  <h3 className={styles.pricingAfterTitle}>한 번의 도입, 매달 반복되는 절감</h3>
+                  <div className={styles.roiStats}>
+                    <div className={styles.roiStat}>
+                      <div className={styles.roiStatValue}>166h</div>
+                      <div className={styles.roiStatLabel}>월 절감 시간(예시)</div>
+                    </div>
+                    <div className={styles.roiStat}>
+                      <div className={styles.roiStatValue}>2m</div>
+                      <div className={styles.roiStatLabel}>건당 절감(예시)</div>
+                    </div>
+                    <div className={styles.roiStat}>
+                      <div className={styles.roiStatValue}>5,000</div>
+                      <div className={styles.roiStatLabel}>월 처리량(예시)</div>
+                    </div>
+                  </div>
+                  <div className={styles.roiExample}>
+                    예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>
+                  </div>
+                  <div className={styles.roiNote}>* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.</div>
+
+                  <div className={styles.pricingCtaRow}>
+                    <Link href="/inquiry" className={styles.pricingButtonPrimary}>
+                      상담 요청
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Modal */}
           {selectedFeature && (
             <>
@@ -700,9 +1051,7 @@ export default function CompanyPage() {
                     </div>
                   </div>
                   <div className={styles.modalBody}>
-                    <p>이곳에 상세 설명이 들어갈 예정입니다.</p>
-                    <p>각 기능에 대한 자세한 내용을 여기에 작성하실 수 있습니다.</p>
-                    <p>추가 정보나 설명을 원하는 만큼 추가할 수 있습니다.</p>
+                    {renderModalBody()}
                   </div>
                 </div>
               </div>

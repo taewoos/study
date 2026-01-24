@@ -638,6 +638,304 @@
   background: rgba(255, 255, 255, 0.90);
 }
 
+/* Pricing - Branding + ROI (below pricing cards) */
+.pricingAfter {
+  margin-top: 22px;
+  margin-left: -80px;
+  margin-right: -80px;
+  max-width: calc(100% + 160px);
+}
+
+.pricingAfterGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.pricingAfterCard {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(17, 24, 39, 0.10);
+  padding: 24px 22px;
+  overflow: hidden;
+}
+
+.pricingAfterCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(520px 260px at 0% 0%, rgba(17, 24, 39, 0.05), transparent 62%),
+    radial-gradient(520px 260px at 100% 18%, rgba(99, 102, 241, 0.06), transparent 62%);
+  pointer-events: none;
+}
+
+.pricingAfterCard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.pricingAfterCardRoi::before {
+  background:
+    radial-gradient(520px 260px at 0% 0%, rgba(17, 24, 39, 0.05), transparent 62%),
+    radial-gradient(520px 260px at 100% 18%, rgba(16, 185, 129, 0.08), transparent 62%);
+}
+
+.pricingAfterEyebrow {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: rgba(17, 24, 39, 0.55);
+}
+
+.pricingAfterTitle {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: rgba(17, 24, 39, 0.92);
+}
+
+.pricingAfterDesc {
+  margin: 10px 0 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(17, 24, 39, 0.65);
+}
+
+.promisePills {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.promisePill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: rgba(17, 24, 39, 0.86);
+  background: rgba(17, 24, 39, 0.03);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+}
+
+.roiStats {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.roiStat {
+  background: rgba(17, 24, 39, 0.02);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 14px;
+  padding: 12px 12px;
+}
+
+.roiStatValue {
+  font-size: 20px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: rgba(17, 24, 39, 0.92);
+}
+
+.roiStatLabel {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(17, 24, 39, 0.55);
+}
+
+.roiExample {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(17, 24, 39, 0.70);
+}
+
+.roiExample strong {
+  color: rgba(17, 24, 39, 0.92);
+}
+
+.roiNote {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(17, 24, 39, 0.52);
+}
+
+.pricingCtaRow {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pricingCtaRow .pricingButtonPrimary,
+.pricingCtaRow .pricingButtonSecondary {
+  width: auto;
+  min-width: 160px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pricing - Extra blocks (Why now / Barrier 0 / Testimonial) */
+.pricingExtra {
+  margin-top: 24px;
+  margin-left: -80px;
+  margin-right: -80px;
+  max-width: calc(100% + 160px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pricingExtraSection {
+  background: #ffffff;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(17, 24, 39, 0.10);
+  padding: 26px 24px;
+}
+
+.pricingExtraHeader {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.pricingExtraEyebrow {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: rgba(17, 24, 39, 0.55);
+}
+
+.pricingExtraTitle {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: rgba(17, 24, 39, 0.92);
+}
+
+.pricingExtraSub {
+  margin: 10px auto 0;
+  max-width: 760px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(17, 24, 39, 0.62);
+}
+
+.pricingExtraCopy {
+  margin: 10px auto 0;
+  max-width: 820px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: rgba(17, 24, 39, 0.62);
+}
+
+.pricingExtraCopy p {
+  margin: 6px 0 0;
+}
+
+.urgencyPoints {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.urgencyPoint {
+  background: rgba(17, 24, 39, 0.02);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 16px;
+  padding: 16px 16px;
+}
+
+.urgencyPointTitle {
+  font-size: 15px;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+  color: rgba(17, 24, 39, 0.90);
+}
+
+.urgencyPointDesc {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(17, 24, 39, 0.62);
+}
+
+.barrierGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.barrierCard {
+  background: rgba(17, 24, 39, 0.02);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 16px;
+  padding: 16px 16px;
+}
+
+.barrierTitle {
+  font-size: 15px;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+  color: rgba(17, 24, 39, 0.90);
+}
+
+.barrierDesc {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(17, 24, 39, 0.62);
+}
+
+.testimonialGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.testimonialCard {
+  margin: 0;
+  background: rgba(17, 24, 39, 0.02);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 16px;
+  padding: 16px 16px;
+}
+
+.testimonialQuote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.75;
+  color: rgba(17, 24, 39, 0.72);
+  font-weight: 650;
+}
+
+.testimonialMeta {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(17, 24, 39, 0.55);
+}
+
 /* Trust / News / Credentials Section */
 .trustSection {
   margin-top: 56px;
@@ -1022,6 +1320,251 @@
   font-size: inherit;
 }
 
+.agentStepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+
+.agentStep {
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.02);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(17, 24, 39, 0.82);
+  white-space: nowrap;
+}
+
+.agentStep:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(17, 24, 39, 0.35);
+  font-weight: 900;
+}
+
+.useCaseGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.useCaseCard {
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: left;
+  cursor: pointer;
+  background: rgba(17, 24, 39, 0.02);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 16px;
+  padding: 14px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.useCaseCard:hover {
+  background: rgba(17, 24, 39, 0.03);
+  border-color: rgba(17, 24, 39, 0.16);
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+  transform: translateY(-1px);
+}
+
+.useCaseCardActive {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 14px 32px rgba(99, 102, 241, 0.12);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.useCaseCard:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, 0.35);
+  outline-offset: 2px;
+}
+
+.useCaseTitle {
+  font-size: 15px;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+  color: rgba(17, 24, 39, 0.90);
+}
+
+.useCaseDesc {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(17, 24, 39, 0.62);
+}
+
+/* Modal - video */
+.modalVideoTitle {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(17, 24, 39, 0.72);
+}
+
+.modalVideoTitle strong {
+  color: rgba(17, 24, 39, 0.92);
+}
+
+.modalVideoWrap {
+  margin-top: 10px;
+  width: 100%;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  background: rgba(17, 24, 39, 0.02);
+  aspect-ratio: 16 / 9;
+  position: relative;
+}
+
+.modalVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #000;
+}
+
+.agentArchWrap {
+  margin-top: 12px;
+  padding: 16px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  background: rgba(17, 24, 39, 0.02);
+}
+
+.agentArchHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.agentArchHeaderTitle {
+  font-size: 14px;
+  font-weight: 950;
+  color: rgba(17, 24, 39, 0.92);
+}
+
+.agentArchHeaderSub {
+  font-size: 12px;
+  color: rgba(17, 24, 39, 0.55);
+}
+
+.agentArchGrid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 12px;
+}
+
+.agentArchPanel {
+  background: #ffffff;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.agentArchPanelTitle {
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(17, 24, 39, 0.62);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(17, 24, 39, 0.02);
+}
+
+.agentArchFlow {
+  padding: 12px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.agentArchFlowItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.agentArchNode {
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(17, 24, 39, 0.82);
+  white-space: nowrap;
+}
+
+.agentArchArrow {
+  font-weight: 900;
+  color: rgba(17, 24, 39, 0.35);
+}
+
+.agentArchList {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(17, 24, 39, 0.70);
+}
+
+.agentArchList li {
+  margin: 6px 0;
+}
+
+.agentArchDiagramWrap {
+  padding: 12px 12px;
+}
+
+.agentArchDiagramLink {
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  background: #ffffff;
+}
+
+.agentArchDiagram {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.agentArchDiagramHint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(17, 24, 39, 0.55);
+  text-align: center;
+}
+
+.modalVideoNote {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(17, 24, 39, 0.55);
+}
+
+.modalVideoNote code {
+  font-size: 0.95em;
+}
+
 @media (max-width: 768px) {
   .modalHeader {
     padding: 48px 20px 14px;
@@ -1040,6 +1583,14 @@
   .modalCloseButton {
     top: 14px;
     right: 14px;
+  }
+
+  .useCaseGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .agentArchGrid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1289,6 +1840,28 @@
     max-width: 100%;
   }
 
+  .pricingAfter {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+  }
+
+  .pricingAfterGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricingExtra {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+  }
+
+  .urgencyPoints,
+  .barrierGrid,
+  .testimonialGrid {
+    grid-template-columns: 1fr;
+  }
+
   .trustGrid {
     grid-template-columns: 1fr;
     margin-left: 0;
@@ -1342,5 +1915,14 @@
 
   .bottomFeatureTitle {
     font-size: 20px;
+  }
+
+  .roiStats {
+    grid-template-columns: 1fr;
+  }
+
+  .pricingCtaRow .pricingButtonPrimary,
+  .pricingCtaRow .pricingButtonSecondary {
+    width: 100%;
   }
 }

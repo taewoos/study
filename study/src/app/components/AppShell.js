@@ -1,8 +1,85 @@
 'use client';
 
 export function AppShell({ styles, title, activeNav, headerActions, children, showLogo = true }) {
+  const year = new Date().getFullYear();
+
+  // Ensure the footer stays at the bottom even when individual page CSS differs.
+  const shellLayoutStyle = {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+  };
+
+  const mainFlexStyle = {
+    flex: 1,
+  };
+
+  const footerStyle = {
+    background: '#ffffff',
+    borderTop: '1px solid #e5e5e5',
+    padding: '24px 32px',
+    color: '#666',
+  };
+
+  const footerInnerStyle = {
+    maxWidth: 1400,
+    margin: '0 auto',
+    width: '100%',
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 16,
+    flexWrap: 'wrap',
+  };
+
+  const footerBrandStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+  };
+
+  const footerLogoRowStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    color: '#1a1a1a',
+    fontWeight: 600,
+  };
+
+  const footerLogoIconStyle = {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    background: 'linear-gradient(135deg, #4A90E2 0%, #357ABD 100%)',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  };
+
+  const footerMetaStyle = {
+    fontSize: 13,
+    lineHeight: 1.5,
+  };
+
+  const footerLinksStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    flexWrap: 'wrap',
+    fontSize: 13,
+  };
+
+  const footerLinkStyle = {
+    color: '#666',
+    textDecoration: 'none',
+  };
+
   return (
-    <div className={styles.container}>
+    <div className={styles.container} style={shellLayoutStyle}>
       {/* Top Header with Navigation */}
       <header className={styles.topHeader}>
         {showLogo && (
@@ -18,7 +95,7 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
             href="/company"
             className={`${styles.topNavItem} ${activeNav === 'company' ? styles.topNavItemActive : ''}`}
           >
-            COMANY
+            COMPANY
           </a>
           <a
             href="/aillm"
@@ -65,7 +142,7 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
       </header>
 
       {/* Main Content */}
-      <main className={styles.main}>
+      <main className={styles.main} style={mainFlexStyle}>
         {/* Page Title Header */}
         {title && (
           <div className={styles.pageHeader}>
@@ -76,6 +153,38 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
         {/* Content Area */}
         <div className={styles.content}>{children}</div>
       </main>
+
+      {/* Footer */}
+      <footer className={styles.footer} style={footerStyle}>
+        <div className={styles.footerInner} style={footerInnerStyle}>
+          <div className={styles.footerBrand} style={footerBrandStyle}>
+            <div className={styles.footerLogoRow} style={footerLogoRowStyle}>
+              <span className={styles.footerLogoIcon} style={footerLogoIconStyle}>
+                SS
+              </span>
+              <span className={styles.footerLogoText}>시와소프트</span>
+            </div>
+            <div className={styles.footerMeta} style={footerMetaStyle}>
+              © {year} 시와소프트. All rights reserved.
+            </div>
+          </div>
+
+          <nav className={styles.footerLinks} style={footerLinksStyle} aria-label="Footer">
+            <a href="/company" className={styles.footerLink} style={footerLinkStyle}>
+              회사소개
+            </a>
+            <a href="/inquiry" className={styles.footerLink} style={footerLinkStyle}>
+              문의하기
+            </a>
+            <a href="/settings" className={styles.footerLink} style={footerLinkStyle}>
+              설정
+            </a>
+            <a href="/mypage" className={styles.footerLink} style={footerLinkStyle}>
+              마이페이지
+            </a>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }
