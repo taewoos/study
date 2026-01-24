@@ -75,6 +75,65 @@ const featureDescriptions = {
   }
 };
 
+const pricingPlans = [
+  {
+    key: 'starter',
+    name: 'Starter',
+    price: '₩49,000',
+    period: '/월',
+    description: '개인/소규모 팀을 위한 시작 플랜',
+    features: ['기본 LLM 기능', '문서 요약/번역', '기본 템플릿', '이메일 지원'],
+    tone: 'pink',
+  },
+  {
+    key: 'pro',
+    name: 'Pro',
+    price: '₩149,000',
+    period: '/월',
+    description: '업무 자동화를 본격적으로 확장',
+    features: ['고급 LLM 기능', '워크플로우 자동화', '팀 공유/권한', '우선 지원'],
+    tone: 'blue',
+    highlight: true,
+  },
+  {
+    key: 'enterprise',
+    name: 'Enterprise',
+    price: '문의',
+    period: '',
+    description: '보안/연동/커스텀 요구사항 대응',
+    features: ['온프레미스/전용 배포', 'SSO/권한관리', '커스텀 모델/파인튜닝', '전담 지원'],
+    tone: 'purple',
+  },
+];
+
+const newsItems = [
+  {
+    title: 'Custom AI, 업무 자동화 솔루션 고도화',
+    date: '2026-01-01',
+    excerpt: 'LLM 기반 문서 처리와 워크플로우 자동화를 결합해 운영 효율을 개선했습니다.',
+    href: '#',
+  },
+  {
+    title: 'AI OCR 적용으로 입력 업무 70% 절감',
+    date: '2025-12-12',
+    excerpt: '문서 인식 정확도를 높이고 예외 케이스 처리 시간을 단축했습니다.',
+    href: '#',
+  },
+  {
+    title: 'RPA + Agent 도입 사례 공개',
+    date: '2025-11-20',
+    excerpt: '반복 업무를 자동화하고 승인/보고 흐름을 표준화했습니다.',
+    href: '#',
+  },
+];
+
+const credentialItems = [
+  { title: '특허 등록', subtitle: '문서 자동 분류 방법', imageSrc: '/uploads/aillm.png' },
+  { title: '특허 출원', subtitle: '워크플로우 추천 엔진', imageSrc: '/uploads/aillm.png' },
+  { title: '자격증', subtitle: '정보보안/클라우드', imageSrc: '/uploads/aillm.png' },
+  { title: '인증', subtitle: '품질/ISMS 준비', imageSrc: '/uploads/aillm.png' },
+];
+
 export default function CompanyPage() {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [floatingTexts, setFloatingTexts] = useState([]);
@@ -507,6 +566,103 @@ export default function CompanyPage() {
             </div>
           </div>
 
+          {/* 요금제 카드 3개 */}
+          <div className={styles.pricingSection}>
+            <div className={styles.pricingHeader}>
+              <h2 className={styles.pricingTitle}>요금제</h2>
+              <p className={styles.pricingSubtitle}>
+                필요한 만큼 선택하고, 확장하면서 비용을 최적화하세요.
+              </p>
+            </div>
+            <div className={styles.pricingGrid}>
+              {pricingPlans.map((plan) => (
+                <div
+                  key={plan.key}
+                  className={`${styles.pricingCard} ${styles[`pricingCardTone_${plan.tone}`]} ${
+                    plan.highlight ? styles.pricingCardHighlight : ''
+                  }`}
+                >
+                  {plan.highlight && <div className={styles.pricingBadge}>추천</div>}
+                  <div className={styles.pricingCardTop}>
+                    <h3 className={styles.pricingCardName}>{plan.name}</h3>
+                    <p className={styles.pricingCardDesc}>{plan.description}</p>
+                  </div>
+                  <div className={styles.pricingPriceRow}>
+                    <span className={styles.pricingPrice}>{plan.price}</span>
+                    {plan.period && <span className={styles.pricingPeriod}>{plan.period}</span>}
+                  </div>
+                  <ul className={styles.pricingList}>
+                    {plan.features.map((f) => (
+                      <li key={f}>{f}</li>
+                    ))}
+                  </ul>
+                  <div className={styles.pricingActions}>
+                    {plan.key === 'enterprise' ? (
+                      <button className={styles.pricingButtonSecondary} type="button">
+                        상담 요청
+                      </button>
+                    ) : (
+                      <button className={styles.pricingButtonPrimary} type="button">
+                        시작하기
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 뉴스/특허/자격 섹션 */}
+          <div className={styles.trustSection}>
+            <div className={styles.trustHeader}>
+              <h2 className={styles.trustTitle}>검증된 성과</h2>
+              <p className={styles.trustSubtitle}>
+                보도자료, 인증서, 특허로 신뢰를 보여드립니다.
+              </p>
+            </div>
+
+            <div className={styles.trustGrid}>
+              <div className={styles.newsPanel}>
+                <div className={styles.panelHeader}>
+                  <h3 className={styles.panelTitle}>News</h3>
+                  <span className={styles.panelHint}>업데이트/보도자료</span>
+                </div>
+                <div className={styles.newsList}>
+                  {newsItems.map((n) => (
+                    <a key={n.title} href={n.href} className={styles.newsCard}>
+                      <div className={styles.newsTopRow}>
+                        <span className={styles.newsDate}>{n.date}</span>
+                        <span className={styles.newsArrow}>›</span>
+                      </div>
+                      <h4 className={styles.newsTitle}>{n.title}</h4>
+                      <p className={styles.newsExcerpt}>{n.excerpt}</p>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.credentialPanel}>
+                <div className={styles.panelHeader}>
+                  <h3 className={styles.panelTitle}>Certificates / Patents</h3>
+                  <span className={styles.panelHint}>이미지/캡션</span>
+                </div>
+                <div className={styles.credentialGrid}>
+                  {credentialItems.map((c) => (
+                    <div key={c.title + c.subtitle} className={styles.credentialCard}>
+                      <div className={styles.credentialThumb}>
+                        <img src={c.imageSrc} alt={c.title} />
+                      </div>
+                      <div className={styles.credentialText}>
+                        <div className={styles.credentialTitle}>{c.title}</div>
+                        <div className={styles.credentialSubtitle}>{c.subtitle}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Modal */}
           {selectedFeature && (
             <>
@@ -518,18 +674,31 @@ export default function CompanyPage() {
                 <button 
                   className={styles.modalCloseButton}
                   onClick={() => setSelectedFeature(null)}
+                  aria-label="닫기"
                 >
                   ×
                 </button>
                 <div className={styles.modalContent}>
-                  <h2 className={styles.modalTitle}>
-                    {selectedFeature === 'aillm' && 'Ai LLM'}
-                    {selectedFeature === 'aiagent' && 'Ai Agent'}
-                    {selectedFeature === 'aiocr' && 'Ai OCR'}
-                    {selectedFeature === 'finetuning' && 'Fine-tuning'}
-                    {selectedFeature === 'rpa' && 'RPA'}
-                    {selectedFeature === 'modelcustom' && 'Model Custom'}
-                  </h2>
+                  <div className={styles.modalHeader}>
+                    <div className={styles.modalHeaderText}>
+                      <p className={styles.modalEyebrow}>CUSTOM AI</p>
+                      <h2 className={styles.modalTitle}>
+                        {selectedFeature === 'aillm' && 'Ai LLM'}
+                        {selectedFeature === 'aiagent' && 'Ai Agent'}
+                        {selectedFeature === 'aiocr' && 'Ai OCR'}
+                        {selectedFeature === 'finetuning' && 'Fine-tuning'}
+                        {selectedFeature === 'rpa' && 'RPA'}
+                        {selectedFeature === 'modelcustom' && 'Model Custom'}
+                      </h2>
+                    </div>
+                    <div className={styles.modalHeaderActions}>
+                      {selectedFeature === 'aillm' && (
+                        <Link href="/aillm" className={styles.modalPrimaryButton}>
+                          시작하기 <span className={styles.chevron}>›</span>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
                   <div className={styles.modalBody}>
                     <p>이곳에 상세 설명이 들어갈 예정입니다.</p>
                     <p>각 기능에 대한 자세한 내용을 여기에 작성하실 수 있습니다.</p>
@@ -542,23 +711,6 @@ export default function CompanyPage() {
         </div>
       </div>
 
-      {/* 하단 3개 박스 */}
-      <div className={styles.bottomFeaturesSection}>
-        <div className={styles.bottomFeaturesGrid}>
-          <div className={styles.bottomFeatureBox}>
-            <h4 className={styles.bottomFeatureTitle}>RPA</h4>
-            <p className={styles.bottomFeatureDesc}>로봇 프로세스 자동화</p>
-          </div>
-          <div className={styles.bottomFeatureBox}>
-            <h4 className={styles.bottomFeatureTitle}>AI LLM</h4>
-            <p className={styles.bottomFeatureDesc}>대규모 언어 모델</p>
-          </div>
-          <div className={styles.bottomFeatureBox}>
-            <h4 className={styles.bottomFeatureTitle}>AI OCR</h4>
-            <p className={styles.bottomFeatureDesc}>문서 인식 기술</p>
-          </div>
-        </div>
-      </div>
     </AppShell>
   );
 }
