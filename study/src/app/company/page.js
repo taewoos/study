@@ -1753,6 +1753,31 @@ export default function CompanyPage() {
 
           {/* 뉴스/특허/자격 섹션은 /news 페이지로 이동됨 */}
 
+          {/* Custom Ai 포커스 섹션 */}
+          <div className={styles.customAiSection}>
+            <div className={styles.customAiContainer}>
+              <div className={styles.customAiTopSection}>
+                <div className={styles.customAiBorderLine}></div>
+                <div className={styles.customAiTopText}>
+                  내용 준비중입니다
+                </div>
+              </div>
+              <div className={styles.customAiFocus}>
+                <p className={styles.customAiLabel}>Custom Ai를</p>
+                <h2 className={styles.customAiTitle}>
+                  "Why"<br />
+                  지금 시작해야하는가?
+                </h2>
+                <p className={styles.customAiSubtext}>
+                  ai 자동화는 "언젠가"가 아니라 "지금" 시작할수록 비용이 줄어듭니다
+                </p>
+              </div>
+              <div className={styles.customAiImagePlaceholder}>
+                {/* 이미지 영역 - 추후 추가 예정 */}
+              </div>
+            </div>
+          </div>
+
           {/* 요금제 카드 4개 */}
           <div className={styles.pricingSection} style={{ position: 'relative' }}>
             {isAdminUser && (

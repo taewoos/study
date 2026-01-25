@@ -181,6 +181,176 @@
   flex-direction: column;
 }
 
+/* Custom Ai 포커스 섹션 */
+.customAiSection {
+  background: #ffffff;
+  padding: 80px 32px 60px;
+  margin-top: 60px;
+}
+
+.customAiContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.customAiTopSection {
+  position: relative;
+  margin-bottom: 40px;
+}
+
+.customAiBorderLine {
+  width: calc(100% - 160px);
+  height: 1px;
+  background: #e5e5e5;
+  margin: 0 auto;
+  margin-bottom: 0;
+}
+
+.customAiTopText {
+  position: absolute;
+  top: -45px;
+  right: 270px;
+  padding: 0 12px;
+  background: #ffffff;
+  font-size: 16px;
+  color: rgba(26, 26, 26, 0.6);
+}
+
+.customAiFocus {
+  margin-bottom: 40px;
+  margin-left: 200px;
+  text-align: left;
+}
+
+.customAiLabel {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(26, 26, 26, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 16px 0;
+}
+
+.customAiTitle {
+  font-size: 36px;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+.customAiSubtext {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(26, 26, 26, 0.6);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.customAiDescription {
+  margin-bottom: 60px;
+}
+
+.customAiDescLine1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.customAiDescLine2 {
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(26, 26, 26, 0.8);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.customAiImagePlaceholder {
+  width: 100%;
+  min-height: 400px;
+  background: #f5f5f5;
+  border: 2px dashed #e5e5e5;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(26, 26, 26, 0.4);
+  font-size: 16px;
+}
+
+/* Custom Ai 다양기능 섹션 */
+.customAiFeaturesSection {
+  background: #ffffff;
+  padding: 60px 32px;
+  margin-top: 0;
+}
+
+.customAiFeaturesTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1a1a1a;
+  text-align: center;
+  margin: 0 0 48px 0;
+  letter-spacing: -0.02em;
+}
+
+.customAiFeaturesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.customAiFeatureCard {
+  background: #ffffff;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.customAiFeatureCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  border-color: rgba(17, 24, 39, 0.20);
+}
+
+.customAiFeatureIcon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #4A90E2 0%, #50C878 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 auto 20px;
+}
+
+.customAiFeatureCardTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+}
+
+.customAiFeatureCardDesc {
+  font-size: 14px;
+  color: rgba(26, 26, 26, 0.7);
+  margin: 0;
+  line-height: 1.6;
+}
+
 /* Slogan Section - GPT Style */
 .sloganSection {
   background: #f5f5f5;
@@ -1975,6 +2145,40 @@
     padding: 40px 20px;
   }
 
+  .customAiSection {
+    padding: 60px 20px 40px;
+  }
+
+  .customAiTitle {
+    font-size: 42px;
+  }
+
+  .customAiDescLine1 {
+    font-size: 20px;
+  }
+
+  .customAiDescLine2 {
+    font-size: 16px;
+  }
+
+  .customAiImagePlaceholder {
+    min-height: 300px;
+  }
+
+  .customAiFeaturesSection {
+    padding: 40px 20px;
+  }
+
+  .customAiFeaturesTitle {
+    font-size: 24px;
+    margin-bottom: 32px;
+  }
+
+  .customAiFeaturesGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
   .mainDescription {
     padding: 32px;
   }
@@ -2033,6 +2237,10 @@
 }
 
 @media (max-width: 480px) {
+  .customAiFeaturesGrid {
+    grid-template-columns: 1fr;
+  }
+
   .sloganSection {
     padding: 60px 16px 50px;
   }
