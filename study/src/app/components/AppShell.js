@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getUser, getToken } from '@/utils/auth';
 
 export function AppShell({ styles, title, activeNav, headerActions, children, showLogo = true }) {
   const year = new Date().getFullYear();
@@ -9,15 +10,15 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // 로그인 상태 확인 (localStorage 또는 sessionStorage에서 확인)
+    // 로그인 상태 확인 (JWT 토큰 기반)
     const checkLoginStatus = () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const token = getToken();
       if (token) {
-        try {
-          const userData = JSON.parse(token);
+        const userData = getUser();
+        if (userData) {
           setIsLoggedIn(true);
           setUser(userData);
-        } catch (error) {
+        } else {
           setIsLoggedIn(false);
           setUser(null);
         }
@@ -50,9 +51,11 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // 로컬 스토리지 및 세션 스토리지에서 토큰 제거
+      // 로컬 스토리지 및 세션 스토리지에서 JWT 토큰 및 사용자 정보 제거
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
       setIsLoggedIn(false);
       setUser(null);
       

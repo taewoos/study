@@ -1,6 +1,7 @@
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { verifyAdmin } from '@/utils/authServer';
 
 export const config = {
   api: {
@@ -16,6 +17,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 관리자 권한 확인
+    const adminCheck = await verifyAdmin(req);
+    if (!adminCheck.isAdmin) {
+      return res.status(403).json({ error: adminCheck.error || '관리자 권한이 필요합니다.' });
+    }
+
     const { file, fileName } = req.body;
 
     if (!file || !fileName) {

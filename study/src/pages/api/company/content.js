@@ -1,4 +1,5 @@
 import { connectDB } from '@/utils/db';
+import { verifyAdmin } from '@/utils/authServer';
 
 // 회사 페이지 콘텐츠 저장/불러오기 API
 export default async function handler(req, res) {
@@ -21,10 +22,13 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST' || req.method === 'PUT') {
     try {
-      const { data } = req.body;
+      // 관리자 권한 확인
+      const adminCheck = await verifyAdmin(req);
+      if (!adminCheck.isAdmin) {
+        return res.status(403).json({ error: adminCheck.error || '관리자 권한이 필요합니다.' });
+      }
 
-      // 관리자 권한 확인 (간단한 검증, 실제로는 JWT 토큰 검증 필요)
-      // 여기서는 클라이언트에서 role을 확인하므로 서버에서도 검증하는 것이 좋습니다.
+      const { data } = req.body;
 
       const result = await contentCollection.updateOne(
         { type: 'main' },

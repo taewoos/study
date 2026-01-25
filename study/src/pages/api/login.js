@@ -1,5 +1,9 @@
 import { connectDB } from '@/utils/db';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+// JWT 시크릿 키 (환경 변수에서 가져오거나 기본값 사용)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -48,6 +52,18 @@ export default async function handler(req, res) {
       });
     }
 
+    // JWT 토큰 생성
+    const tokenPayload = {
+      _id: user._id.toString(),
+      userId: user.userId,
+      email: user.email,
+      role: user.role !== undefined ? user.role : 1,
+    };
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, {
+      expiresIn: '7d', // 7일 후 만료
+    });
+
     // 로그인 성공 - 사용자 정보 반환 (비밀번호 제외)
     const userData = {
       _id: user._id.toString(),
@@ -61,7 +77,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ 
       message: '로그인 성공',
-      user: userData
+      user: userData,
+      token: token // JWT 토큰 반환
     });
   } catch (error) {
     console.error('Login error:', error);

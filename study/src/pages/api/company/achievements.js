@@ -1,4 +1,5 @@
 import { connectDB } from '@/utils/db';
+import { verifyAdmin } from '@/utils/authServer';
 
 // 검증된 성과 게시글 CRUD API
 export default async function handler(req, res) {
@@ -24,6 +25,18 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
+      // 관리자 권한 확인 (초기 데이터 설정 시에는 권한 확인 생략 가능하지만, 보안을 위해 확인)
+      // Authorization 헤더가 없으면 초기 데이터 설정으로 간주하여 허용
+      const hasAuth = req.headers.authorization && req.headers.authorization.startsWith('Bearer ');
+      
+      if (hasAuth) {
+        const adminCheck = await verifyAdmin(req);
+        if (!adminCheck.isAdmin) {
+          return res.status(403).json({ error: adminCheck.error || '관리자 권한이 필요합니다.' });
+        }
+      }
+      // 초기 데이터 설정인 경우 권한 확인 생략 (데이터가 없을 때만 가능)
+
       const { title, date, excerpt, href, type } = req.body; // type: 'news' or 'credential'
 
       if (!title || !date) {
@@ -54,6 +67,12 @@ export default async function handler(req, res) {
 
   if (req.method === 'PUT') {
     try {
+      // 관리자 권한 확인
+      const adminCheck = await verifyAdmin(req);
+      if (!adminCheck.isAdmin) {
+        return res.status(403).json({ error: adminCheck.error || '관리자 권한이 필요합니다.' });
+      }
+
       const { id, title, date, excerpt, href, type } = req.body;
 
       if (!id) {
@@ -89,6 +108,12 @@ export default async function handler(req, res) {
 
   if (req.method === 'DELETE') {
     try {
+      // 관리자 권한 확인
+      const adminCheck = await verifyAdmin(req);
+      if (!adminCheck.isAdmin) {
+        return res.status(403).json({ error: adminCheck.error || '관리자 권한이 필요합니다.' });
+      }
+
       const { id } = req.query;
 
       if (!id) {

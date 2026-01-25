@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { AppShell } from '../components/AppShell';
-import { isAdmin, getUser } from '@/utils/auth';
+import { isAdmin, getUser, getToken } from '@/utils/auth';
 
 const sloganTexts = [
   'Agent 사용으로 생산성 Up',
@@ -430,6 +430,9 @@ export default function CompanyPage() {
   const [newAchievement, setNewAchievement] = useState({ title: '', date: '', excerpt: '', href: '#', type: 'news' });
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [editingWhyNow, setEditingWhyNow] = useState(false);
+  const [editingRiskRemoval, setEditingRiskRemoval] = useState(false);
+  const [editingPricing, setEditingPricing] = useState(false);
 
   const handleFeatureClick = (feature) => {
     setSelectedFeature(feature);
@@ -993,6 +996,9 @@ export default function CompanyPage() {
               },
             ];
             
+            // 초기 데이터는 관리자 권한 없이 저장 (시스템 초기화용)
+            // 실제로는 관리자만 초기 데이터를 설정할 수 있어야 하지만,
+            // 현재는 데이터가 없을 때만 자동으로 설정되므로 허용
             for (const item of initialNewsData) {
               try {
                 await fetch('/api/company/achievements', {
@@ -1017,6 +1023,7 @@ export default function CompanyPage() {
               { title: '인증', subtitle: '품질/ISMS 준비', imageSrc: '/uploads/aillm.png' },
             ];
             
+            // 초기 데이터는 관리자 권한 없이 저장 (시스템 초기화용)
             for (const item of initialCredentialData) {
               try {
                 await fetch('/api/company/achievements', {
@@ -1069,9 +1076,18 @@ export default function CompanyPage() {
   // 콘텐츠 저장 함수
   const saveContent = async (contentData) => {
     try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return false;
+      }
+
       const response = await fetch('/api/company/content', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ data: contentData }),
       });
       if (response.ok) {
@@ -1080,7 +1096,12 @@ export default function CompanyPage() {
         setHasUnsavedChanges(false);
         return true;
       } else {
-        alert('저장에 실패했습니다.');
+        const errorData = await response.json().catch(() => ({ error: '저장에 실패했습니다.' }));
+        if (response.status === 403) {
+          alert('관리자 권한이 필요합니다.');
+        } else {
+          alert(errorData.error || '저장에 실패했습니다.');
+        }
         return false;
       }
     } catch (error) {
@@ -1139,9 +1160,18 @@ export default function CompanyPage() {
       });
 
       // 업로드 API 호출
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return null;
+      }
+
       const response = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           file: base64,
           fileName: file.name,
@@ -1154,7 +1184,12 @@ export default function CompanyPage() {
         setNewAchievement({ ...newAchievement, href: data.url });
         return data.url;
       } else {
-        alert('이미지 업로드에 실패했습니다.');
+        const errorData = await response.json().catch(() => ({ error: '이미지 업로드에 실패했습니다.' }));
+        if (response.status === 403) {
+          alert('관리자 권한이 필요합니다.');
+        } else {
+          alert(errorData.error || '이미지 업로드에 실패했습니다.');
+        }
         return null;
       }
     } catch (error) {
@@ -1180,9 +1215,18 @@ export default function CompanyPage() {
     };
 
     try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
       const response = await fetch('/api/company/achievements', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(achievementToAdd),
       });
 
@@ -1204,7 +1248,12 @@ export default function CompanyPage() {
           setAchievements(processedData);
         }
       } else {
-        alert('게시글 추가에 실패했습니다.');
+        const errorData = await response.json().catch(() => ({ error: '게시글 추가에 실패했습니다.' }));
+        if (response.status === 403) {
+          alert('관리자 권한이 필요합니다.');
+        } else {
+          alert(errorData.error || '게시글 추가에 실패했습니다.');
+        }
       }
     } catch (error) {
       console.error('Failed to add achievement:', error);
@@ -1217,15 +1266,29 @@ export default function CompanyPage() {
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
       const response = await fetch(`/api/company/achievements?id=${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
         setAchievements(achievements.filter(a => a._id !== id));
         alert('게시글이 삭제되었습니다.');
       } else {
-        alert('게시글 삭제에 실패했습니다.');
+        const errorData = await response.json().catch(() => ({ error: '게시글 삭제에 실패했습니다.' }));
+        if (response.status === 403) {
+          alert('관리자 권한이 필요합니다.');
+        } else {
+          alert(errorData.error || '게시글 삭제에 실패했습니다.');
+        }
       }
     } catch (error) {
       console.error('Failed to delete achievement:', error);
@@ -1489,14 +1552,17 @@ export default function CompanyPage() {
               </>
             ) : (
               <button
-                onClick={() => {
-                  // 편집 모드 시작 시 원본 데이터 저장
-                  if (pageContent) {
-                    setOriginalPageContent(JSON.parse(JSON.stringify(pageContent)));
-                  }
-                  setIsEditMode(true);
-                  setHasUnsavedChanges(false); // 편집 모드 시작 시 변경사항 없음
-                }}
+                  onClick={() => {
+                    // 편집 모드 시작 시 원본 데이터 저장
+                    if (pageContent) {
+                      setOriginalPageContent(JSON.parse(JSON.stringify(pageContent)));
+                    }
+                    setIsEditMode(true);
+                    setHasUnsavedChanges(false); // 편집 모드 시작 시 변경사항 없음
+                    setEditingWhyNow(false);
+                    setEditingRiskRemoval(false);
+                    setEditingPricing(false);
+                  }}
                 style={{
                   padding: '0.75rem 1.5rem',
                   background: '#4CAF50',
@@ -1733,7 +1799,7 @@ export default function CompanyPage() {
                 <div className={styles.panelHeader}>
                   <h3 className={styles.panelTitle}>News</h3>
                   <span className={styles.panelHint}>업데이트/보도자료</span>
-                  {isAdminUser && (
+                  {isAdminUser && isEditMode && (
                     <button
                       onClick={() => {
                         setNewAchievement({ title: '', date: '', excerpt: '', href: '#', type: 'news' });
@@ -1772,7 +1838,7 @@ export default function CompanyPage() {
                     return bCreated - aCreated;
                   }).map((n, idx) => (
                     <div key={n._id || n.title || idx} style={{ position: 'relative' }}>
-                      {isAdminUser && (
+                      {isAdminUser && isEditMode && (
                         <button
                           onClick={() => handleDeleteAchievement(n._id)}
                           style={{
@@ -1811,9 +1877,17 @@ export default function CompanyPage() {
                               }}
                               onBlur={async () => {
                                 try {
+                                  const token = getToken();
+                                  if (!token) {
+                                    alert('로그인이 필요합니다.');
+                                    return;
+                                  }
                                   await fetch('/api/company/achievements', {
                                     method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
+                                    headers: { 
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${token}`
+                                    },
                                     body: JSON.stringify({ id: n._id, ...n }),
                                   });
                                 } catch (error) {
@@ -1833,9 +1907,17 @@ export default function CompanyPage() {
                               }}
                               onBlur={async () => {
                                 try {
+                                  const token = getToken();
+                                  if (!token) {
+                                    alert('로그인이 필요합니다.');
+                                    return;
+                                  }
                                   await fetch('/api/company/achievements', {
                                     method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
+                                    headers: { 
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${token}`
+                                    },
                                     body: JSON.stringify({ id: n._id, ...n }),
                                   });
                                 } catch (error) {
@@ -1862,7 +1944,7 @@ export default function CompanyPage() {
                 <div className={styles.panelHeader}>
                   <h3 className={styles.panelTitle}>Certificates / Patents</h3>
                   <span className={styles.panelHint}>이미지/캡션</span>
-                  {isAdminUser && (
+                  {isAdminUser && isEditMode && (
                     <button
                       onClick={() => {
                         setNewAchievement({ title: '', date: '', excerpt: '', href: '#', type: 'credential' });
@@ -1887,7 +1969,7 @@ export default function CompanyPage() {
                 <div className={styles.credentialGrid}>
                   {achievements.filter(a => a.type === 'credential').map((c) => (
                     <div key={c._id || c.title} style={{ position: 'relative' }}>
-                      {isAdminUser && (
+                      {isAdminUser && isEditMode && (
                         <button
                           onClick={() => handleDeleteAchievement(c._id)}
                           style={{
@@ -1926,54 +2008,448 @@ export default function CompanyPage() {
 
           {/* Urgency / Trend + Risk removal + Testimonial */}
           <div className={styles.pricingExtra}>
-            <section className={styles.pricingExtraSection}>
+            <section className={styles.pricingExtraSection} style={{ position: 'relative' }}>
+              {isAdminUser && (
+                <button
+                  onClick={() => {
+                    // 편집 시작 시 원본 데이터 저장
+                    if (pageContent) {
+                      setOriginalPageContent(JSON.parse(JSON.stringify(pageContent)));
+                    }
+                    if (!pageContent?.whyNow) {
+                      const defaultWhyNow = {
+                        title: '"Why" 지금 시작해야 하나',
+                        copy: '자동화는 \'언젠가\'가 아니라 \'지금\' 시작할수록 비용이 줄어듭니다.',
+                        points: [
+                          { title: '업무량 증가', desc: '처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.' },
+                          { title: '인건비 상승', desc: '반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.' },
+                          { title: '속도 경쟁', desc: '고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.' }
+                        ]
+                      };
+                      setPageContent({ ...pageContent, whyNow: defaultWhyNow });
+                    }
+                    setEditingWhyNow(true);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    padding: '0.5rem 1rem',
+                    background: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    zIndex: 10
+                  }}
+                >
+                  수정
+                </button>
+              )}
+              {editingWhyNow && isAdminUser && (
+                <button
+                  onClick={async () => {
+                    const success = await saveContent(pageContent);
+                    if (success) {
+                      setEditingWhyNow(false);
+                    }
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '80px',
+                    padding: '0.5rem 1rem',
+                    background: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    zIndex: 10
+                  }}
+                >
+                  저장
+                </button>
+              )}
+              {editingWhyNow && isAdminUser && (
+                <button
+                  onClick={() => {
+                    setEditingWhyNow(false);
+                    // 원본 데이터로 복원
+                    if (originalPageContent) {
+                      setPageContent(JSON.parse(JSON.stringify(originalPageContent)));
+                    }
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '140px',
+                    padding: '0.5rem 1rem',
+                    background: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    zIndex: 10
+                  }}
+                >
+                  취소
+                </button>
+              )}
               <div className={styles.pricingExtraHeader}>
                 <p className={styles.pricingExtraEyebrow}>WHY NOW</p>
-                <h3 className={styles.pricingExtraTitle}>"Why" 지금 시작해야 하나</h3>
-                <div className={styles.pricingExtraCopy}>
-                  <p>자동화는 ‘언젠가’가 아니라 ‘지금’ 시작할수록 비용이 줄어듭니다.</p>
-                </div>
+                {editingWhyNow && isAdminUser ? (
+                  <>
+                    <input
+                      type="text"
+                      value={pageContent?.whyNow?.title || '"Why" 지금 시작해야 하나'}
+                      onChange={(e) => {
+                        if (!pageContent?.whyNow) {
+                          setPageContent({ 
+                            ...pageContent, 
+                            whyNow: {
+                              title: e.target.value,
+                              copy: '자동화는 \'언젠가\'가 아니라 \'지금\' 시작할수록 비용이 줄어듭니다.',
+                              points: [
+                                { title: '업무량 증가', desc: '처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.' },
+                                { title: '인건비 상승', desc: '반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.' },
+                                { title: '속도 경쟁', desc: '고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.' }
+                              ]
+                            }
+                          });
+                        } else {
+                          setPageContent({ 
+                            ...pageContent, 
+                            whyNow: { 
+                              ...pageContent.whyNow, 
+                              title: e.target.value 
+                            } 
+                          });
+                        }
+                      }}
+                      className={styles.editInput}
+                      style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', width: '100%', padding: '0.5rem' }}
+                    />
+                    <textarea
+                      value={pageContent?.whyNow?.copy || '자동화는 \'언젠가\'가 아니라 \'지금\' 시작할수록 비용이 줄어듭니다.'}
+                      onChange={(e) => {
+                        if (!pageContent?.whyNow) {
+                          setPageContent({ 
+                            ...pageContent, 
+                            whyNow: {
+                              title: '"Why" 지금 시작해야 하나',
+                              copy: e.target.value,
+                              points: [
+                                { title: '업무량 증가', desc: '처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.' },
+                                { title: '인건비 상승', desc: '반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.' },
+                                { title: '속도 경쟁', desc: '고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.' }
+                              ]
+                            }
+                          });
+                        } else {
+                          setPageContent({ 
+                            ...pageContent, 
+                            whyNow: { 
+                              ...pageContent.whyNow, 
+                              copy: e.target.value 
+                            } 
+                          });
+                        }
+                      }}
+                      className={styles.editInput}
+                      style={{ width: '100%', minHeight: '60px', padding: '0.5rem' }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h3 className={styles.pricingExtraTitle}>
+                      {pageContent?.whyNow?.title || '"Why" 지금 시작해야 하나'}
+                    </h3>
+                    <div className={styles.pricingExtraCopy}>
+                      <p>{pageContent?.whyNow?.copy || '자동화는 \'언젠가\'가 아니라 \'지금\' 시작할수록 비용이 줄어듭니다.'}</p>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className={styles.urgencyPoints}>
-                <div className={styles.urgencyPoint}>
-                  <div className={styles.urgencyPointTitle}>업무량 증가</div>
-                  <div className={styles.urgencyPointDesc}>처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.</div>
-                </div>
-                <div className={styles.urgencyPoint}>
-                  <div className={styles.urgencyPointTitle}>인건비 상승</div>
-                  <div className={styles.urgencyPointDesc}>반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.</div>
-                </div>
-                <div className={styles.urgencyPoint}>
-                  <div className={styles.urgencyPointTitle}>속도 경쟁</div>
-                  <div className={styles.urgencyPointDesc}>고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.</div>
-                </div>
+                {(pageContent?.whyNow?.points || [
+                  { title: '업무량 증가', desc: '처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.' },
+                  { title: '인건비 상승', desc: '반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.' },
+                  { title: '속도 경쟁', desc: '고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.' }
+                ]).map((point, idx) => (
+                  <div key={idx} className={styles.urgencyPoint}>
+                    {editingWhyNow && isAdminUser ? (
+                      <>
+                        <input
+                          type="text"
+                          value={point.title}
+                          onChange={(e) => {
+                            const newPoints = [...(pageContent?.whyNow?.points || [])];
+                            newPoints[idx] = { ...newPoints[idx], title: e.target.value };
+                            const newContent = { 
+                              ...pageContent, 
+                              whyNow: { 
+                                ...(pageContent?.whyNow || {}), 
+                                points: newPoints 
+                              } 
+                            };
+                            setPageContent(newContent);
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '0.9375rem', fontWeight: 'bold' }}
+                        />
+                        <textarea
+                          value={point.desc}
+                          onChange={(e) => {
+                            const newPoints = [...(pageContent?.whyNow?.points || [])];
+                            newPoints[idx] = { ...newPoints[idx], desc: e.target.value };
+                            const newContent = { 
+                              ...pageContent, 
+                              whyNow: { 
+                                ...(pageContent?.whyNow || {}), 
+                                points: newPoints 
+                              } 
+                            };
+                            setPageContent(newContent);
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100%', minHeight: '60px', padding: '0.5rem', fontSize: '0.8125rem' }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className={styles.urgencyPointTitle}>{point.title}</div>
+                        <div className={styles.urgencyPointDesc}>{point.desc}</div>
+                      </>
+                    )}
+                  </div>
+                ))}
               </div>
             </section>
 
             {/* Risk removal (Barrier 0) */}
-            <section className={styles.pricingExtraSection}>
+            <section className={styles.pricingExtraSection} style={{ position: 'relative' }}>
+              {isAdminUser && (
+                <button
+                  onClick={() => {
+                    // 편집 시작 시 원본 데이터 저장
+                    if (pageContent) {
+                      setOriginalPageContent(JSON.parse(JSON.stringify(pageContent)));
+                    }
+                    if (!pageContent?.riskRemoval) {
+                      const defaultRiskRemoval = {
+                        title: '도입 장벽 "Low Risk"',
+                        subtitle: '시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.',
+                        cards: [
+                          { title: '초기 세팅 지원', desc: '업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.' },
+                          { title: '기존 시스템 연동', desc: 'API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.' },
+                          { title: '단계적 확장', desc: '작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.' }
+                        ]
+                      };
+                      setPageContent({ ...pageContent, riskRemoval: defaultRiskRemoval });
+                    }
+                    setEditingRiskRemoval(true);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    padding: '0.5rem 1rem',
+                    background: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    zIndex: 10
+                  }}
+                >
+                  수정
+                </button>
+              )}
+              {editingRiskRemoval && isAdminUser && (
+                <button
+                  onClick={async () => {
+                    const success = await saveContent(pageContent);
+                    if (success) {
+                      setEditingRiskRemoval(false);
+                    }
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '80px',
+                    padding: '0.5rem 1rem',
+                    background: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    zIndex: 10
+                  }}
+                >
+                  저장
+                </button>
+              )}
+              {editingRiskRemoval && isAdminUser && (
+                <button
+                  onClick={() => {
+                    setEditingRiskRemoval(false);
+                    // 원본 데이터로 복원
+                    if (originalPageContent) {
+                      setPageContent(JSON.parse(JSON.stringify(originalPageContent)));
+                    }
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '140px',
+                    padding: '0.5rem 1rem',
+                    background: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    zIndex: 10
+                  }}
+                >
+                  취소
+                </button>
+              )}
               <div className={styles.pricingExtraHeader}>
                 <p className={styles.pricingExtraEyebrow}>RISK REMOVAL</p>
-                <h3 className={styles.pricingExtraTitle}>도입 장벽 "Low Risk"</h3>
-                <p className={styles.pricingExtraSub}>
-                  시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.
-                </p>
+                {editingRiskRemoval && isAdminUser ? (
+                  <>
+                    <input
+                      type="text"
+                      value={pageContent?.riskRemoval?.title || '도입 장벽 "Low Risk"'}
+                      onChange={(e) => {
+                        if (!pageContent?.riskRemoval) {
+                          setPageContent({ 
+                            ...pageContent, 
+                            riskRemoval: {
+                              title: e.target.value,
+                              subtitle: '시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.',
+                              cards: [
+                                { title: '초기 세팅 지원', desc: '업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.' },
+                                { title: '기존 시스템 연동', desc: 'API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.' },
+                                { title: '단계적 확장', desc: '작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.' }
+                              ]
+                            }
+                          });
+                        } else {
+                          setPageContent({ 
+                            ...pageContent, 
+                            riskRemoval: { 
+                              ...pageContent.riskRemoval, 
+                              title: e.target.value 
+                            } 
+                          });
+                        }
+                      }}
+                      className={styles.editInput}
+                      style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', width: '100%', padding: '0.5rem' }}
+                    />
+                    <textarea
+                      value={pageContent?.riskRemoval?.subtitle || '시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.'}
+                      onChange={(e) => {
+                        if (!pageContent?.riskRemoval) {
+                          setPageContent({ 
+                            ...pageContent, 
+                            riskRemoval: {
+                              title: '도입 장벽 "Low Risk"',
+                              subtitle: e.target.value,
+                              cards: [
+                                { title: '초기 세팅 지원', desc: '업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.' },
+                                { title: '기존 시스템 연동', desc: 'API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.' },
+                                { title: '단계적 확장', desc: '작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.' }
+                              ]
+                            }
+                          });
+                        } else {
+                          setPageContent({ 
+                            ...pageContent, 
+                            riskRemoval: { 
+                              ...pageContent.riskRemoval, 
+                              subtitle: e.target.value 
+                            } 
+                          });
+                        }
+                      }}
+                      className={styles.editInput}
+                      style={{ width: '100%', minHeight: '60px', padding: '0.5rem' }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h3 className={styles.pricingExtraTitle}>
+                      {pageContent?.riskRemoval?.title || '도입 장벽 "Low Risk"'}
+                    </h3>
+                    <p className={styles.pricingExtraSub}>
+                      {pageContent?.riskRemoval?.subtitle || '시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.'}
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className={styles.barrierGrid}>
-                <div className={styles.barrierCard}>
-                  <div className={styles.barrierTitle}>초기 세팅 지원</div>
-                  <div className={styles.barrierDesc}>업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.</div>
-                </div>
-                <div className={styles.barrierCard}>
-                  <div className={styles.barrierTitle}>기존 시스템 연동</div>
-                  <div className={styles.barrierDesc}>API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.</div>
-                </div>
-                <div className={styles.barrierCard}>
-                  <div className={styles.barrierTitle}>단계적 확장</div>
-                  <div className={styles.barrierDesc}>작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.</div>
-                </div>
+                {(pageContent?.riskRemoval?.cards || [
+                  { title: '초기 세팅 지원', desc: '업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.' },
+                  { title: '기존 시스템 연동', desc: 'API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.' },
+                  { title: '단계적 확장', desc: '작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.' }
+                ]).map((card, idx) => (
+                  <div key={idx} className={styles.barrierCard}>
+                    {editingRiskRemoval && isAdminUser ? (
+                      <>
+                        <input
+                          type="text"
+                          value={card.title}
+                          onChange={(e) => {
+                            const newCards = [...(pageContent?.riskRemoval?.cards || [])];
+                            newCards[idx] = { ...newCards[idx], title: e.target.value };
+                            const newContent = { 
+                              ...pageContent, 
+                              riskRemoval: { 
+                                ...(pageContent?.riskRemoval || {}), 
+                                cards: newCards 
+                              } 
+                            };
+                            setPageContent(newContent);
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '0.9375rem', fontWeight: 'bold' }}
+                        />
+                        <textarea
+                          value={card.desc}
+                          onChange={(e) => {
+                            const newCards = [...(pageContent?.riskRemoval?.cards || [])];
+                            newCards[idx] = { ...newCards[idx], desc: e.target.value };
+                            const newContent = { 
+                              ...pageContent, 
+                              riskRemoval: { 
+                                ...(pageContent?.riskRemoval || {}), 
+                                cards: newCards 
+                              } 
+                            };
+                            setPageContent(newContent);
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100%', minHeight: '60px', padding: '0.5rem', fontSize: '0.8125rem' }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className={styles.barrierTitle}>{card.title}</div>
+                        <div className={styles.barrierDesc}>{card.desc}</div>
+                      </>
+                    )}
+                  </div>
+                ))}
               </div>
             </section>
 
@@ -2012,15 +2488,205 @@ export default function CompanyPage() {
           </div>
 
           {/* 요금제 카드 3개 */}
-          <div className={styles.pricingSection}>
+          <div className={styles.pricingSection} style={{ position: 'relative' }}>
+            {isAdminUser && (
+              <button
+                onClick={() => {
+                  // 편집 시작 시 원본 데이터 저장
+                  if (pageContent) {
+                    setOriginalPageContent(JSON.parse(JSON.stringify(pageContent)));
+                  }
+                  if (!pageContent?.pricing) {
+                    const defaultPricing = {
+                      title: '요금제',
+                      subtitle: '필요한 만큼 선택하고, 확장하면서 비용을 최적화하세요.',
+                      plans: pricingPlans,
+                      brandPromise: {
+                        title: '일이 매끄럽게 흐르는 경험',
+                        description: '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.',
+                        pills: ['빠르게', '정확하게', '안전하게']
+                      },
+                      roi: {
+                        title: '한 번의 도입, 매달 반복되는 절감',
+                        stats: [
+                          { value: '166h', label: '월 절감 시간(예시)' },
+                          { value: '2m', label: '건당 절감(예시)' },
+                          { value: '5,000', label: '월 처리량(예시)' }
+                        ],
+                        example: '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>',
+                        note: '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'
+                      }
+                    };
+                    setPageContent({ ...pageContent, pricing: defaultPricing });
+                  }
+                  setEditingPricing(true);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  right: '20px',
+                  padding: '0.5rem 1rem',
+                  background: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  zIndex: 10
+                }}
+              >
+                수정
+              </button>
+            )}
+            {editingPricing && isAdminUser && (
+              <button
+                onClick={async () => {
+                  const success = await saveContent(pageContent);
+                  if (success) {
+                    setEditingPricing(false);
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  right: '80px',
+                  padding: '0.5rem 1rem',
+                  background: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  zIndex: 10
+                }}
+              >
+                저장
+              </button>
+            )}
+            {editingPricing && isAdminUser && (
+              <button
+                onClick={() => {
+                  setEditingPricing(false);
+                  // 원본 데이터로 복원
+                  if (originalPageContent) {
+                    setPageContent(JSON.parse(JSON.stringify(originalPageContent)));
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  right: '140px',
+                  padding: '0.5rem 1rem',
+                  background: '#ff4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  zIndex: 10
+                }}
+              >
+                취소
+              </button>
+            )}
             <div className={styles.pricingHeader}>
-              <h2 className={styles.pricingTitle}>요금제</h2>
-              <p className={styles.pricingSubtitle}>
-                필요한 만큼 선택하고, 확장하면서 비용을 최적화하세요.
-              </p>
+              {editingPricing && isAdminUser ? (
+                <>
+                  <input
+                    type="text"
+                    value={pageContent?.pricing?.title || '요금제'}
+                    onChange={(e) => {
+                      if (!pageContent?.pricing) {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: {
+                            title: e.target.value,
+                            subtitle: '필요한 만큼 선택하고, 확장하면서 비용을 최적화하세요.',
+                            plans: pricingPlans,
+                            brandPromise: {
+                              title: '일이 매끄럽게 흐르는 경험',
+                              description: '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.',
+                              pills: ['빠르게', '정확하게', '안전하게']
+                            },
+                            roi: {
+                              title: '한 번의 도입, 매달 반복되는 절감',
+                              stats: [
+                                { value: '166h', label: '월 절감 시간(예시)' },
+                                { value: '2m', label: '건당 절감(예시)' },
+                                { value: '5,000', label: '월 처리량(예시)' }
+                              ],
+                              example: '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>',
+                              note: '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'
+                            }
+                          }
+                        });
+                      } else {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: { 
+                            ...pageContent.pricing, 
+                            title: e.target.value 
+                          } 
+                        });
+                      }
+                    }}
+                    className={styles.editInput}
+                    style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem', width: '100%', padding: '0.5rem' }}
+                  />
+                  <textarea
+                    value={pageContent?.pricing?.subtitle || '필요한 만큼 선택하고, 확장하면서 비용을 최적화하세요.'}
+                    onChange={(e) => {
+                      if (!pageContent?.pricing) {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: {
+                            title: '요금제',
+                            subtitle: e.target.value,
+                            plans: pricingPlans,
+                            brandPromise: {
+                              title: '일이 매끄럽게 흐르는 경험',
+                              description: '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.',
+                              pills: ['빠르게', '정확하게', '안전하게']
+                            },
+                            roi: {
+                              title: '한 번의 도입, 매달 반복되는 절감',
+                              stats: [
+                                { value: '166h', label: '월 절감 시간(예시)' },
+                                { value: '2m', label: '건당 절감(예시)' },
+                                { value: '5,000', label: '월 처리량(예시)' }
+                              ],
+                              example: '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>',
+                              note: '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'
+                            }
+                          }
+                        });
+                      } else {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: { 
+                            ...pageContent.pricing, 
+                            subtitle: e.target.value 
+                          } 
+                        });
+                      }
+                    }}
+                    className={styles.editInput}
+                    style={{ width: '100%', minHeight: '60px', padding: '0.5rem' }}
+                  />
+                </>
+              ) : (
+                <>
+                  <h2 className={styles.pricingTitle}>
+                    {pageContent?.pricing?.title || '요금제'}
+                  </h2>
+                  <p className={styles.pricingSubtitle}>
+                    {pageContent?.pricing?.subtitle || '필요한 만큼 선택하고, 확장하면서 비용을 최적화하세요.'}
+                  </p>
+                </>
+              )}
             </div>
             <div className={styles.pricingGrid}>
-              {pricingPlans.map((plan) => (
+              {(pageContent?.pricing?.plans || pricingPlans).map((plan, planIdx) => (
                 <div
                   key={plan.key}
                   className={`${styles.pricingCard} ${styles[`pricingCardTone_${plan.tone}`]} ${
@@ -2029,16 +2695,122 @@ export default function CompanyPage() {
                 >
                   {plan.highlight && <div className={styles.pricingBadge}>추천</div>}
                   <div className={styles.pricingCardTop}>
-                    <h3 className={styles.pricingCardName}>{plan.name}</h3>
-                    <p className={styles.pricingCardDesc}>{plan.description}</p>
+                    {editingPricing && isAdminUser ? (
+                      <>
+                        <input
+                          type="text"
+                          value={plan.name}
+                          onChange={(e) => {
+                            const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                            newPlans[planIdx] = { ...newPlans[planIdx], name: e.target.value };
+                            setPageContent({ 
+                              ...pageContent, 
+                              pricing: { 
+                                ...(pageContent?.pricing || {}), 
+                                plans: newPlans 
+                              } 
+                            });
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
+                        />
+                        <textarea
+                          value={plan.description}
+                          onChange={(e) => {
+                            const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                            newPlans[planIdx] = { ...newPlans[planIdx], description: e.target.value };
+                            setPageContent({ 
+                              ...pageContent, 
+                              pricing: { 
+                                ...(pageContent?.pricing || {}), 
+                                plans: newPlans 
+                              } 
+                            });
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100%', minHeight: '40px', padding: '0.5rem', fontSize: '0.875rem' }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <h3 className={styles.pricingCardName}>{plan.name}</h3>
+                        <p className={styles.pricingCardDesc}>{plan.description}</p>
+                      </>
+                    )}
                   </div>
                   <div className={styles.pricingPriceRow}>
-                    <span className={styles.pricingPrice}>{plan.price}</span>
-                    {plan.period && <span className={styles.pricingPeriod}>{plan.period}</span>}
+                    {editingPricing && isAdminUser ? (
+                      <>
+                        <input
+                          type="text"
+                          value={plan.price}
+                          onChange={(e) => {
+                            const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                            newPlans[planIdx] = { ...newPlans[planIdx], price: e.target.value };
+                            setPageContent({ 
+                              ...pageContent, 
+                              pricing: { 
+                                ...(pageContent?.pricing || {}), 
+                                plans: newPlans 
+                              } 
+                            });
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100px', padding: '0.5rem', fontSize: '2.125rem', fontWeight: 'bold' }}
+                        />
+                        <input
+                          type="text"
+                          value={plan.period || ''}
+                          onChange={(e) => {
+                            const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                            newPlans[planIdx] = { ...newPlans[planIdx], period: e.target.value };
+                            setPageContent({ 
+                              ...pageContent, 
+                              pricing: { 
+                                ...(pageContent?.pricing || {}), 
+                                plans: newPlans 
+                              } 
+                            });
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '60px', padding: '0.5rem', fontSize: '0.875rem' }}
+                          placeholder="/월"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <span className={styles.pricingPrice}>{plan.price}</span>
+                        {plan.period && <span className={styles.pricingPeriod}>{plan.period}</span>}
+                      </>
+                    )}
                   </div>
                   <ul className={styles.pricingList}>
-                    {plan.features.map((f) => (
-                      <li key={f}>{f}</li>
+                    {plan.features.map((f, featureIdx) => (
+                      <li key={featureIdx}>
+                        {editingPricing && isAdminUser ? (
+                          <input
+                            type="text"
+                            value={f}
+                            onChange={(e) => {
+                              const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                              const newFeatures = [...newPlans[planIdx].features];
+                              newFeatures[featureIdx] = e.target.value;
+                              newPlans[planIdx] = { ...newPlans[planIdx], features: newFeatures };
+                              setPageContent({ 
+                                ...pageContent, 
+                                pricing: { 
+                                  ...(pageContent?.pricing || {}), 
+                                  plans: newPlans 
+                                } 
+                              });
+                            }}
+                            className={styles.editInput}
+                            style={{ width: '100%', padding: '0.25rem', fontSize: '0.875rem', marginBottom: '0.25rem' }}
+                          />
+                        ) : (
+                          f
+                        )}
+                      </li>
                     ))}
                   </ul>
                   <div className={styles.pricingActions}>
@@ -2061,38 +2833,214 @@ export default function CompanyPage() {
               <div className={styles.pricingAfterGrid}>
                 <div className={styles.pricingAfterCard}>
                   <p className={styles.pricingAfterEyebrow}>BRAND PROMISE</p>
-                  <h3 className={styles.pricingAfterTitle}>일이 매끄럽게 흐르는 경험</h3>
-                  <p className={styles.pricingAfterDesc}>
-                    반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.
-                  </p>
-                  <div className={styles.promisePills}>
-                    <span className={styles.promisePill}>빠르게</span>
-                    <span className={styles.promisePill}>정확하게</span>
-                    <span className={styles.promisePill}>안전하게</span>
-                  </div>
+                  {editingPricing && isAdminUser ? (
+                    <>
+                      <input
+                        type="text"
+                        value={pageContent?.pricing?.brandPromise?.title || '일이 매끄럽게 흐르는 경험'}
+                        onChange={(e) => {
+                          setPageContent({ 
+                            ...pageContent, 
+                            pricing: { 
+                              ...(pageContent?.pricing || {}), 
+                              brandPromise: { 
+                                ...(pageContent?.pricing?.brandPromise || {}), 
+                                title: e.target.value 
+                              } 
+                            } 
+                          });
+                        }}
+                        className={styles.editInput}
+                        style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
+                      />
+                      <textarea
+                        value={pageContent?.pricing?.brandPromise?.description || '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.'}
+                        onChange={(e) => {
+                          setPageContent({ 
+                            ...pageContent, 
+                            pricing: { 
+                              ...(pageContent?.pricing || {}), 
+                              brandPromise: { 
+                                ...(pageContent?.pricing?.brandPromise || {}), 
+                                description: e.target.value 
+                              } 
+                            } 
+                          });
+                        }}
+                        className={styles.editInput}
+                        style={{ width: '100%', minHeight: '60px', padding: '0.5rem', fontSize: '0.875rem' }}
+                      />
+                      <div style={{ marginTop: '1rem' }}>
+                        {(pageContent?.pricing?.brandPromise?.pills || ['빠르게', '정확하게', '안전하게']).map((pill, pillIdx) => (
+                          <input
+                            key={pillIdx}
+                            type="text"
+                            value={pill}
+                            onChange={(e) => {
+                              const newPills = [...(pageContent?.pricing?.brandPromise?.pills || [])];
+                              newPills[pillIdx] = e.target.value;
+                              setPageContent({ 
+                                ...pageContent, 
+                                pricing: { 
+                                  ...(pageContent?.pricing || {}), 
+                                  brandPromise: { 
+                                    ...(pageContent?.pricing?.brandPromise || {}), 
+                                    pills: newPills 
+                                  } 
+                                } 
+                              });
+                            }}
+                            className={styles.editInput}
+                            style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '0.8125rem' }}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className={styles.pricingAfterTitle}>
+                        {pageContent?.pricing?.brandPromise?.title || '일이 매끄럽게 흐르는 경험'}
+                      </h3>
+                      <p className={styles.pricingAfterDesc}>
+                        {pageContent?.pricing?.brandPromise?.description || '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.'}
+                      </p>
+                      <div className={styles.promisePills}>
+                        {(pageContent?.pricing?.brandPromise?.pills || ['빠르게', '정확하게', '안전하게']).map((pill, pillIdx) => (
+                          <span key={pillIdx} className={styles.promisePill}>{pill}</span>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className={`${styles.pricingAfterCard} ${styles.pricingAfterCardRoi}`}>
                   <p className={styles.pricingAfterEyebrow}>ROI SNAPSHOT</p>
-                  <h3 className={styles.pricingAfterTitle}>한 번의 도입, 매달 반복되는 절감</h3>
-                  <div className={styles.roiStats}>
-                    <div className={styles.roiStat}>
-                      <div className={styles.roiStatValue}>166h</div>
-                      <div className={styles.roiStatLabel}>월 절감 시간(예시)</div>
-                    </div>
-                    <div className={styles.roiStat}>
-                      <div className={styles.roiStatValue}>2m</div>
-                      <div className={styles.roiStatLabel}>건당 절감(예시)</div>
-                    </div>
-                    <div className={styles.roiStat}>
-                      <div className={styles.roiStatValue}>5,000</div>
-                      <div className={styles.roiStatLabel}>월 처리량(예시)</div>
-                    </div>
-                  </div>
-                  <div className={styles.roiExample}>
-                    예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>
-                  </div>
-                  <div className={styles.roiNote}>* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.</div>
+                  {editingPricing && isAdminUser ? (
+                    <>
+                      <input
+                        type="text"
+                        value={pageContent?.pricing?.roi?.title || '한 번의 도입, 매달 반복되는 절감'}
+                        onChange={(e) => {
+                          setPageContent({ 
+                            ...pageContent, 
+                            pricing: { 
+                              ...(pageContent?.pricing || {}), 
+                              roi: { 
+                                ...(pageContent?.pricing?.roi || {}), 
+                                title: e.target.value 
+                              } 
+                            } 
+                          });
+                        }}
+                        className={styles.editInput}
+                        style={{ width: '100%', marginBottom: '1rem', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
+                      />
+                      <div className={styles.roiStats}>
+                        {(pageContent?.pricing?.roi?.stats || [
+                          { value: '166h', label: '월 절감 시간(예시)' },
+                          { value: '2m', label: '건당 절감(예시)' },
+                          { value: '5,000', label: '월 처리량(예시)' }
+                        ]).map((stat, statIdx) => (
+                          <div key={statIdx} className={styles.roiStat}>
+                            <input
+                              type="text"
+                              value={stat.value}
+                              onChange={(e) => {
+                                const newStats = [...(pageContent?.pricing?.roi?.stats || [])];
+                                newStats[statIdx] = { ...newStats[statIdx], value: e.target.value };
+                                setPageContent({ 
+                                  ...pageContent, 
+                                  pricing: { 
+                                    ...(pageContent?.pricing || {}), 
+                                    roi: { 
+                                      ...(pageContent?.pricing?.roi || {}), 
+                                      stats: newStats 
+                                    } 
+                                  } 
+                                });
+                              }}
+                              className={styles.editInput}
+                              style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '1.25rem', fontWeight: 'bold' }}
+                            />
+                            <input
+                              type="text"
+                              value={stat.label}
+                              onChange={(e) => {
+                                const newStats = [...(pageContent?.pricing?.roi?.stats || [])];
+                                newStats[statIdx] = { ...newStats[statIdx], label: e.target.value };
+                                setPageContent({ 
+                                  ...pageContent, 
+                                  pricing: { 
+                                    ...(pageContent?.pricing || {}), 
+                                    roi: { 
+                                      ...(pageContent?.pricing?.roi || {}), 
+                                      stats: newStats 
+                                    } 
+                                  } 
+                                });
+                              }}
+                              className={styles.editInput}
+                              style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem' }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <textarea
+                        value={pageContent?.pricing?.roi?.example || '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>'}
+                        onChange={(e) => {
+                          setPageContent({ 
+                            ...pageContent, 
+                            pricing: { 
+                              ...(pageContent?.pricing || {}), 
+                              roi: { 
+                                ...(pageContent?.pricing?.roi || {}), 
+                                example: e.target.value 
+                              } 
+                            } 
+                          });
+                        }}
+                        className={styles.editInput}
+                        style={{ width: '100%', marginTop: '1rem', minHeight: '40px', padding: '0.5rem', fontSize: '0.8125rem' }}
+                      />
+                      <textarea
+                        value={pageContent?.pricing?.roi?.note || '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'}
+                        onChange={(e) => {
+                          setPageContent({ 
+                            ...pageContent, 
+                            pricing: { 
+                              ...(pageContent?.pricing || {}), 
+                              roi: { 
+                                ...(pageContent?.pricing?.roi || {}), 
+                                note: e.target.value 
+                              } 
+                            } 
+                          });
+                        }}
+                        className={styles.editInput}
+                        style={{ width: '100%', marginTop: '0.5rem', minHeight: '30px', padding: '0.5rem', fontSize: '0.75rem' }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <h3 className={styles.pricingAfterTitle}>
+                        {pageContent?.pricing?.roi?.title || '한 번의 도입, 매달 반복되는 절감'}
+                      </h3>
+                      <div className={styles.roiStats}>
+                        {(pageContent?.pricing?.roi?.stats || [
+                          { value: '166h', label: '월 절감 시간(예시)' },
+                          { value: '2m', label: '건당 절감(예시)' },
+                          { value: '5,000', label: '월 처리량(예시)' }
+                        ]).map((stat, statIdx) => (
+                          <div key={statIdx} className={styles.roiStat}>
+                            <div className={styles.roiStatValue}>{stat.value}</div>
+                            <div className={styles.roiStatLabel}>{stat.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className={styles.roiExample} dangerouslySetInnerHTML={{ __html: pageContent?.pricing?.roi?.example || '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>' }} />
+                      <div className={styles.roiNote}>{pageContent?.pricing?.roi?.note || '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'}</div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

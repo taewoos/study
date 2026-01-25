@@ -1,9 +1,96 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import styles from './page.module.css';
 import { AppShell } from '../components/AppShell';
+import { getUser } from '@/utils/auth';
 
 export default function HomePage() {
+  const [user, setUser] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const currentUser = getUser();
+    setUser(currentUser);
+    
+    // 로그인 상태 변경 감지
+    const handleLoginChange = () => {
+      setUser(getUser());
+    };
+    window.addEventListener('loginStatusChange', handleLoginChange);
+    window.addEventListener('storage', handleLoginChange);
+
+    return () => {
+      window.removeEventListener('loginStatusChange', handleLoginChange);
+      window.removeEventListener('storage', handleLoginChange);
+    };
+  }, []);
+
+  // role에 따른 결제 정보 설정
+  const getPaymentInfo = () => {
+    if (!user) return null;
+    
+    const role = user.role;
+    
+    if (role === 0) {
+      // 관리자
+      return {
+        plan: '관리자',
+        description: '관리자입니다',
+        status: '관리자',
+        showPaymentInfo: false,
+        showPaymentButton: false
+      };
+    } else if (role === 1) {
+      // 일반 유저 - 결제 유도
+      return {
+        plan: '결제 필요',
+        description: '플랜을 선택하여 결제하세요',
+        status: '미결제',
+        showPaymentInfo: false,
+        showPaymentButton: true,
+        buttonText: '결제하기'
+      };
+    } else if (role === 2) {
+      // Starter
+      return {
+        plan: 'Starter 플랜',
+        description: '개인/소규모 팀을 위한 시작 플랜',
+        status: '활성',
+        showPaymentInfo: true,
+        amount: '₩19,000',
+        showPaymentButton: true,
+        buttonText: '결제 관리'
+      };
+    } else if (role === 3) {
+      // Pro
+      return {
+        plan: 'Pro 플랜',
+        description: '업무 자동화를 본격적으로 확장',
+        status: '활성',
+        showPaymentInfo: true,
+        amount: '₩149,000',
+        showPaymentButton: true,
+        buttonText: '결제 관리'
+      };
+    } else if (role === 4) {
+      // Enterprise
+      return {
+        plan: 'Enterprise 플랜',
+        description: '프리미엄 기능 모두 이용 가능',
+        status: '활성',
+        showPaymentInfo: true,
+        amount: '문의',
+        showPaymentButton: true,
+        buttonText: '결제 관리'
+      };
+    }
+    
+    return null;
+  };
+
+  const paymentInfo = getPaymentInfo();
   const headerActions = (
     <>
       <button className={styles.headerButton}>
@@ -37,60 +124,83 @@ export default function HomePage() {
             <div className={styles.paymentCard}>
               <div className={styles.paymentCardGlow}></div>
               <div className={styles.paymentStatus}>
-                <div className={styles.paymentStatusHeader}>
-                  <div>
-                    <span className={styles.paymentPlan}>Enterprise 플랜</span>
-                    <div className={styles.paymentPlanDesc}>프리미엄 기능 모두 이용 가능</div>
+                {isMounted && paymentInfo ? (
+                  <>
+                    <div className={styles.paymentStatusHeader}>
+                      <div>
+                        <span className={styles.paymentPlan}>{paymentInfo.plan}</span>
+                        <div className={styles.paymentPlanDesc}>{paymentInfo.description}</div>
+                      </div>
+                      {paymentInfo.status && (
+                        <span className={styles.paymentStatusBadge}>
+                          {paymentInfo.status !== '관리자' && <span className={styles.badgePulse}></span>}
+                          {paymentInfo.status}
+                        </span>
+                      )}
+                    </div>
+                    {paymentInfo.showPaymentInfo ? (
+                      <div className={styles.paymentInfo}>
+                        <div className={styles.paymentInfoItem}>
+                          <div className={styles.paymentInfoIcon}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10"/>
+                              <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                          </div>
+                          <div className={styles.paymentInfoText}>
+                            <span className={styles.paymentLabel}>다음 결제일</span>
+                            <span className={styles.paymentValue}>2025년 2월 15일</span>
+                          </div>
+                        </div>
+                        <div className={styles.paymentInfoItem}>
+                          <div className={styles.paymentInfoIcon}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <line x1="12" y1="1" x2="12" y2="23"/>
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                          </div>
+                          <div className={styles.paymentInfoText}>
+                            <span className={styles.paymentLabel}>결제 금액</span>
+                            <span className={styles.paymentValue}>{paymentInfo.amount}</span>
+                          </div>
+                        </div>
+                        <div className={styles.paymentInfoItem}>
+                          <div className={styles.paymentInfoIcon}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                              <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                          </div>
+                          <div className={styles.paymentInfoText}>
+                            <span className={styles.paymentLabel}>결제 방법</span>
+                            <span className={styles.paymentValue}>신용카드 (****1234)</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : user?.role === 1 ? (
+                      <div style={{ padding: '2rem', textAlign: 'center' }}>
+                        <p style={{ marginBottom: '1rem', color: '#666' }}>
+                          플랜을 선택하여 결제하시면 더 많은 기능을 이용하실 수 있습니다.
+                        </p>
+                      </div>
+                    ) : null}
+                    {paymentInfo.showPaymentButton && (
+                      <button 
+                      className={styles.paymentButton}
+                      onClick={() => window.location.href = '/payment'}
+                      >
+                        <span>{paymentInfo.buttonText || '결제 관리'}</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ padding: '2rem', textAlign: 'center' }}>
+                    <p>로딩 중...</p>
                   </div>
-                  <span className={styles.paymentStatusBadge}>
-                    <span className={styles.badgePulse}></span>
-                    활성
-                  </span>
-                </div>
-                <div className={styles.paymentInfo}>
-                  <div className={styles.paymentInfoItem}>
-                    <div className={styles.paymentInfoIcon}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                      </svg>
-                    </div>
-                    <div className={styles.paymentInfoText}>
-                      <span className={styles.paymentLabel}>다음 결제일</span>
-                      <span className={styles.paymentValue}>2025년 2월 15일</span>
-                    </div>
-                  </div>
-                  <div className={styles.paymentInfoItem}>
-                    <div className={styles.paymentInfoIcon}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="12" y1="1" x2="12" y2="23"/>
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                      </svg>
-                    </div>
-                    <div className={styles.paymentInfoText}>
-                      <span className={styles.paymentLabel}>결제 금액</span>
-                      <span className={styles.paymentValue}>₩500,000</span>
-                    </div>
-                  </div>
-                  <div className={styles.paymentInfoItem}>
-                    <div className={styles.paymentInfoIcon}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                        <line x1="1" y1="10" x2="23" y2="10"/>
-                      </svg>
-                    </div>
-                    <div className={styles.paymentInfoText}>
-                      <span className={styles.paymentLabel}>결제 방법</span>
-                      <span className={styles.paymentValue}>신용카드 (****1234)</span>
-                    </div>
-                  </div>
-                </div>
-                <button className={styles.paymentButton}>
-                  <span>결제 관리</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
-                </button>
+                )}
               </div>
             </div>
           </section>

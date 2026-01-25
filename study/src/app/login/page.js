@@ -35,9 +35,14 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // 로그인 성공 - 토큰 저장 (간단하게 localStorage 사용)
-        localStorage.setItem('token', JSON.stringify(data.user));
-        sessionStorage.setItem('token', JSON.stringify(data.user));
+        // 로그인 성공 - JWT 토큰 저장
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          sessionStorage.setItem('token', data.token);
+        }
+        // 사용자 정보도 저장 (UI 표시용)
+        localStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.setItem('user', JSON.stringify(data.user));
         
         // 로그인 상태 변경 이벤트 발생
         window.dispatchEvent(new Event('loginStatusChange'));
