@@ -6,6 +6,21 @@
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/* 편집 모드 입력 필드 스타일 */
+.editInput {
+  border: 2px solid #4CAF50;
+  border-radius: 4px;
+  background: #fff;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.editInput:focus {
+  outline: none;
+  border-color: #45a049;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
 /* Top Header with Navigation */
 .topHeader {
   background: #ffffff;
@@ -221,6 +236,7 @@
 .sloganContent {
   max-width: 1000px;
   margin: 0 auto;
+  position: relative;
 }
 
 .sloganMain {
@@ -1108,6 +1124,25 @@
   grid-template-columns: 1fr;
   gap: 12px;
   padding: 16px 18px 18px;
+  overflow-x: hidden;
+}
+
+.newsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.newsList::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.05);
+  border-radius: 4px;
+}
+
+.newsList::-webkit-scrollbar-thumb {
+  background: rgba(17, 24, 39, 0.2);
+  border-radius: 4px;
+}
+
+.newsList::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 24, 39, 0.3);
 }
 
 .newsCard {
@@ -1167,6 +1202,27 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.credentialGrid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.credentialGrid::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.05);
+  border-radius: 4px;
+}
+
+.credentialGrid::-webkit-scrollbar-thumb {
+  background: rgba(17, 24, 39, 0.2);
+  border-radius: 4px;
+}
+
+.credentialGrid::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 24, 39, 0.3);
 }
 
 .credentialCard {

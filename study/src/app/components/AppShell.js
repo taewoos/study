@@ -6,19 +6,63 @@ import Link from 'next/link';
 export function AppShell({ styles, title, activeNav, headerActions, children, showLogo = true }) {
   const year = new Date().getFullYear();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     // 로그인 상태 확인 (localStorage 또는 sessionStorage에서 확인)
     const checkLoginStatus = () => {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      setIsLoggedIn(!!token);
+      if (token) {
+        try {
+          const userData = JSON.parse(token);
+          setIsLoggedIn(true);
+          setUser(userData);
+        } catch (error) {
+          setIsLoggedIn(false);
+          setUser(null);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
     };
     
     checkLoginStatus();
     // 로그인 상태 변경 감지를 위한 이벤트 리스너 (선택사항)
     window.addEventListener('storage', checkLoginStatus);
-    return () => window.removeEventListener('storage', checkLoginStatus);
+    
+    // 커스텀 이벤트 리스너 (같은 탭에서 로그인/로그아웃 시 상태 업데이트)
+    const handleLoginChange = () => {
+      checkLoginStatus();
+    };
+    window.addEventListener('loginStatusChange', handleLoginChange);
+    
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+      window.removeEventListener('loginStatusChange', handleLoginChange);
+    };
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      // 로그아웃 API 호출 (선택사항)
+      await fetch('/api/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // 로컬 스토리지 및 세션 스토리지에서 토큰 제거
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      setIsLoggedIn(false);
+      setUser(null);
+      
+      // 로그인 상태 변경 이벤트 발생
+      window.dispatchEvent(new Event('loginStatusChange'));
+      
+      // 로그인 페이지로 이동
+      window.location.href = '/login';
+    }
+  };
 
   // Ensure the footer stays at the bottom even when individual page CSS differs.
   const shellLayoutStyle = {
@@ -152,7 +196,11 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
           </a>
         </nav>
         <div className={styles.headerRight}>
-          {!isLoggedIn && (
+          {isLoggedIn ? (
+            <button onClick={handleLogout} className={styles.loginButton} style={{ cursor: 'pointer', border: 'none', background: 'none' }}>
+              로그아웃
+            </button>
+          ) : (
             <Link href="/login" className={styles.loginButton}>
               로그인
             </Link>

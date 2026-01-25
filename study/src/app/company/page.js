@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { AppShell } from '../components/AppShell';
+import { isAdmin, getUser } from '@/utils/auth';
 
 const sloganTexts = [
   'Agent 사용으로 생산성 Up',
@@ -106,33 +107,6 @@ const pricingPlans = [
   },
 ];
 
-const newsItems = [
-  {
-    title: 'Custom AI, 업무 자동화 솔루션 고도화',
-    date: '2026-01-01',
-    excerpt: 'LLM 기반 문서 처리와 워크플로우 자동화를 결합해 운영 효율을 개선했습니다.',
-    href: '#',
-  },
-  {
-    title: 'AI OCR 적용으로 입력 업무 70% 절감',
-    date: '2025-12-12',
-    excerpt: '문서 인식 정확도를 높이고 예외 케이스 처리 시간을 단축했습니다.',
-    href: '#',
-  },
-  {
-    title: 'RPA + Agent 도입 사례 공개',
-    date: '2025-11-20',
-    excerpt: '반복 업무를 자동화하고 승인/보고 흐름을 표준화했습니다.',
-    href: '#',
-  },
-];
-
-const credentialItems = [
-  { title: '특허 등록', subtitle: '문서 자동 분류 방법', imageSrc: '/uploads/aillm.png' },
-  { title: '특허 출원', subtitle: '워크플로우 추천 엔진', imageSrc: '/uploads/aillm.png' },
-  { title: '자격증', subtitle: '정보보안/클라우드', imageSrc: '/uploads/aillm.png' },
-  { title: '인증', subtitle: '품질/ISMS 준비', imageSrc: '/uploads/aillm.png' },
-];
 
 const customerReviews = [
   { quote: '“반복 업무가 사라지니, 팀이 ‘중요한 일’에 집중할 수 있게 됐어요.”', meta: '운영팀장' },
@@ -442,6 +416,20 @@ export default function CompanyPage() {
   const [activeRpaUseCaseIndex, setActiveRpaUseCaseIndex] = useState(0);
   const [activeModelCustomUseCaseIndex, setActiveModelCustomUseCaseIndex] = useState(0);
   const [activeAiAgentUseCaseIndex, setActiveAiAgentUseCaseIndex] = useState(0);
+  
+  // 관리자 편집 모드 관련 상태
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); // 클라이언트 마운트 확인용
+  const [pageContent, setPageContent] = useState(null);
+  const [originalPageContent, setOriginalPageContent] = useState(null); // 편집 시작 시 원본 데이터 저장
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // 저장되지 않은 변경사항 추적
+  const [achievements, setAchievements] = useState([]);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [editingAchievement, setEditingAchievement] = useState(null);
+  const [newAchievement, setNewAchievement] = useState({ title: '', date: '', excerpt: '', href: '#', type: 'news' });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const handleFeatureClick = (feature) => {
     setSelectedFeature(feature);
@@ -925,7 +913,329 @@ export default function CompanyPage() {
     return result;
   };
 
+  // 클라이언트 마운트 확인
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // 관리자 권한 확인 및 데이터 로드
+  useEffect(() => {
+    if (!isMounted) return; // 클라이언트에서만 실행
+    
+    const checkAdmin = () => {
+      const adminStatus = isAdmin();
+      console.log('Admin check:', adminStatus);
+      console.log('User data:', getUser());
+      setIsAdminUser(adminStatus);
+    };
+    
+    // 초기 확인
+    checkAdmin();
+
+    // 로그인 상태 변경 감지
+    const handleLoginChange = () => {
+      checkAdmin();
+    };
+    window.addEventListener('loginStatusChange', handleLoginChange);
+    window.addEventListener('storage', handleLoginChange);
+
+    // 콘텐츠 로드
+    const loadContent = async () => {
+      try {
+        const response = await fetch('/api/company/content');
+        if (response.ok) {
+          const data = await response.json();
+          setPageContent(data);
+          setHasUnsavedChanges(false); // 로드 시 변경사항 없음
+        }
+      } catch (error) {
+        console.error('Failed to load content:', error);
+      }
+    };
+
+    // 게시글 로드 및 초기 데이터 설정
+    const loadAchievements = async () => {
+      try {
+        const response = await fetch('/api/company/achievements');
+        if (response.ok) {
+          const data = await response.json();
+          // _id를 문자열로 변환하여 일관성 유지
+          const processedData = data.map(item => ({
+            ...item,
+            _id: item._id?.toString() || item._id
+          }));
+          
+          // news 타입 데이터가 없으면 초기 데이터를 데이터베이스에 저장
+          const newsItems = processedData.filter(a => a.type === 'news');
+          if (newsItems.length === 0) {
+            // 초기 news 데이터를 데이터베이스에 저장
+            const initialNewsData = [
+              {
+                title: 'Custom AI, 업무 자동화 솔루션 고도화',
+                date: '2026-01-01',
+                excerpt: 'LLM 기반 문서 처리와 워크플로우 자동화를 결합해 운영 효율을 개선했습니다.',
+                href: '#',
+                type: 'news',
+              },
+              {
+                title: 'AI OCR 적용으로 입력 업무 70% 절감',
+                date: '2025-12-12',
+                excerpt: '문서 인식 정확도를 높이고 예외 케이스 처리 시간을 단축했습니다.',
+                href: '#',
+                type: 'news',
+              },
+              {
+                title: 'RPA + Agent 도입 사례 공개',
+                date: '2025-11-20',
+                excerpt: '반복 업무를 자동화하고 승인/보고 흐름을 표준화했습니다.',
+                href: '#',
+                type: 'news',
+              },
+            ];
+            
+            for (const item of initialNewsData) {
+              try {
+                await fetch('/api/company/achievements', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(item),
+                });
+              } catch (error) {
+                console.error('Failed to save initial news item:', error);
+              }
+            }
+          }
+          
+          // credential 타입 데이터가 없으면 초기 데이터를 데이터베이스에 저장
+          const credentialItems = processedData.filter(a => a.type === 'credential');
+          if (credentialItems.length === 0) {
+            // 초기 credential 데이터를 데이터베이스에 저장
+            const initialCredentialData = [
+              { title: '특허 등록', subtitle: '문서 자동 분류 방법', imageSrc: '/uploads/aillm.png' },
+              { title: '특허 출원', subtitle: '워크플로우 추천 엔진', imageSrc: '/uploads/aillm.png' },
+              { title: '자격증', subtitle: '정보보안/클라우드', imageSrc: '/uploads/aillm.png' },
+              { title: '인증', subtitle: '품질/ISMS 준비', imageSrc: '/uploads/aillm.png' },
+            ];
+            
+            for (const item of initialCredentialData) {
+              try {
+                await fetch('/api/company/achievements', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    title: item.title,
+                    date: new Date().toISOString().split('T')[0],
+                    excerpt: item.subtitle,
+                    href: item.imageSrc, // imageSrc를 href에 저장
+                    type: 'credential',
+                  }),
+                });
+              } catch (error) {
+                console.error('Failed to save initial credential item:', error);
+              }
+            }
+          }
+          
+          // 초기 데이터 저장 후 다시 로드
+          if (newsItems.length === 0 || credentialItems.length === 0) {
+            const reloadResponse = await fetch('/api/company/achievements');
+            if (reloadResponse.ok) {
+              const reloadData = await reloadResponse.json();
+              const reloadProcessedData = reloadData.map(item => ({
+                ...item,
+                _id: item._id?.toString() || item._id
+              }));
+              setAchievements(reloadProcessedData);
+              return;
+            }
+          }
+          
+          setAchievements(processedData);
+        }
+      } catch (error) {
+        console.error('Failed to load achievements:', error);
+      }
+    };
+
+    loadContent();
+    loadAchievements();
+
+    return () => {
+      window.removeEventListener('loginStatusChange', handleLoginChange);
+      window.removeEventListener('storage', handleLoginChange);
+    };
+  }, [isMounted]);
+
+  // 콘텐츠 저장 함수
+  const saveContent = async (contentData) => {
+    try {
+      const response = await fetch('/api/company/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: contentData }),
+      });
+      if (response.ok) {
+        alert('저장되었습니다.');
+        setPageContent(contentData);
+        setHasUnsavedChanges(false);
+        return true;
+      } else {
+        alert('저장에 실패했습니다.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to save content:', error);
+      alert('저장 중 오류가 발생했습니다.');
+      return false;
+    }
+  };
+
+  // 저장하고 편집 종료
+  const handleSaveAndExit = async () => {
+    if (pageContent) {
+      const success = await saveContent(pageContent);
+      if (success) {
+        setIsEditMode(false);
+        setOriginalPageContent(null); // 저장 후 원본 데이터 초기화
+      }
+    } else {
+      setIsEditMode(false);
+      setOriginalPageContent(null);
+    }
+  };
+
+  // 편집 종료 처리
+  const handleExitEdit = () => {
+    if (hasUnsavedChanges) {
+      if (confirm('저장하지 않은 변경사항이 있습니다. 저장하시겠습니까?')) {
+        handleSaveAndExit();
+      } else {
+        // 취소를 누르면 원본 데이터로 되돌림
+        if (originalPageContent) {
+          setPageContent(JSON.parse(JSON.stringify(originalPageContent)));
+        }
+        setIsEditMode(false);
+        setHasUnsavedChanges(false);
+        setOriginalPageContent(null);
+      }
+    } else {
+      setIsEditMode(false);
+      setOriginalPageContent(null);
+    }
+  };
+
+  // 이미지 업로드 함수
+  const handleImageUpload = async (file) => {
+    if (!file) return null;
+
+    setUploadingImage(true);
+    try {
+      // 파일을 base64로 변환
+      const reader = new FileReader();
+      const base64 = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // 업로드 API 호출
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file: base64,
+          fileName: file.name,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setImagePreview(data.url);
+        setNewAchievement({ ...newAchievement, href: data.url });
+        return data.url;
+      } else {
+        alert('이미지 업로드에 실패했습니다.');
+        return null;
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      alert('이미지 업로드 중 오류가 발생했습니다.');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // 게시글 추가 함수
+  const handleAddAchievement = async () => {
+    if (!newAchievement.title) {
+      alert('제목을 입력해주세요.');
+      return;
+    }
+
+    // 날짜가 없으면 현재 날짜로 설정
+    const achievementToAdd = {
+      ...newAchievement,
+      date: newAchievement.date || new Date().toISOString().split('T')[0]
+    };
+
+    try {
+      const response = await fetch('/api/company/achievements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(achievementToAdd),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNewAchievement({ title: '', date: '', excerpt: '', href: '#', type: 'news' });
+        setImagePreview(null);
+        setShowAchievementModal(false);
+        alert('게시글이 추가되었습니다.');
+        // achievements 다시 로드하여 최신 상태 유지 (기존 항목 유지)
+        const reloadResponse = await fetch('/api/company/achievements');
+        if (reloadResponse.ok) {
+          const reloadData = await reloadResponse.json();
+          // _id를 문자열로 변환하여 일관성 유지
+          const processedData = reloadData.map(item => ({
+            ...item,
+            _id: item._id?.toString() || item._id
+          }));
+          setAchievements(processedData);
+        }
+      } else {
+        alert('게시글 추가에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to add achievement:', error);
+      alert('게시글 추가 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 게시글 삭제 함수
+  const handleDeleteAchievement = async (id) => {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+
+    try {
+      const response = await fetch(`/api/company/achievements?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setAchievements(achievements.filter(a => a._id !== id));
+        alert('게시글이 삭제되었습니다.');
+      } else {
+        alert('게시글 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to delete achievement:', error);
+      alert('게시글 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    if (!isMounted) return; // 클라이언트에서만 실행
+    
     // 두 점 사이의 거리 계산 (유클리드 거리)
     const getDistance = (x1, y1, x2, y2) => {
       return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
@@ -1106,12 +1416,114 @@ export default function CompanyPage() {
       clearInterval(spawnInterval);
       clearInterval(cleanupInterval);
     };
-  }, []);
+  }, [isMounted]);
 
   return (
     <AppShell styles={styles} title="" activeNav="company" headerActions={null} showLogo={false}>
       {/* 상단 슬로건 영역 - GPT 스타일 */}
       <div className={styles.sloganSection}>
+        {/* 수정하기/저장/편집 종료 버튼 - 슬로건 섹션 오른쪽 상단 */}
+        {isMounted && isAdminUser && (
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            display: 'flex',
+            gap: '0.5rem',
+            zIndex: 100
+          }}>
+            {isEditMode ? (
+              <>
+                <button
+                  onClick={handleSaveAndExit}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    transition: 'all 0.2s',
+                    minWidth: '100px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                  }}
+                >
+                  저장
+                </button>
+                <button
+                  onClick={handleExitEdit}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    transition: 'all 0.2s',
+                    minWidth: '100px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                  }}
+                >
+                  편집 종료
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  // 편집 모드 시작 시 원본 데이터 저장
+                  if (pageContent) {
+                    setOriginalPageContent(JSON.parse(JSON.stringify(pageContent)));
+                  }
+                  setIsEditMode(true);
+                  setHasUnsavedChanges(false); // 편집 모드 시작 시 변경사항 없음
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  transition: 'all 0.2s',
+                  minWidth: '100px'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                }}
+              >
+                수정하기
+              </button>
+            )}
+          </div>
+        )}
         {floatingTexts.map((item) => (
           <div
             key={item.id}
@@ -1127,13 +1539,63 @@ export default function CompanyPage() {
           </div>
         ))}
         <div className={styles.sloganContent}>
-          <h1 className={styles.sloganMain}>
-            AI 기반 자동화 솔루션으로<br />
-            <span className={styles.sloganHighlight}>생산성을 높이고</span> 업무의 새로운 경험을 제공합니다
-          </h1>
-          <p className={styles.sloganSubtext}>
-            가장 똑똑하고 빠르고 실용적인 AI 모델이 탑재되어 더욱 깊이 있게 사고합니다. 이제 누구나 사용할 수 있습니다.
-          </p>
+          {isMounted && isEditMode && isAdminUser ? (
+            <>
+              <textarea
+                value={pageContent?.sloganMain || 'AI 기반 자동화 솔루션으로\n생산성을 높이고 업무의 새로운 경험을 제공합니다'}
+                onChange={(e) => {
+                  const newContent = { ...pageContent, sloganMain: e.target.value };
+                  setPageContent(newContent);
+                  setHasUnsavedChanges(true);
+                }}
+                className={styles.editInput}
+                style={{ 
+                  fontSize: '2.5rem', 
+                  fontWeight: 'bold', 
+                  marginBottom: '1rem',
+                  width: '100%',
+                  minHeight: '120px',
+                  padding: '1rem',
+                  marginTop: isAdminUser ? '3rem' : '0'
+                }}
+              />
+              <textarea
+                value={pageContent?.sloganSubtext || '가장 똑똑하고 빠르고 실용적인 AI 모델이 탑재되어 더욱 깊이 있게 사고합니다. 이제 누구나 사용할 수 있습니다.'}
+                onChange={(e) => {
+                  const newContent = { ...pageContent, sloganSubtext: e.target.value };
+                  setPageContent(newContent);
+                  setHasUnsavedChanges(true);
+                }}
+                className={styles.editInput}
+                style={{ 
+                  fontSize: '1.125rem', 
+                  marginBottom: '1rem',
+                  width: '100%',
+                  minHeight: '60px',
+                  padding: '0.5rem'
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <h1 className={styles.sloganMain}>
+                {pageContent?.sloganMain?.split('\n').map((line, i) => (
+                  <span key={i}>
+                    {line}
+                    {i < pageContent.sloganMain.split('\n').length - 1 && <br />}
+                  </span>
+                )) || (
+                  <>
+                    AI 기반 자동화 솔루션으로<br />
+                    <span className={styles.sloganHighlight}>생산성을 높이고</span> 업무의 새로운 경험을 제공합니다
+                  </>
+                )}
+              </h1>
+              <p className={styles.sloganSubtext}>
+                {pageContent?.sloganSubtext || '가장 똑똑하고 빠르고 실용적인 AI 모델이 탑재되어 더욱 깊이 있게 사고합니다. 이제 누구나 사용할 수 있습니다.'}
+              </p>
+            </>
+          )}
           <div className={styles.sloganActions}>
             <Link href="/aillm" className={styles.sloganButtonPrimary}>시작하기 <span className={styles.chevron}>›</span></Link>
           </div>
@@ -1143,7 +1605,23 @@ export default function CompanyPage() {
       {/* 메인 콘텐츠 영역 */}
       <div className={styles.mainContentSection}>
         <div className={styles.mainContentContainer}>
-          <h2 className={styles.mainDescriptionTitle}>Custom Ai 제공되는 다양기능을 만나보세요</h2>
+          {isEditMode && isAdminUser ? (
+            <input
+              type="text"
+              value={pageContent?.mainDescriptionTitle || 'Custom Ai 제공되는 다양기능을 만나보세요'}
+              onChange={(e) => {
+                const newContent = { ...pageContent, mainDescriptionTitle: e.target.value };
+                setPageContent(newContent);
+                saveContent(newContent);
+              }}
+              className={styles.editInput}
+              style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '2rem', width: '100%', padding: '0.5rem' }}
+            />
+          ) : (
+            <h2 className={styles.mainDescriptionTitle}>
+              {pageContent?.mainDescriptionTitle || 'Custom Ai 제공되는 다양기능을 만나보세요'}
+            </h2>
+          )}
           <div className={styles.featureCardsGrid}>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('aillm')}>
               <div className={styles.featureCardImage}>
@@ -1200,10 +1678,54 @@ export default function CompanyPage() {
           {/* 뉴스/특허/자격 섹션 */}
           <div className={styles.trustSection}>
             <div className={styles.trustHeader}>
-              <h2 className={styles.trustTitle}>검증된 성과</h2>
-              <p className={styles.trustSubtitle}>
-                보도자료, 인증서, 특허로 신뢰를 보여드립니다.
-              </p>
+              {isEditMode && isAdminUser ? (
+                <>
+                  <input
+                    type="text"
+                    value={pageContent?.trustTitle || '검증된 성과'}
+                    onChange={(e) => {
+                      const newContent = { ...pageContent, trustTitle: e.target.value };
+                      setPageContent(newContent);
+                      saveContent(newContent);
+                    }}
+                    className={styles.editInput}
+                    style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}
+                  />
+                  <input
+                    type="text"
+                    value={pageContent?.trustSubtitle || '보도자료, 인증서, 특허로 신뢰를 보여드립니다.'}
+                    onChange={(e) => {
+                      const newContent = { ...pageContent, trustSubtitle: e.target.value };
+                      setPageContent(newContent);
+                      saveContent(newContent);
+                    }}
+                    className={styles.editInput}
+                  />
+                </>
+              ) : (
+                <>
+                  <h2 className={styles.trustTitle}>{pageContent?.trustTitle || '검증된 성과'}</h2>
+                  <p className={styles.trustSubtitle}>
+                    {pageContent?.trustSubtitle || '보도자료, 인증서, 특허로 신뢰를 보여드립니다.'}
+                  </p>
+                </>
+              )}
+              {isAdminUser && (
+                <button
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  style={{
+                    marginTop: '1rem',
+                    padding: '0.5rem 1rem',
+                    background: isEditMode ? '#ff4444' : '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isEditMode ? '편집 종료' : '편집 모드'}
+                </button>
+              )}
             </div>
 
             <div className={styles.trustGrid}>
@@ -1211,17 +1733,127 @@ export default function CompanyPage() {
                 <div className={styles.panelHeader}>
                   <h3 className={styles.panelTitle}>News</h3>
                   <span className={styles.panelHint}>업데이트/보도자료</span>
+                  {isAdminUser && (
+                    <button
+                      onClick={() => {
+                        setNewAchievement({ title: '', date: '', excerpt: '', href: '#', type: 'news' });
+                        setImagePreview(null);
+                        setShowAchievementModal(true);
+                      }}
+                      style={{
+                        marginLeft: 'auto',
+                        padding: '0.25rem 0.5rem',
+                        background: '#2196F3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      + 추가
+                    </button>
+                  )}
                 </div>
-                <div className={styles.newsList}>
-                  {newsItems.map((n) => (
-                    <a key={n.title} href={n.href} className={styles.newsCard}>
-                      <div className={styles.newsTopRow}>
-                        <span className={styles.newsDate}>{n.date}</span>
-                        <span className={styles.newsArrow}>›</span>
-                      </div>
-                      <h4 className={styles.newsTitle}>{n.title}</h4>
-                      <p className={styles.newsExcerpt}>{n.excerpt}</p>
-                    </a>
+                <div 
+                  className={styles.newsList}
+                  style={{
+                    maxHeight: achievements.filter(a => a.type === 'news').length > 5 ? '760px' : 'none',
+                    overflowY: achievements.filter(a => a.type === 'news').length > 5 ? 'auto' : 'visible'
+                  }}
+                >
+                  {achievements.filter(a => a.type === 'news').sort((a, b) => {
+                    // 날짜 기준 내림차순 정렬 (최신순)
+                    const dateDiff = new Date(b.date) - new Date(a.date);
+                    if (dateDiff !== 0) return dateDiff;
+                    // 같은 날짜면 createdAt 기준으로 정렬 (최신순)
+                    const aCreated = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                    const bCreated = b.createdAt ? new Date(b.createdAt) : new Date(0);
+                    return bCreated - aCreated;
+                  }).map((n, idx) => (
+                    <div key={n._id || n.title || idx} style={{ position: 'relative' }}>
+                      {isAdminUser && (
+                        <button
+                          onClick={() => handleDeleteAchievement(n._id)}
+                          style={{
+                            position: 'absolute',
+                            top: '0.5rem',
+                            right: '0.5rem',
+                            background: '#ff4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            zIndex: 10
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                      <a href={n.href} target="_blank" rel="noopener noreferrer" className={styles.newsCard}>
+                        <div className={styles.newsTopRow}>
+                          <span className={styles.newsDate}>{n.date}</span>
+                          <span className={styles.newsArrow}>›</span>
+                        </div>
+                        {isEditMode && isAdminUser ? (
+                          <>
+                            <input
+                              type="text"
+                              value={n.title}
+                              onChange={(e) => {
+                                const updated = achievements.map(a => 
+                                  a._id === n._id ? { ...a, title: e.target.value } : a
+                                );
+                                setAchievements(updated);
+                              }}
+                              onBlur={async () => {
+                                try {
+                                  await fetch('/api/company/achievements', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ id: n._id, ...n }),
+                                  });
+                                } catch (error) {
+                                  console.error('Failed to update:', error);
+                                }
+                              }}
+                              className={styles.editInput}
+                              style={{ width: '100%', marginBottom: '0.5rem' }}
+                            />
+                            <textarea
+                              value={n.excerpt}
+                              onChange={(e) => {
+                                const updated = achievements.map(a => 
+                                  a._id === n._id ? { ...a, excerpt: e.target.value } : a
+                                );
+                                setAchievements(updated);
+                              }}
+                              onBlur={async () => {
+                                try {
+                                  await fetch('/api/company/achievements', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ id: n._id, ...n }),
+                                  });
+                                } catch (error) {
+                                  console.error('Failed to update:', error);
+                                }
+                              }}
+                              className={styles.editInput}
+                              style={{ width: '100%', minHeight: '60px' }}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <h4 className={styles.newsTitle}>{n.title}</h4>
+                            <p className={styles.newsExcerpt}>{n.excerpt}</p>
+                          </>
+                        )}
+                      </a>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -1230,16 +1862,60 @@ export default function CompanyPage() {
                 <div className={styles.panelHeader}>
                   <h3 className={styles.panelTitle}>Certificates / Patents</h3>
                   <span className={styles.panelHint}>이미지/캡션</span>
+                  {isAdminUser && (
+                    <button
+                      onClick={() => {
+                        setNewAchievement({ title: '', date: '', excerpt: '', href: '#', type: 'credential' });
+                        setImagePreview(null);
+                        setShowAchievementModal(true);
+                      }}
+                      style={{
+                        marginLeft: 'auto',
+                        padding: '0.25rem 0.5rem',
+                        background: '#2196F3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      + 추가
+                    </button>
+                  )}
                 </div>
                 <div className={styles.credentialGrid}>
-                  {credentialItems.map((c) => (
-                    <div key={c.title + c.subtitle} className={styles.credentialCard}>
-                      <div className={styles.credentialThumb}>
-                        <img src={c.imageSrc} alt={c.title} />
-                      </div>
-                      <div className={styles.credentialText}>
-                        <div className={styles.credentialTitle}>{c.title}</div>
-                        <div className={styles.credentialSubtitle}>{c.subtitle}</div>
+                  {achievements.filter(a => a.type === 'credential').map((c) => (
+                    <div key={c._id || c.title} style={{ position: 'relative' }}>
+                      {isAdminUser && (
+                        <button
+                          onClick={() => handleDeleteAchievement(c._id)}
+                          style={{
+                            position: 'absolute',
+                            top: '0.5rem',
+                            right: '0.5rem',
+                            background: '#ff4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            zIndex: 10
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                      <div className={styles.credentialCard}>
+                        <div className={styles.credentialThumb}>
+                          <img src={c.href || '/uploads/aillm.png'} alt={c.title} />
+                        </div>
+                        <div className={styles.credentialText}>
+                          <div className={styles.credentialTitle}>{c.title}</div>
+                          <div className={styles.credentialSubtitle}>{c.excerpt}</div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1467,6 +2143,161 @@ export default function CompanyPage() {
           )}
         </div>
       </div>
+
+      {/* 게시글 추가 모달 */}
+      {showAchievementModal && isAdminUser && (
+        <>
+          <div 
+            className={styles.modalOverlay}
+            onClick={() => setShowAchievementModal(false)}
+          />
+          <div className={styles.modal} style={{ maxWidth: '600px' }}>
+            <button 
+              className={styles.modalCloseButton}
+              onClick={() => setShowAchievementModal(false)}
+              aria-label="닫기"
+            >
+              ×
+            </button>
+            <div className={styles.modalContent}>
+              <h2 style={{ marginBottom: '1.5rem' }}>게시글 추가</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    제목 *
+                  </label>
+                  <input
+                    type="text"
+                    value={newAchievement.title}
+                    onChange={(e) => setNewAchievement({ ...newAchievement, title: e.target.value })}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    placeholder="게시글 제목"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    날짜 *
+                  </label>
+                  <input
+                    type="date"
+                    value={newAchievement.date}
+                    onChange={(e) => setNewAchievement({ ...newAchievement, date: e.target.value })}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    내용
+                  </label>
+                  <textarea
+                    value={newAchievement.excerpt}
+                    onChange={(e) => setNewAchievement({ ...newAchievement, excerpt: e.target.value })}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', minHeight: '100px' }}
+                    placeholder="게시글 내용"
+                  />
+                </div>
+                {newAchievement.type === 'credential' ? (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      이미지 *
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImageUpload(file);
+                        }
+                      }}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      disabled={uploadingImage}
+                    />
+                    {uploadingImage && <p style={{ marginTop: '0.5rem', color: '#666' }}>업로드 중...</p>}
+                    {imagePreview && (
+                      <div style={{ marginTop: '1rem' }}>
+                        <img 
+                          src={imagePreview} 
+                          alt="미리보기" 
+                          style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px', border: '1px solid #ddd' }}
+                        />
+                      </div>
+                    )}
+                    {newAchievement.href && newAchievement.href !== '#' && !imagePreview && (
+                      <div style={{ marginTop: '1rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: '#666' }}>현재 이미지:</p>
+                        <img 
+                          src={newAchievement.href} 
+                          alt="현재 이미지" 
+                          style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px', border: '1px solid #ddd' }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      링크
+                    </label>
+                    <input
+                      type="text"
+                      value={newAchievement.href}
+                      onChange={(e) => setNewAchievement({ ...newAchievement, href: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      placeholder="# 또는 URL"
+                    />
+                  </div>
+                )}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    타입
+                  </label>
+                  <select
+                    value={newAchievement.type}
+                    onChange={(e) => setNewAchievement({ ...newAchievement, type: e.target.value })}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  >
+                    <option value="news">News</option>
+                    <option value="credential">Credential</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button
+                    onClick={handleAddAchievement}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    추가
+                  </button>
+                  <button
+                    onClick={() => setShowAchievementModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
     </AppShell>
   );
