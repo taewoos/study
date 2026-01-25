@@ -21,6 +21,7 @@ export default function PaymentPage() {
   });
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -241,6 +242,49 @@ export default function PaymentPage() {
     }
   };
 
+  const handleSelectPlan = async (planRole) => {
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const response = await fetch('/api/user/plan', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: planRole }),
+      });
+
+      if (response.ok) {
+        const updatedUser = { ...user, role: planRole };
+        setUser(updatedUser);
+        // localStorage도 업데이트
+        const currentUser = getUser();
+        if (currentUser) {
+          localStorage.setItem('user', JSON.stringify({ ...currentUser, role: planRole }));
+        }
+        setShowPlanModal(false);
+        alert('플랜이 선택되었습니다.');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '플랜 선택에 실패했습니다.' }));
+        alert(errorData.error || '플랜 선택에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to select plan:', error);
+      alert('플랜 선택 중 오류가 발생했습니다.');
+    }
+  };
+
+  const plans = [
+    { role: 2, name: 'Starter', amount: 19000, description: '기본 기능 제공' },
+    { role: 3, name: 'Pro', amount: 149000, description: '고급 기능 제공' },
+    { role: 4, name: 'Enterprise', amount: 0, description: '맞춤형 솔루션' },
+  ];
+
   if (!isMounted) {
     return <div>로딩 중...</div>;
   }
@@ -272,7 +316,22 @@ export default function PaymentPage() {
 
         {/* 결제 정보 섹션 */}
         <section className={styles.paymentSection}>
-          <h2 className={styles.sectionTitle}>결제 정보</h2>
+          <div className={styles.paymentInfoHeader}>
+            <h2 className={styles.sectionTitle}>결제 정보</h2>
+            {!paymentMethod && !showCardForm && (
+              <button
+                onClick={() => setShowCardForm(true)}
+                className={styles.smallCardButton}
+                title="카드 등록"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                  <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                <span>카드 등록</span>
+              </button>
+            )}
+          </div>
           
           {planInfo ? (
             <div className={styles.planCard}>
@@ -284,8 +343,14 @@ export default function PaymentPage() {
               </div>
             </div>
           ) : (
-            <div className={styles.planCard}>
+            <div 
+              className={styles.planCardSelectable}
+              onClick={() => setShowPlanModal(true)}
+            >
               <p>플랜을 선택해주세요.</p>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
             </div>
           )}
 
@@ -389,25 +454,16 @@ export default function PaymentPage() {
             </div>
           )}
 
-          {/* 카드 등록/결제 버튼 */}
-          {!showCardForm && (
+          {/* 결제 버튼 */}
+          {!showCardForm && paymentMethod && planInfo && planInfo.amount > 0 && (
             <div className={styles.actionButtons}>
-              {!paymentMethod ? (
-                <button
-                  onClick={() => setShowCardForm(true)}
-                  className={styles.primaryButton}
-                >
-                  카드 등록
-                </button>
-              ) : planInfo && planInfo.amount > 0 ? (
-                <button
-                  onClick={handlePayment}
-                  disabled={isProcessing}
-                  className={styles.primaryButton}
-                >
-                  {isProcessing ? '결제 처리 중...' : '결제하기'}
-                </button>
-              ) : null}
+              <button
+                onClick={handlePayment}
+                disabled={isProcessing}
+                className={styles.primaryButton}
+              >
+                {isProcessing ? '결제 처리 중...' : '결제하기'}
+              </button>
             </div>
           )}
         </section>
@@ -442,6 +498,43 @@ export default function PaymentPage() {
             </div>
           )}
         </section>
+
+        {/* 플랜 선택 모달 */}
+        {showPlanModal && (
+          <div className={styles.modalOverlay} onClick={() => setShowPlanModal(false)}>
+            <div className={styles.planModal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h3>플랜 선택</h3>
+                <button 
+                  className={styles.modalCloseButton}
+                  onClick={() => setShowPlanModal(false)}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <div className={styles.planOptions}>
+                {plans.map((plan) => (
+                  <div 
+                    key={plan.role} 
+                    className={styles.planOption}
+                    onClick={() => handleSelectPlan(plan.role)}
+                  >
+                    <div className={styles.planOptionHeader}>
+                      <h4 className={styles.planOptionName}>{plan.name}</h4>
+                      <div className={styles.planOptionAmount}>
+                        {plan.amount > 0 ? `₩${plan.amount.toLocaleString()}/월` : '문의'}
+                      </div>
+                    </div>
+                    <p className={styles.planOptionDescription}>{plan.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

@@ -1,13 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { AppShell } from '../components/AppShell';
-import { getUser } from '@/utils/auth';
+import { getUser, getToken } from '@/utils/auth';
 
 export default function HomePage() {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [rpaProjects, setRpaProjects] = useState([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
 
   useEffect(() => {
     setIsMounted(true);
@@ -21,11 +25,48 @@ export default function HomePage() {
     window.addEventListener('loginStatusChange', handleLoginChange);
     window.addEventListener('storage', handleLoginChange);
 
+    // RPA 프로젝트 목록 불러오기
+    if (currentUser) {
+      fetchRpaProjects();
+    }
+
     return () => {
       window.removeEventListener('loginStatusChange', handleLoginChange);
       window.removeEventListener('storage', handleLoginChange);
     };
   }, []);
+
+  const fetchRpaProjects = async () => {
+    try {
+      setIsLoadingProjects(true);
+      const token = getToken();
+      if (!token) {
+        setIsLoadingProjects(false);
+        return;
+      }
+
+      const response = await fetch('/api/rpa/projects', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // 최대 3개만 표시
+        setRpaProjects(data.slice(0, 3));
+      } else {
+        setRpaProjects([]);
+      }
+    } catch (error) {
+      console.error('RPA 프로젝트 로드 오류:', error);
+      setRpaProjects([]);
+    } finally {
+      setIsLoadingProjects(false);
+    }
+  };
 
   // role에 따른 결제 정보 설정
   const getPaymentInfo = () => {
@@ -205,39 +246,6 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* RPA Projects Section */}
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <div>
-                <h2 className={styles.sectionTitle}>RPA 프로젝트</h2>
-                <p className={styles.sectionSubtitle}>자동화로 업무를 혁신하세요</p>
-              </div>
-              <a href="/rpa" className={styles.viewAllLink}>전체 프로젝트 보기 →</a>
-            </div>
-            <div className={styles.rpaProjectsGrid}>
-              <div className={styles.rpaProjectCard}>
-                <div className={styles.rpaCardLeftBorder}></div>
-                <div className={styles.rpaCardContent}>
-                  <div className={styles.rpaCardHeader}>
-                    <span className={styles.rpaProjectDate}>2025-11-12</span>
-                    <div className={styles.rpaCardIcon}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <polyline points="10 9 9 9 8 9"/>
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className={styles.rpaProjectTitle}>세금계산서 수정_erp</h3>
-                  <p className={styles.rpaProjectDescription}>업무 관련 자동화 프로젝트입니다.</p>
-                  <a href="/rpa/1" className={styles.rpaViewDetailsLink}>자세히 보기 →</a>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* AI Services Section */}
           <section className={styles.section}>
             <div>
@@ -334,6 +342,72 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+          </section>
+
+          {/* RPA Projects Section */}
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>RPA 프로젝트</h2>
+                <p className={styles.sectionSubtitle}>자동화로 업무를 혁신하세요</p>
+              </div>
+              <a href="/rpa" className={styles.viewAllLink}>전체 프로젝트 보기 →</a>
+            </div>
+            {isLoadingProjects ? (
+              <div className={styles.rpaProjectsGrid}>
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                  프로젝트를 불러오는 중...
+                </div>
+              </div>
+            ) : rpaProjects.length > 0 ? (
+              <div className={styles.rpaProjectsGrid}>
+                {rpaProjects.map((project) => (
+                  <div 
+                    key={project.id} 
+                    className={styles.rpaProjectCard}
+                    onClick={() => router.push(`/rpa/${project.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className={styles.rpaCardLeftBorder}></div>
+                    <div className={styles.rpaCardContent}>
+                      <div className={styles.rpaCardHeader}>
+                        <span className={styles.rpaProjectDate}>{project.date}</span>
+                        <div className={styles.rpaCardIcon}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <h3 className={styles.rpaProjectTitle}>{project.title}</h3>
+                      <p className={styles.rpaProjectDescription}>{project.description}</p>
+                      <a 
+                        href={`/rpa/${project.id}`} 
+                        className={styles.rpaViewDetailsLink}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          router.push(`/rpa/${project.id}`);
+                        }}
+                      >
+                        자세히 보기 →
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.rpaProjectsGrid}>
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                  <p>등록된 프로젝트가 없습니다.</p>
+                  <a href="/rpa" style={{ color: '#4A90E2', textDecoration: 'none', marginTop: '1rem', display: 'inline-block' }}>
+                    프로젝트 등록하기 →
+                  </a>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Ad Banner Section */}

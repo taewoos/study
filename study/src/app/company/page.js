@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { AppShell } from '../components/AppShell';
+import { LoginModal } from '../components/LoginModal';
 import { isAdmin, getUser, getToken } from '@/utils/auth';
 
 const sloganTexts = [
@@ -408,6 +410,7 @@ const aiAgentUseCases = [
 ];
 
 export default function CompanyPage() {
+  const router = useRouter();
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [floatingTexts, setFloatingTexts] = useState([]);
   const [activeAiLlmUseCaseIndex, setActiveAiLlmUseCaseIndex] = useState(0);
@@ -433,6 +436,7 @@ export default function CompanyPage() {
   const [editingWhyNow, setEditingWhyNow] = useState(false);
   const [editingRiskRemoval, setEditingRiskRemoval] = useState(false);
   const [editingPricing, setEditingPricing] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleFeatureClick = (feature) => {
     setSelectedFeature(feature);
@@ -1482,6 +1486,7 @@ export default function CompanyPage() {
   }, [isMounted]);
 
   return (
+    <>
     <AppShell styles={styles} title="" activeNav="company" headerActions={null} showLogo={false}>
       {/* 상단 슬로건 영역 - GPT 스타일 */}
       <div className={styles.sloganSection}>
@@ -2819,7 +2824,20 @@ export default function CompanyPage() {
                         상담 요청
                       </button>
                     ) : (
-                      <button className={styles.pricingButtonPrimary} type="button">
+                      <button 
+                        className={styles.pricingButtonPrimary} 
+                        type="button"
+                        onClick={() => {
+                          const currentUser = getUser();
+                          if (currentUser) {
+                            // 로그인한 경우 마이페이지로 이동
+                            router.push('/mypage');
+                          } else {
+                            // 로그인 안한 경우 모달 표시
+                            setShowLoginModal(true);
+                          }
+                        }}
+                      >
                         {plan.name} 시작 <span className={styles.arrowUpRight}>↗</span>
                       </button>
                     )}
@@ -3248,5 +3266,14 @@ export default function CompanyPage() {
       )}
 
     </AppShell>
+    <LoginModal 
+      isOpen={showLoginModal}
+      onClose={() => setShowLoginModal(false)}
+      onSuccess={() => {
+        // 로그인 성공 후 마이페이지로 이동
+        router.push('/mypage');
+      }}
+    />
+  </>
   );
 }
