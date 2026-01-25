@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import styles from './page.module.css';
 import { AppShell } from '../components/AppShell';
 import { RichTextEditor } from '../../components/RichTextEditor';
+import { getToken } from '@/utils/auth';
 
 export default function AillmPage() {
   // Left panel state
@@ -132,6 +133,20 @@ export default function AillmPage() {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [savedTemplates, setSavedTemplates] = useState([]);
+  
+  // API 등록 모달 state
+  const [isApiModalOpen, setIsApiModalOpen] = useState(false);
+  const [apiKeys, setApiKeys] = useState([
+    { id: 1, name: 'API Key 1', key: '', isActive: false }
+  ]);
+  const [isSavingApi, setIsSavingApi] = useState(false);
+  
+  // MCP 관리 모달 state
+  const [isMcpModalOpen, setIsMcpModalOpen] = useState(false);
+  const [mcpConfigs, setMcpConfigs] = useState([
+    { id: 1, name: 'MCP 1', url: '', key: '', isActive: false }
+  ]);
+  const [isSavingMcp, setIsSavingMcp] = useState(false);
   // Table modal state
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
   const [tableRows, setTableRows] = useState(3);
@@ -3220,6 +3235,269 @@ export default function AillmPage() {
     setSavedTemplates(updatedTemplates);
     localStorage.setItem('aillmTemplates', JSON.stringify(updatedTemplates));
   };
+
+  // API 키 추가
+  const handleAddApiKey = () => {
+    const newId = apiKeys.length > 0 ? Math.max(...apiKeys.map(k => k.id)) + 1 : 1;
+    setApiKeys([...apiKeys, {
+      id: newId,
+      name: `API Key ${newId}`,
+      key: '',
+      isActive: false
+    }]);
+  };
+
+  // API 키 삭제
+  const handleDeleteApiKey = (id) => {
+    if (apiKeys.length <= 1) {
+      alert('최소 하나의 API 키는 유지해야 합니다.');
+      return;
+    }
+    setApiKeys(apiKeys.filter(k => k.id !== id));
+  };
+
+  // API 키 정보 변경
+  const handleApiKeyChange = (id, field, value) => {
+    setApiKeys(apiKeys.map(k => 
+      k.id === id ? { ...k, [field]: value } : k
+    ));
+  };
+
+  // API 키 사용/중지
+  const handleToggleApiKey = async (id) => {
+    const targetKey = apiKeys.find(k => k.id === id);
+    if (!targetKey || !targetKey.key) {
+      alert('API 키를 먼저 입력해주세요.');
+      return;
+    }
+
+    setIsSavingApi(true);
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        setIsSavingApi(false);
+        return;
+      }
+
+      // 다른 API 키는 모두 비활성화하고, 선택한 것만 활성화
+      const updatedKeys = apiKeys.map(k => ({
+        ...k,
+        isActive: k.id === id ? !k.isActive : false
+      }));
+
+      // 서버에 저장
+      const response = await fetch('/api/user/api-keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          apiKeys: updatedKeys.map(k => ({
+            id: k.id,
+            name: k.name,
+            key: k.key,
+            isActive: k.isActive
+          }))
+        }),
+      });
+
+      if (response.ok) {
+        setApiKeys(updatedKeys);
+        const activeKey = updatedKeys.find(k => k.isActive);
+        if (activeKey) {
+          alert(`${activeKey.name}이(가) 사용중입니다.`);
+        } else {
+          alert('API 키 사용이 중지되었습니다.');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '저장에 실패했습니다.' }));
+        alert(errorData.error || 'API 키 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('API 키 저장 오류:', error);
+      alert('API 키 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSavingApi(false);
+    }
+  };
+
+  // MCP 추가
+  const handleAddMcp = () => {
+    const newId = mcpConfigs.length > 0 ? Math.max(...mcpConfigs.map(m => m.id)) + 1 : 1;
+    setMcpConfigs([...mcpConfigs, {
+      id: newId,
+      name: `MCP ${newId}`,
+      url: '',
+      key: '',
+      isActive: false
+    }]);
+  };
+
+  // MCP 삭제
+  const handleDeleteMcp = (id) => {
+    if (mcpConfigs.length <= 1) {
+      alert('최소 하나의 MCP는 유지해야 합니다.');
+      return;
+    }
+    setMcpConfigs(mcpConfigs.filter(m => m.id !== id));
+  };
+
+  // MCP 정보 변경
+  const handleMcpChange = (id, field, value) => {
+    setMcpConfigs(mcpConfigs.map(m => 
+      m.id === id ? { ...m, [field]: value } : m
+    ));
+  };
+
+  // MCP 사용/중지
+  const handleToggleMcp = async (id) => {
+    const targetMcp = mcpConfigs.find(m => m.id === id);
+    if (!targetMcp || !targetMcp.url || !targetMcp.key) {
+      alert('MCP URL과 키를 먼저 입력해주세요.');
+      return;
+    }
+
+    setIsSavingMcp(true);
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        setIsSavingMcp(false);
+        return;
+      }
+
+      // 다른 MCP는 모두 비활성화하고, 선택한 것만 활성화
+      const updatedConfigs = mcpConfigs.map(m => ({
+        ...m,
+        isActive: m.id === id ? !m.isActive : false
+      }));
+
+      // 서버에 저장
+      const response = await fetch('/api/user/mcp-configs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          mcpConfigs: updatedConfigs.map(m => ({
+            id: m.id,
+            name: m.name,
+            url: m.url,
+            key: m.key,
+            isActive: m.isActive
+          }))
+        }),
+      });
+
+      if (response.ok) {
+        setMcpConfigs(updatedConfigs);
+        const activeMcp = updatedConfigs.find(m => m.isActive);
+        if (activeMcp) {
+          alert(`${activeMcp.name}이(가) 사용중입니다.`);
+        } else {
+          alert('MCP 사용이 중지되었습니다.');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '저장에 실패했습니다.' }));
+        alert(errorData.error || 'MCP 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('MCP 저장 오류:', error);
+      alert('MCP 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSavingMcp(false);
+    }
+  };
+
+  // MCP 저장 함수
+  const handleSaveMcpConfigs = async () => {
+    setIsSavingMcp(true);
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        setIsSavingMcp(false);
+        return;
+      }
+
+      // 서버에 MCP 설정 저장
+      const response = await fetch('/api/user/mcp-configs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          mcpConfigs: mcpConfigs.map(m => ({
+            id: m.id,
+            name: m.name,
+            url: m.url,
+            key: m.key,
+            isActive: m.isActive
+          }))
+        }),
+      });
+
+      if (response.ok) {
+        alert('MCP 설정이 저장되었습니다.');
+        setIsMcpModalOpen(false);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '저장에 실패했습니다.' }));
+        alert(errorData.error || 'MCP 설정 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('MCP 저장 오류:', error);
+      alert('MCP 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSavingMcp(false);
+    }
+  };
+
+  // API 키 저장 함수
+  const handleSaveApiKeys = async () => {
+    setIsSavingApi(true);
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        setIsSavingApi(false);
+        return;
+      }
+
+      // 서버에 API 키 저장
+      const response = await fetch('/api/user/api-keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          apiKeys: apiKeys.map(k => ({
+            id: k.id,
+            name: k.name,
+            key: k.key,
+            isActive: k.isActive
+          }))
+        }),
+      });
+
+      if (response.ok) {
+        alert('API 키가 저장되었습니다.');
+        setIsApiModalOpen(false);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '저장에 실패했습니다.' }));
+        alert(errorData.error || 'API 키 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('API 키 저장 오류:', error);
+      alert('API 키 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSavingApi(false);
+    }
+  };
   
   const handleDeleteMemo = (id) => {
     setMemos(memos.filter(m => m.id !== id));
@@ -3295,6 +3573,64 @@ export default function AillmPage() {
     }
   };
 
+  // API 키 로드
+  useEffect(() => {
+    const loadApiKeys = async () => {
+      try {
+        const token = getToken();
+        if (!token) return;
+
+        const response = await fetch('/api/user/api-keys', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.apiKeys && data.apiKeys.length > 0) {
+            setApiKeys(data.apiKeys);
+          }
+        }
+      } catch (error) {
+        console.error('API 키 로드 오류:', error);
+      }
+    };
+
+    if (isApiModalOpen) {
+      loadApiKeys();
+    }
+  }, [isApiModalOpen]);
+
+  // MCP 설정 로드
+  useEffect(() => {
+    const loadMcpConfigs = async () => {
+      try {
+        const token = getToken();
+        if (!token) return;
+
+        const response = await fetch('/api/user/mcp-configs', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.mcpConfigs && data.mcpConfigs.length > 0) {
+            setMcpConfigs(data.mcpConfigs);
+          }
+        }
+      } catch (error) {
+        console.error('MCP 설정 로드 오류:', error);
+      }
+    };
+
+    if (isMcpModalOpen) {
+      loadMcpConfigs();
+    }
+  }, [isMcpModalOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!activeCanvasItemId && !activeCanvasLinkId) return;
@@ -3318,27 +3654,8 @@ export default function AillmPage() {
   );
   const sampleTemplates = getSampleTemplates();
 
-  const headerActions = (
-    <>
-      <button className={styles.headerButton}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-          <polyline points="22,6 12,13 2,6" />
-        </svg>
-        <span>문의하기</span>
-      </button>
-      <button className={styles.headerButton}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-        <span>알림 0</span>
-      </button>
-    </>
-  );
-
   return (
-    <AppShell styles={styles} title="AI-LLM 대화방" activeNav="aillm" headerActions={headerActions}>
+    <AppShell styles={styles} title="AI-LLM 대화방" activeNav="aillm" headerActions={null}>
     <div className={styles.container}>
       <section className={styles.chatSection}>
       {/* Left Panel - Conversation List */}
@@ -3438,9 +3755,19 @@ export default function AillmPage() {
               +
             </button>
           </div>
-          <button className={styles.toolbarBtn}>api</button>
+          <button 
+            className={styles.toolbarBtn}
+            onClick={() => setIsApiModalOpen(true)}
+          >
+            api
+          </button>
           <button className={styles.toolbarBtn}>사용중인모드</button>
-          <button className={styles.toolbarBtn}>mcp</button>
+          <button 
+            className={styles.toolbarBtn}
+            onClick={() => setIsMcpModalOpen(true)}
+          >
+            mcp
+          </button>
           <button className={styles.toolbarBtn}>RPA연동</button>
           <button 
             className={`${styles.toolbarBtn} ${isCustomMode ? styles.customModeActive : ''}`}
@@ -4691,6 +5018,403 @@ export default function AillmPage() {
           />
         </div>
       ))}
+
+      {/* MCP 관리 모달 */}
+      {isMcpModalOpen && (
+        <div
+          className={styles.templateModalOverlay}
+          onClick={() => setIsMcpModalOpen(false)}
+        >
+          <div
+            className={styles.templateModal}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '600px', width: '90%' }}
+          >
+            <div className={styles.templateModalHeader}>
+              <h3>MCP 관리</h3>
+              <button
+                className={styles.templateModalClose}
+                onClick={() => setIsMcpModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.apiModalContent} style={{ padding: '20px' }}>
+              {mcpConfigs.map((mcp) => (
+                <div key={mcp.id} className={styles.apiKeyRow} style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px',
+                  marginBottom: '15px',
+                  padding: '16px',
+                  border: mcp.isActive ? '2px solid #4CAF50' : '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  backgroundColor: mcp.isActive ? '#f0f8ff' : '#fff',
+                  boxShadow: mcp.isActive ? '0 2px 8px rgba(76, 175, 80, 0.2)' : '0 1px 3px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <input
+                        type="text"
+                        value={mcp.name}
+                        onChange={(e) => handleMcpChange(mcp.id, 'name', e.target.value)}
+                        style={{
+                          width: '150px',
+                          padding: '8px 12px',
+                          border: '1px solid #ddd',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '500'
+                        }}
+                      />
+                      {mcpConfigs.length > 1 && (
+                        <button
+                          onClick={() => handleDeleteMcp(mcp.id)}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#ff4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            transition: 'background 0.2s ease'
+                          }}
+                          onMouseOver={(e) => e.target.style.background = '#cc0000'}
+                          onMouseOut={(e) => e.target.style.background = '#ff4444'}
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={mcp.url}
+                      onChange={(e) => handleMcpChange(mcp.id, 'url', e.target.value)}
+                      placeholder="MCP 서버 URL"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px'
+                      }}
+                    />
+                    <input
+                      type="password"
+                      value={mcp.key}
+                      onChange={(e) => handleMcpChange(mcp.id, 'key', e.target.value)}
+                      placeholder="MCP 인증 키"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontFamily: 'monospace'
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleToggleMcp(mcp.id)}
+                    disabled={isSavingMcp || !mcp.url || !mcp.key}
+                    style={{
+                      padding: '10px 20px',
+                      background: mcp.isActive ? '#4CAF50' : '#2196F3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: (!mcp.url || !mcp.key || isSavingMcp) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      minWidth: '90px',
+                      opacity: (!mcp.url || !mcp.key || isSavingMcp) ? 0.6 : 1,
+                      transition: 'all 0.2s ease',
+                      boxShadow: mcp.isActive ? '0 2px 4px rgba(76, 175, 80, 0.3)' : '0 2px 4px rgba(33, 150, 243, 0.3)'
+                    }}
+                    onMouseOver={(e) => {
+                      if (mcp.url && mcp.key && !isSavingMcp) {
+                        e.target.style.transform = 'scale(1.05)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'scale(1)';
+                    }}
+                  >
+                    {mcp.isActive ? '사용중' : '사용'}
+                  </button>
+                </div>
+              ))}
+              
+              <button
+                onClick={handleAddMcp}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: '#f8f9fa',
+                  border: '2px dashed #2196F3',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  color: '#2196F3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginTop: '10px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = '#e3f2fd';
+                  e.target.style.borderColor = '#1976D2';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = '#f8f9fa';
+                  e.target.style.borderColor = '#2196F3';
+                }}
+              >
+                <span style={{ fontSize: '22px', fontWeight: 'bold' }}>+</span>
+                <span>MCP 추가</span>
+              </button>
+
+              <div className={styles.apiModalActions} style={{ 
+                display: 'flex', 
+                gap: '10px', 
+                marginTop: '20px',
+                justifyContent: 'flex-end'
+              }}>
+                <button
+                  className={styles.apiModalSaveBtn}
+                  onClick={handleSaveMcpConfigs}
+                  disabled={isSavingMcp}
+                  style={{
+                    padding: '10px 20px',
+                    background: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: isSavingMcp ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  {isSavingMcp ? '저장 중...' : '저장'}
+                </button>
+                <button
+                  className={styles.apiModalCancelBtn}
+                  onClick={() => setIsMcpModalOpen(false)}
+                  style={{
+                    padding: '10px 20px',
+                    background: '#f5f5f5',
+                    color: '#666',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* API 등록 모달 */}
+      {isApiModalOpen && (
+        <div
+          className={styles.templateModalOverlay}
+          onClick={() => setIsApiModalOpen(false)}
+        >
+          <div
+            className={styles.templateModal}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '600px', width: '90%' }}
+          >
+            <div className={styles.templateModalHeader}>
+              <h3>API 키 등록</h3>
+              <button
+                className={styles.templateModalClose}
+                onClick={() => setIsApiModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.apiModalContent} style={{ padding: '20px' }}>
+              {apiKeys.map((apiKey) => (
+                <div key={apiKey.id} className={styles.apiKeyRow} style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px',
+                  marginBottom: '15px',
+                  padding: '16px',
+                  border: apiKey.isActive ? '2px solid #4CAF50' : '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  backgroundColor: apiKey.isActive ? '#f0f8ff' : '#fff',
+                  boxShadow: apiKey.isActive ? '0 2px 8px rgba(76, 175, 80, 0.2)' : '0 1px 3px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <input
+                        type="text"
+                        value={apiKey.name}
+                        onChange={(e) => handleApiKeyChange(apiKey.id, 'name', e.target.value)}
+                        style={{
+                          width: '150px',
+                          padding: '8px 12px',
+                          border: '1px solid #ddd',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '500'
+                        }}
+                      />
+                      {apiKeys.length > 1 && (
+                        <button
+                          onClick={() => handleDeleteApiKey(apiKey.id)}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#ff4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            transition: 'background 0.2s ease'
+                          }}
+                          onMouseOver={(e) => e.target.style.background = '#cc0000'}
+                          onMouseOut={(e) => e.target.style.background = '#ff4444'}
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="password"
+                      value={apiKey.key}
+                      onChange={(e) => handleApiKeyChange(apiKey.id, 'key', e.target.value)}
+                      placeholder="API 키를 입력하세요"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontFamily: 'monospace'
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleToggleApiKey(apiKey.id)}
+                    disabled={isSavingApi || !apiKey.key}
+                    style={{
+                      padding: '10px 20px',
+                      background: apiKey.isActive ? '#4CAF50' : '#2196F3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: (!apiKey.key || isSavingApi) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      minWidth: '90px',
+                      opacity: (!apiKey.key || isSavingApi) ? 0.6 : 1,
+                      transition: 'all 0.2s ease',
+                      boxShadow: apiKey.isActive ? '0 2px 4px rgba(76, 175, 80, 0.3)' : '0 2px 4px rgba(33, 150, 243, 0.3)'
+                    }}
+                    onMouseOver={(e) => {
+                      if (apiKey.key && !isSavingApi) {
+                        e.target.style.transform = 'scale(1.05)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'scale(1)';
+                    }}
+                  >
+                    {apiKey.isActive ? '사용중' : '사용'}
+                  </button>
+                </div>
+              ))}
+              
+              <button
+                onClick={handleAddApiKey}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: '#f8f9fa',
+                  border: '2px dashed #2196F3',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  color: '#2196F3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginTop: '10px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = '#e3f2fd';
+                  e.target.style.borderColor = '#1976D2';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = '#f8f9fa';
+                  e.target.style.borderColor = '#2196F3';
+                }}
+              >
+                <span style={{ fontSize: '22px', fontWeight: 'bold' }}>+</span>
+                <span>API 키 추가</span>
+              </button>
+
+              <div className={styles.apiModalActions} style={{ 
+                display: 'flex', 
+                gap: '10px', 
+                marginTop: '20px',
+                justifyContent: 'flex-end'
+              }}>
+                <button
+                  className={styles.apiModalSaveBtn}
+                  onClick={handleSaveApiKeys}
+                  disabled={isSavingApi}
+                  style={{
+                    padding: '10px 20px',
+                    background: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: isSavingApi ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  {isSavingApi ? '저장 중...' : '저장'}
+                </button>
+                <button
+                  className={styles.apiModalCancelBtn}
+                  onClick={() => setIsApiModalOpen(false)}
+                  style={{
+                    padding: '10px 20px',
+                    background: '#f5f5f5',
+                    color: '#666',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </AppShell>
   );

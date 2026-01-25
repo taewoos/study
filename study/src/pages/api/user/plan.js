@@ -16,8 +16,8 @@ export default async function handler(req, res) {
 
     const { role } = req.body;
 
-    // role 유효성 검사
-    if (role === undefined || ![1, 2, 3, 4].includes(role)) {
+    // role 유효성 검사 (0: 관리자, 1: 결제안한 유저, 2: 스타터, 3: 프로, 4: 프리미엄, 5: 엔터프라이즈)
+    if (role === undefined || ![1, 2, 3, 4, 5].includes(role)) {
       return res.status(400).json({ error: '유효한 플랜을 선택해주세요.' });
     }
 

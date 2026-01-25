@@ -33,38 +33,55 @@
 
 2. 기능구현 정리하기
 
-RAG LLM
+RAG LLM -Starter 
 - 임베딩 할때 권한별 조회 접근 다르게 할 것
 - 출력시 이미지 나오고 하단에 출처 링크로 원본문서 사용 가능하게 할 것
 - 임베딩시 이미지가 있다면 자동 OCR 처리 기반 임베딩 (API 사용 X, 직접 구현)
+- api 연동기능 Starter
 
 
-파인튜닝
+
+
+파인튜닝 -Enterprise
 - 해당 특정 알고리즘 파인튜닝 진행
 
 Agent
-- RPA 연동으로 세금계산서 자동 발행
+- RPA 연동으로 세금계산서 자동 발행 
 - ERP 연동 수정, 작성, 삭제
 - 생각나거나 추가 진행
+- rpa 가 들어가는 agent는 Enterprise 로 
+- rpa가 빠진 agent 는 Pro 
+
+
+보고서 만들어주는거  회의내용 요약해주고  (아키텍쳐 그려주고 캔버스 작업과 연동까지 ) 
+
+
 
 OCR
 - 임베딩을 위한 범용성 진행
 - 특정 기능을 위한 OCR 진행
 - 해당 mcp로  챗봇연동으로 파서 진행 챗봇 자체에 ocr 연동
+- 그냥 단순 임배딩은 Starter
+- ocr 문서 전처리 는 pro 
+- 업체 전용 ocr 처리 Enterprise
 
-STT
+
+
+STT,tts -Enterprise 
 - 보이스 연동
 
 MCP
-- 해당 에이전트 MCP 연동
+- 해당 에이전트 MCP 연동 Starter
+
+RPA - Enterprise
 
 
 3. 심화 학습
 
-모델 생성
+모델 생성 - Enterprise
 - 모델 자체를 생성 1B 기준으로 만들어볼 것
 
-MCP 서버 구축 (가장 우선)
+MCP 서버 구축 (가장 우선)- Enterprise
 - MCP를 직접 도커를 통해 서버를 올려서 콜백 함수만 있는 모델 돌릴 수 있는지
 
 자동 모델 선택

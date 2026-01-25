@@ -1,6 +1,61 @@
 import { connectDB } from '@/utils/db';
 import { verifyUser } from '@/utils/authServer';
 
+// 포트원 결제 검증 함수
+async function verifyPortOnePayment(paymentId, amount) {
+  const PORTONE_SECRET_KEY = process.env.PORTONE_SECRET_KEY;
+  
+  if (!PORTONE_SECRET_KEY) {
+    console.warn('PORTONE_SECRET_KEY가 설정되지 않았습니다. 결제 검증을 건너뜁니다.');
+    return {
+      success: true,
+      transactionId: paymentId,
+      paymentId: paymentId,
+      warning: '결제 검증이 건너뛰어졌습니다. (환경 변수 미설정)'
+    };
+  }
+
+  try {
+    const response = await fetch(`https://api.portone.io/payments/v2/payments/${paymentId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `PortOne ${PORTONE_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.error('포트원 API 응답 오류:', response.status, response.statusText);
+      return {
+        success: false,
+        error: '결제 검증 API 호출 실패'
+      };
+    }
+
+    const data = await response.json();
+    
+    // 결제 검증
+    if (data.status === 'PAID' && data.amount.total === amount) {
+      return {
+        success: true,
+        transactionId: data.transactionId || paymentId,
+        paymentId: data.paymentId || paymentId
+      };
+    }
+    
+    return {
+      success: false,
+      error: '결제 검증 실패: 상태 또는 금액이 일치하지 않습니다.'
+    };
+  } catch (error) {
+    console.error('PortOne verification error:', error);
+    return {
+      success: false,
+      error: '결제 검증 중 오류 발생: ' + error.message
+    };
+  }
+}
+
 // 실제 결제 처리 API
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -23,32 +78,26 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: userCheck.error || '인증이 필요합니다.' });
     }
 
-    const { amount, plan } = req.body;
+    const { amount, plan, paymentId, transactionId, paymentType, status, virtualAccount, bankTransferInfo } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: '올바른 결제 금액을 입력해주세요.' });
     }
 
-    // 등록된 카드 확인
-    const paymentMethod = await paymentMethodsCollection.findOne({
-      userId: userCheck.user.userId || userCheck.user.email
-    });
-
-    if (!paymentMethod) {
-      return res.status(400).json({ error: '등록된 카드가 없습니다. 먼저 카드를 등록해주세요.' });
+    if (!paymentId) {
+      return res.status(400).json({ error: '결제 ID가 필요합니다.' });
     }
 
-    // 실제 결제 처리 (포트원, 토스페이먼츠 등 연동 필요)
-    // 여기서는 시뮬레이션으로 처리
-    const paymentResult = await processPayment({
-      amount,
-      cardNumber: paymentMethod.cardNumber,
-      userId: userCheck.user.userId || userCheck.user.email,
-      plan
-    });
+    const isBankTransfer = paymentType === 'bank_transfer';
+    const paymentStatus = status || (isBankTransfer ? 'pending' : 'completed');
 
-    if (!paymentResult.success) {
-      return res.status(400).json({ error: paymentResult.error || '결제에 실패했습니다.' });
+    // 무통장 입금이 아닌 경우에만 포트원 결제 검증
+    if (!isBankTransfer) {
+      const verification = await verifyPortOnePayment(paymentId, amount);
+      
+      if (!verification.success) {
+        return res.status(400).json({ error: verification.error || '결제 검증에 실패했습니다.' });
+      }
     }
 
     // 결제 내역 저장
@@ -57,86 +106,49 @@ export default async function handler(req, res) {
       email: userCheck.user.email,
       amount: amount,
       plan: plan,
-      status: 'completed',
-      paymentMethod: 'card',
-      transactionId: paymentResult.transactionId,
+      status: paymentStatus,
+      paymentMethod: isBankTransfer ? 'bank_transfer' : 'card',
+      paymentType: paymentType || 'card',
+      paymentId: paymentId,
+      transactionId: transactionId || paymentId,
+      virtualAccount: virtualAccount || null,
+      bankTransferInfo: bankTransferInfo || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
     await paymentsCollection.insertOne(payment);
 
-    // 사용자의 다음 결제일 업데이트 (1개월 후)
-    const nextPaymentDate = new Date();
-    nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+    // 결제 완료된 경우에만 사용자의 다음 결제일 업데이트 (1개월 후)
+    if (paymentStatus === 'completed') {
+      const nextPaymentDate = new Date();
+      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
-    await usersCollection.updateOne(
-      { 
-        $or: [
-          { userId: userCheck.user.userId },
-          { email: userCheck.user.email }
-        ]
-      },
-      { 
-        $set: { 
-          nextPaymentDate: nextPaymentDate,
-          lastPaymentDate: new Date(),
-          updatedAt: new Date()
-        } 
-      }
-    );
+      await usersCollection.updateOne(
+        { 
+          $or: [
+            { userId: userCheck.user.userId },
+            { email: userCheck.user.email }
+          ]
+        },
+        { 
+          $set: { 
+            nextPaymentDate: nextPaymentDate,
+            lastPaymentDate: new Date(),
+            updatedAt: new Date()
+          } 
+        }
+      );
+    }
 
     return res.status(200).json({ 
       message: '결제가 완료되었습니다.',
       payment: payment,
-      transactionId: paymentResult.transactionId
+      transactionId: verification.transactionId || transactionId,
+      paymentId: verification.paymentId || paymentId
     });
   } catch (error) {
     console.error('Payment process error:', error);
     return res.status(500).json({ error: '결제 처리 중 오류가 발생했습니다.' });
-  }
-}
-
-// 실제 결제 처리 함수 (포트원, 토스페이먼츠 등 연동)
-async function processPayment({ amount, cardNumber, userId, plan }) {
-  // 실제로는 포트원, 토스페이먼츠 등의 API를 호출해야 합니다
-  // 여기서는 시뮬레이션으로 처리
-  
-  try {
-    // 시뮬레이션: 항상 성공
-    // 실제 구현 시:
-    // 1. 포트원 API 호출
-    // 2. 결제 승인 요청
-    // 3. 결과 반환
-    
-    // 예시: 포트원 연동
-    // const response = await fetch('https://api.portone.io/payments/v1/payments', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${PORTONE_API_KEY}`,
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({
-    //     amount: amount,
-    //     currency: 'KRW',
-    //     orderId: `order_${Date.now()}`,
-    //     // ... 기타 결제 정보
-    //   })
-    // });
-    
-    // 임시로 성공 처리
-    const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    return {
-      success: true,
-      transactionId: transactionId,
-      message: '결제가 완료되었습니다.'
-    };
-  } catch (error) {
-    console.error('Payment processing error:', error);
-    return {
-      success: false,
-      error: '결제 처리 중 오류가 발생했습니다.'
-    };
   }
 }

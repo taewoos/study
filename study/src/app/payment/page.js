@@ -10,15 +10,22 @@ export default function PaymentPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState(null);
-  const [showCardForm, setShowCardForm] = useState(false);
-  const [cardInfo, setCardInfo] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardHolder: '',
-    cardPassword: ''
+  const [selectedPaymentType, setSelectedPaymentType] = useState('bank_transfer'); // 'card' or 'bank_transfer'
+  const [showBankTransferForm, setShowBankTransferForm] = useState(false);
+  const [showAccountInfo, setShowAccountInfo] = useState(false);
+  const [bankTransferInfo, setBankTransferInfo] = useState({
+    depositorName: '', // 입금자명
+    depositDate: '', // 입금일
+    depositAmount: '', // 입금금액
+    bankName: '' // 은행명
   });
+  
+  // 입금 계좌 정보 (환경 변수 또는 하드코딩)
+  const bankAccountInfo = {
+    bank: process.env.NEXT_PUBLIC_BANK_NAME || '국민은행',
+    accountNumber: process.env.NEXT_PUBLIC_BANK_ACCOUNT || '123-456-789012',
+    accountHolder: process.env.NEXT_PUBLIC_BANK_HOLDER || '(주)스터디',
+  };
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
@@ -31,34 +38,22 @@ export default function PaymentPage() {
       return;
     }
     setUser(currentUser);
-    loadPaymentInfo();
-    loadPaymentHistory();
+    
+    // 약간의 지연 후 결제 내역 로드 (토큰이 준비될 시간 확보)
+    const timer = setTimeout(() => {
+      loadPaymentHistory();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [router]);
-
-  const loadPaymentInfo = async () => {
-    try {
-      const token = getToken();
-      if (!token) return;
-
-      const response = await fetch('/api/payment/method', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPaymentMethod(data);
-      }
-    } catch (error) {
-      console.error('Failed to load payment method:', error);
-    }
-  };
 
   const loadPaymentHistory = async () => {
     try {
       const token = getToken();
-      if (!token) return;
+      if (!token) {
+        console.log('토큰이 없어 결제 내역을 불러올 수 없습니다.');
+        return;
+      }
 
       const response = await fetch('/api/payment/history', {
         headers: {
@@ -69,43 +64,37 @@ export default function PaymentPage() {
       if (response.ok) {
         const data = await response.json();
         setPaymentHistory(data);
+      } else if (response.status === 401) {
+        // 인증 실패 시 토큰 제거하고 로그인 페이지로 리다이렉트
+        console.warn('인증이 만료되었습니다. 다시 로그인해주세요.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
+      } else {
+        console.error('결제 내역 로드 실패:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Failed to load payment history:', error);
     }
   };
 
-  const handleCardNumberChange = (e) => {
-    let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
-    if (value.length > 16) value = value.slice(0, 16);
-    const formatted = value.replace(/(.{4})/g, '$1 ').trim();
-    setCardInfo({ ...cardInfo, cardNumber: formatted });
-  };
-
-  const handleExpiryChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 4) value = value.slice(0, 4);
-    if (value.length >= 2) {
-      value = value.slice(0, 2) + '/' + value.slice(2);
+  const handlePayment = () => {
+    // 신용카드 선택 시 준비중 메시지
+    if (selectedPaymentType === 'card') {
+      alert('신용카드 결제는 준비중입니다.');
+      return;
     }
-    setCardInfo({ ...cardInfo, expiryDate: value });
+    
+    // 무통장 입금인 경우 계좌 정보 표시 및 입금 정보 입력 폼 표시
+    if (selectedPaymentType === 'bank_transfer') {
+      setShowAccountInfo(true);
+      setShowBankTransferForm(true);
+    }
   };
 
-  const handleCvvChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 3) value = value.slice(0, 3);
-    setCardInfo({ ...cardInfo, cvv: value });
-  };
-
-  const handleCardPasswordChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 2) value = value.slice(0, 2);
-    setCardInfo({ ...cardInfo, cardPassword: value });
-  };
-
-  const handleSaveCard = async () => {
-    if (!cardInfo.cardNumber || !cardInfo.expiryDate || !cardInfo.cvv || !cardInfo.cardHolder) {
-      alert('모든 필드를 입력해주세요.');
+  const handleBankTransferSubmit = async () => {
+    if (!bankTransferInfo.depositorName || !bankTransferInfo.depositDate || !bankTransferInfo.depositAmount) {
+      alert('필수 항목을 모두 입력해주세요.');
       return;
     }
 
@@ -114,76 +103,36 @@ export default function PaymentPage() {
       const token = getToken();
       if (!token) {
         alert('로그인이 필요합니다.');
-        return;
-      }
-
-      const response = await fetch('/api/payment/method', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          cardNumber: cardInfo.cardNumber.replace(/\s/g, ''),
-          expiryDate: cardInfo.expiryDate,
-          cvv: cardInfo.cvv,
-          cardHolder: cardInfo.cardHolder,
-          // 실제로는 카드 정보를 암호화하여 저장해야 합니다
-        }),
-      });
-
-      if (response.ok) {
-        alert('카드가 등록되었습니다.');
-        setShowCardForm(false);
-        setCardInfo({
-          cardNumber: '',
-          expiryDate: '',
-          cvv: '',
-          cardHolder: '',
-          cardPassword: ''
-        });
-        loadPaymentInfo();
-      } else {
-        const errorData = await response.json().catch(() => ({ error: '카드 등록에 실패했습니다.' }));
-        alert(errorData.error || '카드 등록에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('Failed to save card:', error);
-      alert('카드 등록 중 오류가 발생했습니다.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handlePayment = async () => {
-    if (!paymentMethod) {
-      alert('먼저 카드를 등록해주세요.');
-      return;
-    }
-
-    if (!confirm('결제를 진행하시겠습니까?')) {
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const token = getToken();
-      if (!token) {
-        alert('로그인이 필요합니다.');
+        setIsProcessing(false);
         return;
       }
 
       // 결제 금액 계산
       let amount = 0;
-      if (user?.role === 2) amount = 19000;
-      else if (user?.role === 3) amount = 149000;
-      else if (user?.role === 4) {
-        alert('Enterprise 플랜은 문의가 필요합니다.');
+      let planName = '';
+      if (user?.role === 2) {
+        amount = 19000;
+        planName = 'Starter';
+      } else if (user?.role === 3) {
+        amount = 49900;
+        planName = 'Pro';
+      } else if (user?.role === 4) {
+        amount = 149000;
+        planName = 'Premium';
+      } else if (user?.role === 5) {
+        amount = 0;
+        planName = 'Enterprise';
+      } else {
+        alert('플랜을 먼저 선택해주세요.');
         setIsProcessing(false);
         return;
       }
 
-      const response = await fetch('/api/payment/process', {
+      // 고유한 paymentId 생성
+      const paymentId = `bank_transfer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // 서버에 입금 대기 상태로 저장
+      const serverResponse = await fetch('/api/payment/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,56 +140,39 @@ export default function PaymentPage() {
         },
         body: JSON.stringify({
           amount: amount,
-          plan: user?.role === 2 ? 'starter' : user?.role === 3 ? 'pro' : 'enterprise'
+          plan: user?.role === 2 ? 'starter' : user?.role === 3 ? 'pro' : user?.role === 4 ? 'premium' : 'enterprise',
+          paymentId: paymentId,
+          transactionId: paymentId,
+          paymentType: 'bank_transfer',
+          status: 'pending', // 입금 대기 상태 (관리자 확인 필요)
+          bankTransferInfo: bankTransferInfo,
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        alert('결제가 완료되었습니다.');
+      if (serverResponse.ok) {
+        alert('입금 정보가 제출되었습니다.\n관리자 확인 후 플랜이 활성화됩니다.');
+        setShowBankTransferForm(false);
+        setShowAccountInfo(false);
+        setBankTransferInfo({
+          depositorName: '',
+          depositDate: '',
+          depositAmount: '',
+          bankName: ''
+        });
         loadPaymentHistory();
-        // 결제 성공 후 페이지 새로고침 또는 상태 업데이트
         window.location.reload();
       } else {
-        const errorData = await response.json().catch(() => ({ error: '결제에 실패했습니다.' }));
-        alert(errorData.error || '결제에 실패했습니다.');
+        const errorData = await serverResponse.json().catch(() => ({ error: '서버 처리에 실패했습니다.' }));
+        alert(errorData.error || '서버 처리에 실패했습니다.');
       }
     } catch (error) {
-      console.error('Failed to process payment:', error);
-      alert('결제 처리 중 오류가 발생했습니다.');
+      console.error('Bank transfer submit error:', error);
+      alert('입금 정보 제출 중 오류가 발생했습니다.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleDeleteCard = async () => {
-    if (!confirm('등록된 카드를 삭제하시겠습니까?')) {
-      return;
-    }
-
-    try {
-      const token = getToken();
-      if (!token) return;
-
-      const response = await fetch('/api/payment/method', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        alert('카드가 삭제되었습니다.');
-        setPaymentMethod(null);
-        loadPaymentInfo();
-      } else {
-        alert('카드 삭제에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('Failed to delete card:', error);
-      alert('카드 삭제 중 오류가 발생했습니다.');
-    }
-  };
 
   const handleSelectPlan = async (planRole) => {
     try {
@@ -281,8 +213,9 @@ export default function PaymentPage() {
 
   const plans = [
     { role: 2, name: 'Starter', amount: 19000, description: '기본 기능 제공' },
-    { role: 3, name: 'Pro', amount: 149000, description: '고급 기능 제공' },
-    { role: 4, name: 'Enterprise', amount: 0, description: '맞춤형 솔루션' },
+    { role: 3, name: 'Pro', amount: 49900, description: '고급 기능 제공' },
+    { role: 4, name: 'Premium', amount: 149000, description: '프리미엄 기능 제공' },
+    { role: 5, name: 'Enterprise', amount: 0, description: '맞춤형 솔루션' },
   ];
 
   if (!isMounted) {
@@ -293,8 +226,9 @@ export default function PaymentPage() {
     if (!user) return null;
     const role = user.role;
     if (role === 2) return { name: 'Starter', amount: 19000 };
-    if (role === 3) return { name: 'Pro', amount: 149000 };
-    if (role === 4) return { name: 'Enterprise', amount: 0 };
+    if (role === 3) return { name: 'Pro', amount: 49900 };
+    if (role === 4) return { name: 'Premium', amount: 149000 };
+    if (role === 5) return { name: 'Enterprise', amount: 0 };
     return null;
   };
 
@@ -318,29 +252,24 @@ export default function PaymentPage() {
         <section className={styles.paymentSection}>
           <div className={styles.paymentInfoHeader}>
             <h2 className={styles.sectionTitle}>결제 정보</h2>
-            {!paymentMethod && !showCardForm && (
-              <button
-                onClick={() => setShowCardForm(true)}
-                className={styles.smallCardButton}
-                title="카드 등록"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                  <line x1="1" y1="10" x2="23" y2="10"/>
-                </svg>
-                <span>카드 등록</span>
-              </button>
-            )}
           </div>
           
           {planInfo ? (
-            <div className={styles.planCard}>
+            <div 
+              className={styles.planCard}
+              onClick={() => setShowPlanModal(true)}
+              style={{ cursor: 'pointer' }}
+              title="플랜 변경"
+            >
               <div className={styles.planInfo}>
                 <h3 className={styles.planName}>{planInfo.name} 플랜</h3>
                 <div className={styles.planAmount}>
                   {planInfo.amount > 0 ? `₩${planInfo.amount.toLocaleString()}/월` : '문의'}
                 </div>
               </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginLeft: 'auto' }}>
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
             </div>
           ) : (
             <div 
@@ -354,96 +283,108 @@ export default function PaymentPage() {
             </div>
           )}
 
-          {/* 등록된 카드 정보 */}
-          {paymentMethod && !showCardForm && (
-            <div className={styles.cardInfoCard}>
-              <div className={styles.cardInfoHeader}>
-                <h3>등록된 카드</h3>
-                <button 
-                  onClick={handleDeleteCard}
-                  className={styles.deleteButton}
-                >
-                  삭제
-                </button>
-              </div>
-              <div className={styles.cardDisplay}>
-                <div className={styles.cardNumber}>
-                  **** **** **** {paymentMethod.last4 || '1234'}
+          {/* 입금 계좌 정보 표시 */}
+          {showAccountInfo && (
+            <div className={styles.virtualAccountCard}>
+              <h3>입금 계좌 정보</h3>
+              <div className={styles.virtualAccountInfo}>
+                <div className={styles.accountRow}>
+                  <span className={styles.accountLabel}>은행:</span>
+                  <span className={styles.accountValue}>{bankAccountInfo.bank}</span>
                 </div>
-                <div className={styles.cardDetails}>
-                  <span>{paymentMethod.cardHolder || '카드 소유자'}</span>
-                  <span>{paymentMethod.expiryDate || 'MM/YY'}</span>
+                <div className={styles.accountRow}>
+                  <span className={styles.accountLabel}>계좌번호:</span>
+                  <span className={styles.accountValue}>{bankAccountInfo.accountNumber}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(bankAccountInfo.accountNumber);
+                      alert('계좌번호가 복사되었습니다.');
+                    }}
+                    className={styles.copyButton}
+                  >
+                    복사
+                  </button>
+                </div>
+                <div className={styles.accountRow}>
+                  <span className={styles.accountLabel}>예금주:</span>
+                  <span className={styles.accountValue}>{bankAccountInfo.accountHolder}</span>
+                </div>
+                <div className={styles.accountNotice}>
+                  <p>⚠️ 위 계좌로 정확한 금액을 입금해주세요.</p>
+                  <p style={{ color: 'red' }}>⚠️ 입금자명은 회원가입 시 입력한 이름과 동일해야 합니다.</p>
+                  <p>입금 후 아래 정보를 입력해주세요.</p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 카드 등록 폼 */}
-          {showCardForm && (
+          {/* 무통장 입금 정보 입력 폼 */}
+          {showBankTransferForm && (
             <div className={styles.cardFormCard}>
-              <h3>신용카드 등록</h3>
+              <h3>무통장 입금 정보</h3>
+              <div className={styles.accountNotice}>
+                <p>⚠️ 입금 후 아래 정보를 입력해주세요.</p>
+                <p>관리자 확인 후 플랜이 활성화됩니다.</p>
+              </div>
               <div className={styles.formGroup}>
-                <label>카드 번호</label>
+                <label>입금자명 *</label>
                 <input
                   type="text"
-                  value={cardInfo.cardNumber}
-                  onChange={handleCardNumberChange}
-                  placeholder="1234 5678 9012 3456"
-                  maxLength={19}
+                  value={bankTransferInfo.depositorName}
+                  onChange={(e) => setBankTransferInfo({ ...bankTransferInfo, depositorName: e.target.value })}
+                  placeholder="홍길동"
                   className={styles.cardInput}
                 />
               </div>
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>만료일 (MM/YY)</label>
-                  <input
-                    type="text"
-                    value={cardInfo.expiryDate}
-                    onChange={handleExpiryChange}
-                    placeholder="MM/YY"
-                    maxLength={5}
-                    className={styles.cardInput}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>CVV</label>
-                  <input
-                    type="text"
-                    value={cardInfo.cvv}
-                    onChange={handleCvvChange}
-                    placeholder="123"
-                    maxLength={3}
-                    className={styles.cardInput}
-                  />
-                </div>
+              <div className={styles.formGroup}>
+                <label>입금일 *</label>
+                <input
+                  type="date"
+                  value={bankTransferInfo.depositDate}
+                  onChange={(e) => setBankTransferInfo({ ...bankTransferInfo, depositDate: e.target.value })}
+                  className={styles.cardInput}
+                />
               </div>
               <div className={styles.formGroup}>
-                <label>카드 소유자 이름</label>
+                <label>입금금액 *</label>
+                <input
+                  type="number"
+                  value={bankTransferInfo.depositAmount}
+                  onChange={(e) => setBankTransferInfo({ ...bankTransferInfo, depositAmount: e.target.value })}
+                  placeholder={planInfo?.amount?.toLocaleString() || '0'}
+                  className={styles.cardInput}
+                />
+                <p className={styles.helperText}>예상 금액: ₩{planInfo?.amount?.toLocaleString() || '0'}</p>
+              </div>
+              <div className={styles.formGroup}>
+                <label>은행명</label>
                 <input
                   type="text"
-                  value={cardInfo.cardHolder}
-                  onChange={(e) => setCardInfo({ ...cardInfo, cardHolder: e.target.value })}
-                  placeholder="홍길동"
+                  value={bankTransferInfo.bankName}
+                  onChange={(e) => setBankTransferInfo({ ...bankTransferInfo, bankName: e.target.value })}
+                  placeholder="예: 국민은행, 신한은행"
                   className={styles.cardInput}
                 />
               </div>
               <div className={styles.formActions}>
                 <button
-                  onClick={handleSaveCard}
-                  disabled={isProcessing}
+                  onClick={handleBankTransferSubmit}
+                  disabled={isProcessing || !bankTransferInfo.depositorName || !bankTransferInfo.depositDate || !bankTransferInfo.depositAmount}
                   className={styles.saveButton}
                 >
-                  {isProcessing ? '처리 중...' : '카드 등록'}
+                  {isProcessing ? '처리 중...' : '입금 정보 제출'}
                 </button>
                 <button
                   onClick={() => {
-                    setShowCardForm(false);
-                    setCardInfo({
-                      cardNumber: '',
-                      expiryDate: '',
-                      cvv: '',
-                      cardHolder: '',
-                      cardPassword: ''
+                    setShowBankTransferForm(false);
+                    setShowAccountInfo(false);
+                    setBankTransferInfo({
+                      depositorName: '',
+                      depositDate: '',
+                      depositAmount: '',
+                      bankName: '',
+                      accountNumber: '',
+                      memo: ''
                     });
                   }}
                   className={styles.cancelButton}
@@ -454,15 +395,49 @@ export default function PaymentPage() {
             </div>
           )}
 
+          {/* 결제 방식 선택 */}
+          {!showBankTransferForm && planInfo && planInfo.amount > 0 && (
+            <div className={styles.paymentTypeSection}>
+              <h3 className={styles.paymentTypeTitle}>결제 방식 선택</h3>
+              <div className={styles.paymentTypeOptions}>
+                <label className={styles.paymentTypeOption}>
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    value="card"
+                    checked={selectedPaymentType === 'card'}
+                    onChange={(e) => setSelectedPaymentType(e.target.value)}
+                  />
+                  <span>신용카드</span>
+                </label>
+                <label className={styles.paymentTypeOption}>
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    value="bank_transfer"
+                    checked={selectedPaymentType === 'bank_transfer'}
+                    onChange={(e) => setSelectedPaymentType(e.target.value)}
+                  />
+                  <span>무통장 입금</span>
+                </label>
+              </div>
+              {selectedPaymentType === 'card' && (
+                <div className={styles.paymentNotice}>
+                  <p>⚠️ 신용카드 결제는 준비중입니다.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 결제 버튼 */}
-          {!showCardForm && paymentMethod && planInfo && planInfo.amount > 0 && (
+          {!showBankTransferForm && planInfo && planInfo.amount > 0 && (
             <div className={styles.actionButtons}>
               <button
                 onClick={handlePayment}
                 disabled={isProcessing}
                 className={styles.primaryButton}
               >
-                {isProcessing ? '결제 처리 중...' : '결제하기'}
+                결제하기
               </button>
             </div>
           )}

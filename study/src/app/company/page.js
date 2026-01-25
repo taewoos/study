@@ -82,21 +82,27 @@ const pricingPlans = [
   {
     key: 'starter',
     name: 'Starter',
-    price: '₩19,000',
+    price: '19,000',
     period: '/월',
     description: '개인/소규모 팀을 위한 시작 플랜',
-    features: ['기본 LLM 기능', '캔버스 작업 영역', '기본 템플릿',],
-    tone: 'pink',
+    features: ['기본 임배딩', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)'],
   },
   {
     key: 'pro',
     name: 'Pro',
-    price: '₩149,000',
+    price: '49,900',
     period: '/월',
     description: '업무 자동화를 본격적으로 확장',
-    features: ['기본Starter 플랜 +','Ai Agent 기능', 'Ai OCR 기능', '음성인식 기능', '팀 공유/권한'],
-    tone: 'blue',
+    features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)', 'RPA 연동기능이 없는 Agent'],
     highlight: true,
+  },
+  {
+    key: 'premium',
+    name: 'Premium',
+    price: '149,000',
+    period: '/월',
+    description: '고급 기능과 확장된 지원',
+    features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)', '음성인식 (STT, TTS)', 'OCR (문서 파서기능)'],
   },
   {
     key: 'enterprise',
@@ -104,8 +110,7 @@ const pricingPlans = [
     price: '문의',
     period: '',
     description: '보안/연동/커스텀 요구사항 대응',
-    features: ['온프레미스/전용 배포', 'RPA', '커스텀 모델/파인튜닝', '전담 지원'],
-    tone: 'purple',
+    features: ['RPA', '자체모델 제작', '모델 파인튜닝', '폐쇄망 구축', 'RPA 연동기능이 있는 Agent'],
   },
 ];
 
@@ -1746,753 +1751,9 @@ export default function CompanyPage() {
             </div>
           </div>
 
-          {/* 뉴스/특허/자격 섹션 */}
-          <div className={styles.trustSection}>
-            <div className={styles.trustHeader}>
-              {isEditMode && isAdminUser ? (
-                <>
-                  <input
-                    type="text"
-                    value={pageContent?.trustTitle || '검증된 성과'}
-                    onChange={(e) => {
-                      const newContent = { ...pageContent, trustTitle: e.target.value };
-                      setPageContent(newContent);
-                      saveContent(newContent);
-                    }}
-                    className={styles.editInput}
-                    style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}
-                  />
-                  <input
-                    type="text"
-                    value={pageContent?.trustSubtitle || '보도자료, 인증서, 특허로 신뢰를 보여드립니다.'}
-                    onChange={(e) => {
-                      const newContent = { ...pageContent, trustSubtitle: e.target.value };
-                      setPageContent(newContent);
-                      saveContent(newContent);
-                    }}
-                    className={styles.editInput}
-                  />
-                </>
-              ) : (
-                <>
-                  <h2 className={styles.trustTitle}>{pageContent?.trustTitle || '검증된 성과'}</h2>
-                  <p className={styles.trustSubtitle}>
-                    {pageContent?.trustSubtitle || '보도자료, 인증서, 특허로 신뢰를 보여드립니다.'}
-                  </p>
-                </>
-              )}
-              {isAdminUser && (
-                <button
-                  onClick={() => setIsEditMode(!isEditMode)}
-                  style={{
-                    marginTop: '1rem',
-                    padding: '0.5rem 1rem',
-                    background: isEditMode ? '#ff4444' : '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {isEditMode ? '편집 종료' : '편집 모드'}
-                </button>
-              )}
-            </div>
+          {/* 뉴스/특허/자격 섹션은 /news 페이지로 이동됨 */}
 
-            <div className={styles.trustGrid}>
-              <div className={styles.newsPanel}>
-                <div className={styles.panelHeader}>
-                  <h3 className={styles.panelTitle}>News</h3>
-                  <span className={styles.panelHint}>업데이트/보도자료</span>
-                  {isAdminUser && isEditMode && (
-                    <button
-                      onClick={() => {
-                        setNewAchievement({ title: '', date: '', excerpt: '', href: '#', type: 'news' });
-                        setImagePreview(null);
-                        setShowAchievementModal(true);
-                      }}
-                      style={{
-                        marginLeft: 'auto',
-                        padding: '0.25rem 0.5rem',
-                        background: '#2196F3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      + 추가
-                    </button>
-                  )}
-                </div>
-                <div 
-                  className={styles.newsList}
-                  style={{
-                    maxHeight: achievements.filter(a => a.type === 'news').length > 5 ? '760px' : 'none',
-                    overflowY: achievements.filter(a => a.type === 'news').length > 5 ? 'auto' : 'visible'
-                  }}
-                >
-                  {achievements.filter(a => a.type === 'news').sort((a, b) => {
-                    // 날짜 기준 내림차순 정렬 (최신순)
-                    const dateDiff = new Date(b.date) - new Date(a.date);
-                    if (dateDiff !== 0) return dateDiff;
-                    // 같은 날짜면 createdAt 기준으로 정렬 (최신순)
-                    const aCreated = a.createdAt ? new Date(a.createdAt) : new Date(0);
-                    const bCreated = b.createdAt ? new Date(b.createdAt) : new Date(0);
-                    return bCreated - aCreated;
-                  }).map((n, idx) => (
-                    <div key={n._id || n.title || idx} style={{ position: 'relative' }}>
-                      {isAdminUser && isEditMode && (
-                        <button
-                          onClick={() => handleDeleteAchievement(n._id)}
-                          style={{
-                            position: 'absolute',
-                            top: '0.5rem',
-                            right: '0.5rem',
-                            background: '#ff4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '24px',
-                            height: '24px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            zIndex: 10
-                          }}
-                        >
-                          ×
-                        </button>
-                      )}
-                      <a href={n.href} target="_blank" rel="noopener noreferrer" className={styles.newsCard}>
-                        <div className={styles.newsTopRow}>
-                          <span className={styles.newsDate}>{n.date}</span>
-                          <span className={styles.newsArrow}>›</span>
-                        </div>
-                        {isEditMode && isAdminUser ? (
-                          <>
-                            <input
-                              type="text"
-                              value={n.title}
-                              onChange={(e) => {
-                                const updated = achievements.map(a => 
-                                  a._id === n._id ? { ...a, title: e.target.value } : a
-                                );
-                                setAchievements(updated);
-                              }}
-                              onBlur={async () => {
-                                try {
-                                  const token = getToken();
-                                  if (!token) {
-                                    alert('로그인이 필요합니다.');
-                                    return;
-                                  }
-                                  await fetch('/api/company/achievements', {
-                                    method: 'PUT',
-                                    headers: { 
-                                      'Content-Type': 'application/json',
-                                      'Authorization': `Bearer ${token}`
-                                    },
-                                    body: JSON.stringify({ id: n._id, ...n }),
-                                  });
-                                } catch (error) {
-                                  console.error('Failed to update:', error);
-                                }
-                              }}
-                              className={styles.editInput}
-                              style={{ width: '100%', marginBottom: '0.5rem' }}
-                            />
-                            <textarea
-                              value={n.excerpt}
-                              onChange={(e) => {
-                                const updated = achievements.map(a => 
-                                  a._id === n._id ? { ...a, excerpt: e.target.value } : a
-                                );
-                                setAchievements(updated);
-                              }}
-                              onBlur={async () => {
-                                try {
-                                  const token = getToken();
-                                  if (!token) {
-                                    alert('로그인이 필요합니다.');
-                                    return;
-                                  }
-                                  await fetch('/api/company/achievements', {
-                                    method: 'PUT',
-                                    headers: { 
-                                      'Content-Type': 'application/json',
-                                      'Authorization': `Bearer ${token}`
-                                    },
-                                    body: JSON.stringify({ id: n._id, ...n }),
-                                  });
-                                } catch (error) {
-                                  console.error('Failed to update:', error);
-                                }
-                              }}
-                              className={styles.editInput}
-                              style={{ width: '100%', minHeight: '60px' }}
-                            />
-                          </>
-                        ) : (
-                          <>
-                            <h4 className={styles.newsTitle}>{n.title}</h4>
-                            <p className={styles.newsExcerpt}>{n.excerpt}</p>
-                          </>
-                        )}
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.credentialPanel}>
-                <div className={styles.panelHeader}>
-                  <h3 className={styles.panelTitle}>Certificates / Patents</h3>
-                  <span className={styles.panelHint}>이미지/캡션</span>
-                  {isAdminUser && isEditMode && (
-                    <button
-                      onClick={() => {
-                        setNewAchievement({ title: '', date: '', excerpt: '', href: '#', type: 'credential' });
-                        setImagePreview(null);
-                        setShowAchievementModal(true);
-                      }}
-                      style={{
-                        marginLeft: 'auto',
-                        padding: '0.25rem 0.5rem',
-                        background: '#2196F3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      + 추가
-                    </button>
-                  )}
-                </div>
-                <div className={styles.credentialGrid}>
-                  {achievements.filter(a => a.type === 'credential').map((c) => (
-                    <div key={c._id || c.title} style={{ position: 'relative' }}>
-                      {isAdminUser && isEditMode && (
-                        <button
-                          onClick={() => handleDeleteAchievement(c._id)}
-                          style={{
-                            position: 'absolute',
-                            top: '0.5rem',
-                            right: '0.5rem',
-                            background: '#ff4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '24px',
-                            height: '24px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            zIndex: 10
-                          }}
-                        >
-                          ×
-                        </button>
-                      )}
-                      <div className={styles.credentialCard}>
-                        <div className={styles.credentialThumb}>
-                          <img src={c.href || '/uploads/aillm.png'} alt={c.title} />
-                        </div>
-                        <div className={styles.credentialText}>
-                          <div className={styles.credentialTitle}>{c.title}</div>
-                          <div className={styles.credentialSubtitle}>{c.excerpt}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Urgency / Trend + Risk removal + Testimonial */}
-          <div className={styles.pricingExtra}>
-            <section className={styles.pricingExtraSection} style={{ position: 'relative' }}>
-              {isAdminUser && (
-                <button
-                  onClick={() => {
-                    // 편집 시작 시 원본 데이터 저장
-                    if (pageContent) {
-                      setOriginalPageContent(JSON.parse(JSON.stringify(pageContent)));
-                    }
-                    if (!pageContent?.whyNow) {
-                      const defaultWhyNow = {
-                        title: '"Why" 지금 시작해야 하나',
-                        copy: '자동화는 \'언젠가\'가 아니라 \'지금\' 시작할수록 비용이 줄어듭니다.',
-                        points: [
-                          { title: '업무량 증가', desc: '처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.' },
-                          { title: '인건비 상승', desc: '반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.' },
-                          { title: '속도 경쟁', desc: '고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.' }
-                        ]
-                      };
-                      setPageContent({ ...pageContent, whyNow: defaultWhyNow });
-                    }
-                    setEditingWhyNow(true);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    padding: '0.5rem 1rem',
-                    background: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    zIndex: 10
-                  }}
-                >
-                  수정
-                </button>
-              )}
-              {editingWhyNow && isAdminUser && (
-                <button
-                  onClick={async () => {
-                    const success = await saveContent(pageContent);
-                    if (success) {
-                      setEditingWhyNow(false);
-                    }
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '80px',
-                    padding: '0.5rem 1rem',
-                    background: '#2196F3',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    zIndex: 10
-                  }}
-                >
-                  저장
-                </button>
-              )}
-              {editingWhyNow && isAdminUser && (
-                <button
-                  onClick={() => {
-                    setEditingWhyNow(false);
-                    // 원본 데이터로 복원
-                    if (originalPageContent) {
-                      setPageContent(JSON.parse(JSON.stringify(originalPageContent)));
-                    }
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '140px',
-                    padding: '0.5rem 1rem',
-                    background: '#ff4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    zIndex: 10
-                  }}
-                >
-                  취소
-                </button>
-              )}
-              <div className={styles.pricingExtraHeader}>
-                <p className={styles.pricingExtraEyebrow}>WHY NOW</p>
-                {editingWhyNow && isAdminUser ? (
-                  <>
-                    <input
-                      type="text"
-                      value={pageContent?.whyNow?.title || '"Why" 지금 시작해야 하나'}
-                      onChange={(e) => {
-                        if (!pageContent?.whyNow) {
-                          setPageContent({ 
-                            ...pageContent, 
-                            whyNow: {
-                              title: e.target.value,
-                              copy: '자동화는 \'언젠가\'가 아니라 \'지금\' 시작할수록 비용이 줄어듭니다.',
-                              points: [
-                                { title: '업무량 증가', desc: '처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.' },
-                                { title: '인건비 상승', desc: '반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.' },
-                                { title: '속도 경쟁', desc: '고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.' }
-                              ]
-                            }
-                          });
-                        } else {
-                          setPageContent({ 
-                            ...pageContent, 
-                            whyNow: { 
-                              ...pageContent.whyNow, 
-                              title: e.target.value 
-                            } 
-                          });
-                        }
-                      }}
-                      className={styles.editInput}
-                      style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', width: '100%', padding: '0.5rem' }}
-                    />
-                    <textarea
-                      value={pageContent?.whyNow?.copy || '자동화는 \'언젠가\'가 아니라 \'지금\' 시작할수록 비용이 줄어듭니다.'}
-                      onChange={(e) => {
-                        if (!pageContent?.whyNow) {
-                          setPageContent({ 
-                            ...pageContent, 
-                            whyNow: {
-                              title: '"Why" 지금 시작해야 하나',
-                              copy: e.target.value,
-                              points: [
-                                { title: '업무량 증가', desc: '처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.' },
-                                { title: '인건비 상승', desc: '반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.' },
-                                { title: '속도 경쟁', desc: '고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.' }
-                              ]
-                            }
-                          });
-                        } else {
-                          setPageContent({ 
-                            ...pageContent, 
-                            whyNow: { 
-                              ...pageContent.whyNow, 
-                              copy: e.target.value 
-                            } 
-                          });
-                        }
-                      }}
-                      className={styles.editInput}
-                      style={{ width: '100%', minHeight: '60px', padding: '0.5rem' }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <h3 className={styles.pricingExtraTitle}>
-                      {pageContent?.whyNow?.title || '"Why" 지금 시작해야 하나'}
-                    </h3>
-                    <div className={styles.pricingExtraCopy}>
-                      <p>{pageContent?.whyNow?.copy || '자동화는 \'언젠가\'가 아니라 \'지금\' 시작할수록 비용이 줄어듭니다.'}</p>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className={styles.urgencyPoints}>
-                {(pageContent?.whyNow?.points || [
-                  { title: '업무량 증가', desc: '처리량이 늘수록 병목은 커집니다. 자동화로 선제 대응하세요.' },
-                  { title: '인건비 상승', desc: '반복 업무에 투입되는 시간은 곧 비용입니다. 시간을 회수하세요.' },
-                  { title: '속도 경쟁', desc: '고객 대응과 의사결정 속도가 경쟁력입니다. 더 빠르게 움직이세요.' }
-                ]).map((point, idx) => (
-                  <div key={idx} className={styles.urgencyPoint}>
-                    {editingWhyNow && isAdminUser ? (
-                      <>
-                        <input
-                          type="text"
-                          value={point.title}
-                          onChange={(e) => {
-                            const newPoints = [...(pageContent?.whyNow?.points || [])];
-                            newPoints[idx] = { ...newPoints[idx], title: e.target.value };
-                            const newContent = { 
-                              ...pageContent, 
-                              whyNow: { 
-                                ...(pageContent?.whyNow || {}), 
-                                points: newPoints 
-                              } 
-                            };
-                            setPageContent(newContent);
-                          }}
-                          className={styles.editInput}
-                          style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '0.9375rem', fontWeight: 'bold' }}
-                        />
-                        <textarea
-                          value={point.desc}
-                          onChange={(e) => {
-                            const newPoints = [...(pageContent?.whyNow?.points || [])];
-                            newPoints[idx] = { ...newPoints[idx], desc: e.target.value };
-                            const newContent = { 
-                              ...pageContent, 
-                              whyNow: { 
-                                ...(pageContent?.whyNow || {}), 
-                                points: newPoints 
-                              } 
-                            };
-                            setPageContent(newContent);
-                          }}
-                          className={styles.editInput}
-                          style={{ width: '100%', minHeight: '60px', padding: '0.5rem', fontSize: '0.8125rem' }}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <div className={styles.urgencyPointTitle}>{point.title}</div>
-                        <div className={styles.urgencyPointDesc}>{point.desc}</div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Risk removal (Barrier 0) */}
-            <section className={styles.pricingExtraSection} style={{ position: 'relative' }}>
-              {isAdminUser && (
-                <button
-                  onClick={() => {
-                    // 편집 시작 시 원본 데이터 저장
-                    if (pageContent) {
-                      setOriginalPageContent(JSON.parse(JSON.stringify(pageContent)));
-                    }
-                    if (!pageContent?.riskRemoval) {
-                      const defaultRiskRemoval = {
-                        title: '도입 장벽 "Low Risk"',
-                        subtitle: '시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.',
-                        cards: [
-                          { title: '초기 세팅 지원', desc: '업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.' },
-                          { title: '기존 시스템 연동', desc: 'API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.' },
-                          { title: '단계적 확장', desc: '작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.' }
-                        ]
-                      };
-                      setPageContent({ ...pageContent, riskRemoval: defaultRiskRemoval });
-                    }
-                    setEditingRiskRemoval(true);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    padding: '0.5rem 1rem',
-                    background: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    zIndex: 10
-                  }}
-                >
-                  수정
-                </button>
-              )}
-              {editingRiskRemoval && isAdminUser && (
-                <button
-                  onClick={async () => {
-                    const success = await saveContent(pageContent);
-                    if (success) {
-                      setEditingRiskRemoval(false);
-                    }
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '80px',
-                    padding: '0.5rem 1rem',
-                    background: '#2196F3',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    zIndex: 10
-                  }}
-                >
-                  저장
-                </button>
-              )}
-              {editingRiskRemoval && isAdminUser && (
-                <button
-                  onClick={() => {
-                    setEditingRiskRemoval(false);
-                    // 원본 데이터로 복원
-                    if (originalPageContent) {
-                      setPageContent(JSON.parse(JSON.stringify(originalPageContent)));
-                    }
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '140px',
-                    padding: '0.5rem 1rem',
-                    background: '#ff4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    zIndex: 10
-                  }}
-                >
-                  취소
-                </button>
-              )}
-              <div className={styles.pricingExtraHeader}>
-                <p className={styles.pricingExtraEyebrow}>RISK REMOVAL</p>
-                {editingRiskRemoval && isAdminUser ? (
-                  <>
-                    <input
-                      type="text"
-                      value={pageContent?.riskRemoval?.title || '도입 장벽 "Low Risk"'}
-                      onChange={(e) => {
-                        if (!pageContent?.riskRemoval) {
-                          setPageContent({ 
-                            ...pageContent, 
-                            riskRemoval: {
-                              title: e.target.value,
-                              subtitle: '시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.',
-                              cards: [
-                                { title: '초기 세팅 지원', desc: '업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.' },
-                                { title: '기존 시스템 연동', desc: 'API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.' },
-                                { title: '단계적 확장', desc: '작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.' }
-                              ]
-                            }
-                          });
-                        } else {
-                          setPageContent({ 
-                            ...pageContent, 
-                            riskRemoval: { 
-                              ...pageContent.riskRemoval, 
-                              title: e.target.value 
-                            } 
-                          });
-                        }
-                      }}
-                      className={styles.editInput}
-                      style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', width: '100%', padding: '0.5rem' }}
-                    />
-                    <textarea
-                      value={pageContent?.riskRemoval?.subtitle || '시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.'}
-                      onChange={(e) => {
-                        if (!pageContent?.riskRemoval) {
-                          setPageContent({ 
-                            ...pageContent, 
-                            riskRemoval: {
-                              title: '도입 장벽 "Low Risk"',
-                              subtitle: e.target.value,
-                              cards: [
-                                { title: '초기 세팅 지원', desc: '업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.' },
-                                { title: '기존 시스템 연동', desc: 'API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.' },
-                                { title: '단계적 확장', desc: '작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.' }
-                              ]
-                            }
-                          });
-                        } else {
-                          setPageContent({ 
-                            ...pageContent, 
-                            riskRemoval: { 
-                              ...pageContent.riskRemoval, 
-                              subtitle: e.target.value 
-                            } 
-                          });
-                        }
-                      }}
-                      className={styles.editInput}
-                      style={{ width: '100%', minHeight: '60px', padding: '0.5rem' }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <h3 className={styles.pricingExtraTitle}>
-                      {pageContent?.riskRemoval?.title || '도입 장벽 "Low Risk"'}
-                    </h3>
-                    <p className={styles.pricingExtraSub}>
-                      {pageContent?.riskRemoval?.subtitle || '시작은 가볍게, 운영은 안정적으로. 팀이 부담 없이 도입할 수 있게 설계했습니다.'}
-                    </p>
-                  </>
-                )}
-              </div>
-
-              <div className={styles.barrierGrid}>
-                {(pageContent?.riskRemoval?.cards || [
-                  { title: '초기 세팅 지원', desc: '업무에 맞는 기본 템플릿과 운영 가이드를 함께 제공합니다.' },
-                  { title: '기존 시스템 연동', desc: 'API/데이터 연동으로 이미 쓰던 흐름을 유지하며 확장합니다.' },
-                  { title: '단계적 확장', desc: '작게 시작하고, 성과가 보이면 기능과 사용량을 늘리면 됩니다.' }
-                ]).map((card, idx) => (
-                  <div key={idx} className={styles.barrierCard}>
-                    {editingRiskRemoval && isAdminUser ? (
-                      <>
-                        <input
-                          type="text"
-                          value={card.title}
-                          onChange={(e) => {
-                            const newCards = [...(pageContent?.riskRemoval?.cards || [])];
-                            newCards[idx] = { ...newCards[idx], title: e.target.value };
-                            const newContent = { 
-                              ...pageContent, 
-                              riskRemoval: { 
-                                ...(pageContent?.riskRemoval || {}), 
-                                cards: newCards 
-                              } 
-                            };
-                            setPageContent(newContent);
-                          }}
-                          className={styles.editInput}
-                          style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '0.9375rem', fontWeight: 'bold' }}
-                        />
-                        <textarea
-                          value={card.desc}
-                          onChange={(e) => {
-                            const newCards = [...(pageContent?.riskRemoval?.cards || [])];
-                            newCards[idx] = { ...newCards[idx], desc: e.target.value };
-                            const newContent = { 
-                              ...pageContent, 
-                              riskRemoval: { 
-                                ...(pageContent?.riskRemoval || {}), 
-                                cards: newCards 
-                              } 
-                            };
-                            setPageContent(newContent);
-                          }}
-                          className={styles.editInput}
-                          style={{ width: '100%', minHeight: '60px', padding: '0.5rem', fontSize: '0.8125rem' }}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <div className={styles.barrierTitle}>{card.title}</div>
-                        <div className={styles.barrierDesc}>{card.desc}</div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Testimonial */}
-            <section className={styles.pricingExtraSection}>
-              <div className={styles.pricingExtraHeader}>
-                <p className={styles.pricingExtraEyebrow}>TESTIMONIAL</p>
-                <h3 className={styles.pricingExtraTitle}>Customer review</h3>
-                <p className={styles.pricingExtraSub}>현장에서 느끼는 변화는 ‘숫자’보다 먼저 체감됩니다.</p>
-              </div>
-
-              <div className={styles.testimonialMarquee} aria-label="Customer reviews marquee">
-                {Array.from({ length: testimonialRows }).map((_, rowIdx) => {
-                  const items = getTestimonialRowItems(rowIdx);
-                  const direction = rowIdx === 1 ? 'left' : 'right'; // 1st/3rd right, 2nd left
-                  return (
-                    <div
-                      key={`testimonial-row-${rowIdx}`}
-                      className={`${styles.testimonialMarqueeRow} ${
-                        direction === 'left' ? styles.testimonialMarqueeRowLeft : styles.testimonialMarqueeRowRight
-                      }`}
-                    >
-                      <div className={styles.testimonialMarqueeTrack}>
-                        {[...items, ...items].map((t, idx) => (
-                          <figure className={styles.testimonialMarqueeCard} key={`${rowIdx}-${idx}-${t.meta}`}>
-                            <blockquote className={styles.testimonialQuote}>{t.quote}</blockquote>
-                            <figcaption className={styles.testimonialMeta}>{t.meta}</figcaption>
-                          </figure>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          </div>
-
-          {/* 요금제 카드 3개 */}
+          {/* 요금제 카드 4개 */}
           <div className={styles.pricingSection} style={{ position: 'relative' }}>
             {isAdminUser && (
               <button
@@ -2691,10 +1952,22 @@ export default function CompanyPage() {
               )}
             </div>
             <div className={styles.pricingGrid}>
-              {(pageContent?.pricing?.plans || pricingPlans).map((plan, planIdx) => (
+              {(() => {
+                const savedPlans = pageContent?.pricing?.plans;
+                const hasPremium = savedPlans?.some(plan => plan.key === 'premium');
+                const hasFourPlans = savedPlans?.length >= 4;
+                // 저장된 plans가 4개 미만이거나 premium이 없으면 기본 pricingPlans 사용
+                return (savedPlans && hasFourPlans && hasPremium) ? savedPlans : pricingPlans;
+              })().map((plan, planIdx) => {
+                // 편집 모드에서도 동일한 plans 사용
+                const savedPlans = pageContent?.pricing?.plans;
+                const hasPremium = savedPlans?.some(p => p.key === 'premium');
+                const hasFourPlans = savedPlans?.length >= 4;
+                const currentPlans = (savedPlans && hasFourPlans && hasPremium) ? savedPlans : pricingPlans;
+                return (
                 <div
                   key={plan.key}
-                  className={`${styles.pricingCard} ${styles[`pricingCardTone_${plan.tone}`]} ${
+                  className={`${styles.pricingCard} ${
                     plan.highlight ? styles.pricingCardHighlight : ''
                   }`}
                 >
@@ -2706,7 +1979,7 @@ export default function CompanyPage() {
                           type="text"
                           value={plan.name}
                           onChange={(e) => {
-                            const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                            const newPlans = [...currentPlans];
                             newPlans[planIdx] = { ...newPlans[planIdx], name: e.target.value };
                             setPageContent({ 
                               ...pageContent, 
@@ -2722,7 +1995,7 @@ export default function CompanyPage() {
                         <textarea
                           value={plan.description}
                           onChange={(e) => {
-                            const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                            const newPlans = [...currentPlans];
                             newPlans[planIdx] = { ...newPlans[planIdx], description: e.target.value };
                             setPageContent({ 
                               ...pageContent, 
@@ -2750,7 +2023,7 @@ export default function CompanyPage() {
                           type="text"
                           value={plan.price}
                           onChange={(e) => {
-                            const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                            const newPlans = [...currentPlans];
                             newPlans[planIdx] = { ...newPlans[planIdx], price: e.target.value };
                             setPageContent({ 
                               ...pageContent, 
@@ -2767,7 +2040,7 @@ export default function CompanyPage() {
                           type="text"
                           value={plan.period || ''}
                           onChange={(e) => {
-                            const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                            const newPlans = [...currentPlans];
                             newPlans[planIdx] = { ...newPlans[planIdx], period: e.target.value };
                             setPageContent({ 
                               ...pageContent, 
@@ -2785,7 +2058,12 @@ export default function CompanyPage() {
                     ) : (
                       <>
                         <span className={styles.pricingPrice}>{plan.price}</span>
-                        {plan.period && <span className={styles.pricingPeriod}>{plan.period}</span>}
+                        {plan.period && (
+                          <>
+                            <span className={styles.pricingCurrency}>₩</span>
+                            <span className={styles.pricingPeriod}>{plan.period}</span>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -2797,7 +2075,7 @@ export default function CompanyPage() {
                             type="text"
                             value={f}
                             onChange={(e) => {
-                              const newPlans = [...(pageContent?.pricing?.plans || pricingPlans)];
+                              const newPlans = [...currentPlans];
                               const newFeatures = [...newPlans[planIdx].features];
                               newFeatures[featureIdx] = e.target.value;
                               newPlans[planIdx] = { ...newPlans[planIdx], features: newFeatures };
@@ -2831,10 +2109,10 @@ export default function CompanyPage() {
                           const currentUser = getUser();
                           if (currentUser) {
                             // 로그인한 경우 마이페이지로 이동
-                            router.push('/mypage');
+                            router.push('/payment');
                           } else {
-                            // 로그인 안한 경우 모달 표시
-                            setShowLoginModal(true);
+                            // 로그인하지 않은 경우 로그인 페이지로 이동
+                            router.push('/login');
                           }
                         }}
                       >
@@ -2843,430 +2121,230 @@ export default function CompanyPage() {
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Branding + ROI (below pricing cards) */}
-            <div className={styles.pricingAfter}>
-              <div className={styles.pricingAfterGrid}>
-                <div className={styles.pricingAfterCard}>
-                  <p className={styles.pricingAfterEyebrow}>BRAND PROMISE</p>
-                  {editingPricing && isAdminUser ? (
-                    <>
-                      <input
-                        type="text"
-                        value={pageContent?.pricing?.brandPromise?.title || '일이 매끄럽게 흐르는 경험'}
-                        onChange={(e) => {
-                          setPageContent({ 
-                            ...pageContent, 
-                            pricing: { 
-                              ...(pageContent?.pricing || {}), 
-                              brandPromise: { 
-                                ...(pageContent?.pricing?.brandPromise || {}), 
-                                title: e.target.value 
-                              } 
-                            } 
-                          });
-                        }}
-                        className={styles.editInput}
-                        style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
-                      />
-                      <textarea
-                        value={pageContent?.pricing?.brandPromise?.description || '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.'}
-                        onChange={(e) => {
-                          setPageContent({ 
-                            ...pageContent, 
-                            pricing: { 
-                              ...(pageContent?.pricing || {}), 
-                              brandPromise: { 
-                                ...(pageContent?.pricing?.brandPromise || {}), 
-                                description: e.target.value 
-                              } 
-                            } 
-                          });
-                        }}
-                        className={styles.editInput}
-                        style={{ width: '100%', minHeight: '60px', padding: '0.5rem', fontSize: '0.875rem' }}
-                      />
-                      <div style={{ marginTop: '1rem' }}>
-                        {(pageContent?.pricing?.brandPromise?.pills || ['빠르게', '정확하게', '안전하게']).map((pill, pillIdx) => (
-                          <input
-                            key={pillIdx}
-                            type="text"
-                            value={pill}
-                            onChange={(e) => {
-                              const newPills = [...(pageContent?.pricing?.brandPromise?.pills || [])];
-                              newPills[pillIdx] = e.target.value;
-                              setPageContent({ 
-                                ...pageContent, 
-                                pricing: { 
-                                  ...(pageContent?.pricing || {}), 
-                                  brandPromise: { 
-                                    ...(pageContent?.pricing?.brandPromise || {}), 
-                                    pills: newPills 
-                                  } 
-                                } 
-                              });
-                            }}
-                            className={styles.editInput}
-                            style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '0.8125rem' }}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className={styles.pricingAfterTitle}>
-                        {pageContent?.pricing?.brandPromise?.title || '일이 매끄럽게 흐르는 경험'}
-                      </h3>
-                      <p className={styles.pricingAfterDesc}>
-                        {pageContent?.pricing?.brandPromise?.description || '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.'}
-                      </p>
-                      <div className={styles.promisePills}>
-                        {(pageContent?.pricing?.brandPromise?.pills || ['빠르게', '정확하게', '안전하게']).map((pill, pillIdx) => (
-                          <span key={pillIdx} className={styles.promisePill}>{pill}</span>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                <div className={`${styles.pricingAfterCard} ${styles.pricingAfterCardRoi}`}>
-                  <p className={styles.pricingAfterEyebrow}>ROI SNAPSHOT</p>
-                  {editingPricing && isAdminUser ? (
-                    <>
-                      <input
-                        type="text"
-                        value={pageContent?.pricing?.roi?.title || '한 번의 도입, 매달 반복되는 절감'}
-                        onChange={(e) => {
-                          setPageContent({ 
-                            ...pageContent, 
-                            pricing: { 
-                              ...(pageContent?.pricing || {}), 
-                              roi: { 
-                                ...(pageContent?.pricing?.roi || {}), 
-                                title: e.target.value 
-                              } 
-                            } 
-                          });
-                        }}
-                        className={styles.editInput}
-                        style={{ width: '100%', marginBottom: '1rem', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
-                      />
-                      <div className={styles.roiStats}>
-                        {(pageContent?.pricing?.roi?.stats || [
-                          { value: '166h', label: '월 절감 시간(예시)' },
-                          { value: '2m', label: '건당 절감(예시)' },
-                          { value: '5,000', label: '월 처리량(예시)' }
-                        ]).map((stat, statIdx) => (
-                          <div key={statIdx} className={styles.roiStat}>
-                            <input
-                              type="text"
-                              value={stat.value}
-                              onChange={(e) => {
-                                const newStats = [...(pageContent?.pricing?.roi?.stats || [])];
-                                newStats[statIdx] = { ...newStats[statIdx], value: e.target.value };
-                                setPageContent({ 
-                                  ...pageContent, 
-                                  pricing: { 
-                                    ...(pageContent?.pricing || {}), 
-                                    roi: { 
-                                      ...(pageContent?.pricing?.roi || {}), 
-                                      stats: newStats 
-                                    } 
-                                  } 
-                                });
-                              }}
-                              className={styles.editInput}
-                              style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '1.25rem', fontWeight: 'bold' }}
-                            />
-                            <input
-                              type="text"
-                              value={stat.label}
-                              onChange={(e) => {
-                                const newStats = [...(pageContent?.pricing?.roi?.stats || [])];
-                                newStats[statIdx] = { ...newStats[statIdx], label: e.target.value };
-                                setPageContent({ 
-                                  ...pageContent, 
-                                  pricing: { 
-                                    ...(pageContent?.pricing || {}), 
-                                    roi: { 
-                                      ...(pageContent?.pricing?.roi || {}), 
-                                      stats: newStats 
-                                    } 
-                                  } 
-                                });
-                              }}
-                              className={styles.editInput}
-                              style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem' }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      <textarea
-                        value={pageContent?.pricing?.roi?.example || '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>'}
-                        onChange={(e) => {
-                          setPageContent({ 
-                            ...pageContent, 
-                            pricing: { 
-                              ...(pageContent?.pricing || {}), 
-                              roi: { 
-                                ...(pageContent?.pricing?.roi || {}), 
-                                example: e.target.value 
-                              } 
-                            } 
-                          });
-                        }}
-                        className={styles.editInput}
-                        style={{ width: '100%', marginTop: '1rem', minHeight: '40px', padding: '0.5rem', fontSize: '0.8125rem' }}
-                      />
-                      <textarea
-                        value={pageContent?.pricing?.roi?.note || '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'}
-                        onChange={(e) => {
-                          setPageContent({ 
-                            ...pageContent, 
-                            pricing: { 
-                              ...(pageContent?.pricing || {}), 
-                              roi: { 
-                                ...(pageContent?.pricing?.roi || {}), 
-                                note: e.target.value 
-                              } 
-                            } 
-                          });
-                        }}
-                        className={styles.editInput}
-                        style={{ width: '100%', marginTop: '0.5rem', minHeight: '30px', padding: '0.5rem', fontSize: '0.75rem' }}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <h3 className={styles.pricingAfterTitle}>
-                        {pageContent?.pricing?.roi?.title || '한 번의 도입, 매달 반복되는 절감'}
-                      </h3>
-                      <div className={styles.roiStats}>
-                        {(pageContent?.pricing?.roi?.stats || [
-                          { value: '166h', label: '월 절감 시간(예시)' },
-                          { value: '2m', label: '건당 절감(예시)' },
-                          { value: '5,000', label: '월 처리량(예시)' }
-                        ]).map((stat, statIdx) => (
-                          <div key={statIdx} className={styles.roiStat}>
-                            <div className={styles.roiStatValue}>{stat.value}</div>
-                            <div className={styles.roiStatLabel}>{stat.label}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className={styles.roiExample} dangerouslySetInnerHTML={{ __html: pageContent?.pricing?.roi?.example || '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>' }} />
-                      <div className={styles.roiNote}>{pageContent?.pricing?.roi?.note || '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'}</div>
-                    </>
-                  )}
-                </div>
-              </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Modal */}
-          {selectedFeature && (
-            <>
-              <div 
-                className={styles.modalOverlay}
-                onClick={() => setSelectedFeature(null)}
-              />
-              <div className={styles.modal}>
-                <button 
-                  className={styles.modalCloseButton}
-                  onClick={() => setSelectedFeature(null)}
-                  aria-label="닫기"
-                >
-                  ×
-                </button>
-                <div className={styles.modalContent}>
-                  <div className={styles.modalHeader}>
-                    <div className={styles.modalHeaderText}>
-                      <p className={styles.modalEyebrow}>CUSTOM AI</p>
-                      <h2 className={styles.modalTitle}>
-                        {selectedFeature === 'aillm' && 'Ai LLM'}
-                        {selectedFeature === 'aiagent' && 'Ai Agent'}
-                        {selectedFeature === 'aiocr' && 'Ai OCR'}
-                        {selectedFeature === 'finetuning' && 'Fine-tuning'}
-                        {selectedFeature === 'rpa' && 'RPA'}
-                        {selectedFeature === 'modelcustom' && 'Model Custom'}
-                      </h2>
-                    </div>
-                    <div className={styles.modalHeaderActions}>
-                      {selectedFeature === 'aillm' && (
-                        <Link href="/aillm" className={styles.modalPrimaryButton}>
-                          시작하기 <span className={styles.chevron}>›</span>
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                  <div className={styles.modalBody}>
-                    {renderModalBody()}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* 게시글 추가 모달 */}
-      {showAchievementModal && isAdminUser && (
-        <>
-          <div 
-            className={styles.modalOverlay}
-            onClick={() => setShowAchievementModal(false)}
-          />
-          <div className={styles.modal} style={{ maxWidth: '600px' }}>
-            <button 
-              className={styles.modalCloseButton}
-              onClick={() => setShowAchievementModal(false)}
-              aria-label="닫기"
-            >
-              ×
-            </button>
-            <div className={styles.modalContent}>
-              <h2 style={{ marginBottom: '1.5rem' }}>게시글 추가</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    제목 *
-                  </label>
-                  <input
-                    type="text"
-                    value={newAchievement.title}
-                    onChange={(e) => setNewAchievement({ ...newAchievement, title: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                    placeholder="게시글 제목"
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    날짜 *
-                  </label>
-                  <input
-                    type="date"
-                    value={newAchievement.date}
-                    onChange={(e) => setNewAchievement({ ...newAchievement, date: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    내용
-                  </label>
-                  <textarea
-                    value={newAchievement.excerpt}
-                    onChange={(e) => setNewAchievement({ ...newAchievement, excerpt: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', minHeight: '100px' }}
-                    placeholder="게시글 내용"
-                  />
-                </div>
-                {newAchievement.type === 'credential' ? (
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      이미지 *
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleImageUpload(file);
-                        }
-                      }}
-                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                      disabled={uploadingImage}
-                    />
-                    {uploadingImage && <p style={{ marginTop: '0.5rem', color: '#666' }}>업로드 중...</p>}
-                    {imagePreview && (
-                      <div style={{ marginTop: '1rem' }}>
-                        <img 
-                          src={imagePreview} 
-                          alt="미리보기" 
-                          style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        />
-                      </div>
-                    )}
-                    {newAchievement.href && newAchievement.href !== '#' && !imagePreview && (
-                      <div style={{ marginTop: '1rem' }}>
-                        <p style={{ fontSize: '0.875rem', color: '#666' }}>현재 이미지:</p>
-                        <img 
-                          src={newAchievement.href} 
-                          alt="현재 이미지" 
-                          style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      링크
-                    </label>
+          {/* Branding + ROI (below pricing cards) */}
+          <div className={styles.pricingAfter}>
+            <div className={styles.pricingAfterGrid}>
+              <div className={styles.pricingAfterCard}>
+                <p className={styles.pricingAfterEyebrow}>BRAND PROMISE</p>
+                {editingPricing && isAdminUser ? (
+                  <>
                     <input
                       type="text"
-                      value={newAchievement.href}
-                      onChange={(e) => setNewAchievement({ ...newAchievement, href: e.target.value })}
-                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                      placeholder="# 또는 URL"
+                      value={pageContent?.pricing?.brandPromise?.title || '일이 매끄럽게 흐르는 경험'}
+                      onChange={(e) => {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: { 
+                            ...(pageContent?.pricing || {}), 
+                            brandPromise: { 
+                              ...(pageContent?.pricing?.brandPromise || {}), 
+                              title: e.target.value 
+                            } 
+                          } 
+                        });
+                      }}
+                      className={styles.editInput}
+                      style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
                     />
-                  </div>
+                    <textarea
+                      value={pageContent?.pricing?.brandPromise?.description || '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.'}
+                      onChange={(e) => {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: { 
+                            ...(pageContent?.pricing || {}), 
+                            brandPromise: { 
+                              ...(pageContent?.pricing?.brandPromise || {}), 
+                              description: e.target.value 
+                            } 
+                          } 
+                        });
+                      }}
+                      className={styles.editInput}
+                      style={{ width: '100%', minHeight: '60px', padding: '0.5rem' }}
+                    />
+                    <div style={{ marginTop: '0.5rem' }}>
+                      {(pageContent?.pricing?.brandPromise?.pills || ['빠르게', '정확하게', '안전하게']).map((pill, pillIdx) => (
+                        <input
+                          key={pillIdx}
+                          type="text"
+                          value={pill}
+                          onChange={(e) => {
+                            const newPills = [...(pageContent?.pricing?.brandPromise?.pills || [])];
+                            newPills[pillIdx] = e.target.value;
+                            setPageContent({ 
+                              ...pageContent, 
+                              pricing: { 
+                                ...(pageContent?.pricing || {}), 
+                                brandPromise: { 
+                                  ...(pageContent?.pricing?.brandPromise || {}), 
+                                  pills: newPills 
+                                } 
+                              } 
+                            });
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100%', marginBottom: '0.25rem', padding: '0.25rem' }}
+                        />
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className={styles.pricingAfterTitle}>
+                      {pageContent?.pricing?.brandPromise?.title || '일이 매끄럽게 흐르는 경험'}
+                    </h3>
+                    <p className={styles.pricingAfterDesc}>
+                      {pageContent?.pricing?.brandPromise?.description || '반복은 자동화로, 판단은 사람에게. 팀이 핵심 업무에 집중하도록 설계합니다.'}
+                    </p>
+                    <div className={styles.promisePills}>
+                      {(pageContent?.pricing?.brandPromise?.pills || ['빠르게', '정확하게', '안전하게']).map((pill, pillIdx) => (
+                        <span key={pillIdx} className={styles.promisePill}>{pill}</span>
+                      ))}
+                    </div>
+                  </>
                 )}
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    타입
-                  </label>
-                  <select
-                    value={newAchievement.type}
-                    onChange={(e) => setNewAchievement({ ...newAchievement, type: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  >
-                    <option value="news">News</option>
-                    <option value="credential">Credential</option>
-                  </select>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button
-                    onClick={handleAddAchievement}
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      background: '#4CAF50',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    추가
-                  </button>
-                  <button
-                    onClick={() => setShowAchievementModal(false)}
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      background: '#ccc',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    취소
-                  </button>
-                </div>
+              </div>
+
+              <div className={`${styles.pricingAfterCard} ${styles.pricingAfterCardRoi}`}>
+                <p className={styles.pricingAfterEyebrow}>ROI SNAPSHOT</p>
+                {editingPricing && isAdminUser ? (
+                  <>
+                    <input
+                      type="text"
+                      value={pageContent?.pricing?.roi?.title || '한 번의 도입, 매달 반복되는 절감'}
+                      onChange={(e) => {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: { 
+                            ...(pageContent?.pricing || {}), 
+                            roi: { 
+                              ...(pageContent?.pricing?.roi || {}), 
+                              title: e.target.value 
+                            } 
+                          } 
+                        });
+                      }}
+                      className={styles.editInput}
+                      style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
+                    />
+                    {(pageContent?.pricing?.roi?.stats || [
+                      { value: '166h', label: '월 절감 시간(예시)' },
+                      { value: '2m', label: '건당 절감(예시)' },
+                      { value: '5,000', label: '월 처리량(예시)' }
+                    ]).map((stat, statIdx) => (
+                      <div key={statIdx} style={{ marginBottom: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={stat.value}
+                          onChange={(e) => {
+                            const newStats = [...(pageContent?.pricing?.roi?.stats || [])];
+                            newStats[statIdx] = { ...newStats[statIdx], value: e.target.value };
+                            setPageContent({ 
+                              ...pageContent, 
+                              pricing: { 
+                                ...(pageContent?.pricing || {}), 
+                                roi: { 
+                                  ...(pageContent?.pricing?.roi || {}), 
+                                  stats: newStats 
+                                } 
+                              } 
+                            });
+                          }}
+                          className={styles.editInput}
+                          style={{ width: '100px', marginRight: '0.5rem', padding: '0.25rem' }}
+                        />
+                        <input
+                          type="text"
+                          value={stat.label}
+                          onChange={(e) => {
+                            const newStats = [...(pageContent?.pricing?.roi?.stats || [])];
+                            newStats[statIdx] = { ...newStats[statIdx], label: e.target.value };
+                            setPageContent({ 
+                              ...pageContent, 
+                              pricing: { 
+                                ...(pageContent?.pricing || {}), 
+                                roi: { 
+                                  ...(pageContent?.pricing?.roi || {}), 
+                                  stats: newStats 
+                                } 
+                              } 
+                            });
+                          }}
+                          className={styles.editInput}
+                          style={{ width: 'calc(100% - 120px)', padding: '0.25rem' }}
+                        />
+                      </div>
+                    ))}
+                    <textarea
+                      value={pageContent?.pricing?.roi?.example || '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>'}
+                      onChange={(e) => {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: { 
+                            ...(pageContent?.pricing || {}), 
+                            roi: { 
+                              ...(pageContent?.pricing?.roi || {}), 
+                              example: e.target.value 
+                            } 
+                          } 
+                        });
+                      }}
+                      className={styles.editInput}
+                      style={{ width: '100%', minHeight: '60px', marginTop: '0.5rem', padding: '0.5rem' }}
+                    />
+                    <input
+                      type="text"
+                      value={pageContent?.pricing?.roi?.note || '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'}
+                      onChange={(e) => {
+                        setPageContent({ 
+                          ...pageContent, 
+                          pricing: { 
+                            ...(pageContent?.pricing || {}), 
+                            roi: { 
+                              ...(pageContent?.pricing?.roi || {}), 
+                              note: e.target.value 
+                            } 
+                          } 
+                        });
+                      }}
+                      className={styles.editInput}
+                      style={{ width: '100%', marginTop: '0.5rem', padding: '0.5rem' }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h3 className={styles.pricingAfterTitle}>
+                      {pageContent?.pricing?.roi?.title || '한 번의 도입, 매달 반복되는 절감'}
+                    </h3>
+                    <div className={styles.roiStats}>
+                      {(pageContent?.pricing?.roi?.stats || [
+                        { value: '166h', label: '월 절감 시간(예시)' },
+                        { value: '2m', label: '건당 절감(예시)' },
+                        { value: '5,000', label: '월 처리량(예시)' }
+                      ]).map((stat, statIdx) => (
+                        <div key={statIdx} className={styles.roiStat}>
+                          <div className={styles.roiStatValue}>{stat.value}</div>
+                          <div className={styles.roiStatLabel}>{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={styles.roiExample} dangerouslySetInnerHTML={{ __html: pageContent?.pricing?.roi?.example || '예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>' }} />
+                    <div className={styles.roiNote}>{pageContent?.pricing?.roi?.note || '* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.'}</div>
+                  </>
+                )}
               </div>
             </div>
           </div>
-        </>
-      )}
-
+        </div>
+      </div>
     </AppShell>
-    <LoginModal 
+    <LoginModal
       isOpen={showLoginModal}
       onClose={() => setShowLoginModal(false)}
       onSuccess={() => {

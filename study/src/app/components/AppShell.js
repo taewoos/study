@@ -8,6 +8,26 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
   const year = new Date().getFullYear();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [rpaNotifications, setRpaNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+
+  // RPA 알림 가져오기
+  const fetchRpaNotifications = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      const response = await fetch('/api/rpa/notifications?read=false');
+      if (response.ok) {
+        const data = await response.json();
+        setRpaNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch RPA notifications:', error);
+    }
+  };
 
   useEffect(() => {
     // 로그인 상태 확인 (JWT 토큰 기반)
@@ -18,13 +38,19 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
         if (userData) {
           setIsLoggedIn(true);
           setUser(userData);
+          // 로그인 시 알림 가져오기
+          fetchRpaNotifications();
         } else {
           setIsLoggedIn(false);
           setUser(null);
+          setRpaNotifications([]);
+          setUnreadCount(0);
         }
       } else {
         setIsLoggedIn(false);
         setUser(null);
+        setRpaNotifications([]);
+        setUnreadCount(0);
       }
     };
     
@@ -38,11 +64,19 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
     };
     window.addEventListener('loginStatusChange', handleLoginChange);
     
+    // 주기적으로 알림 확인 (30초마다)
+    const notificationInterval = setInterval(() => {
+      if (isLoggedIn) {
+        fetchRpaNotifications();
+      }
+    }, 30000);
+    
     return () => {
       window.removeEventListener('storage', checkLoginStatus);
       window.removeEventListener('loginStatusChange', handleLoginChange);
+      clearInterval(notificationInterval);
     };
-  }, []);
+  }, [isLoggedIn]);
 
   const handleLogout = async () => {
     try {
@@ -150,11 +184,16 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
           <div className={styles.headerLeft}>
             <div className={styles.logo}>
               <div className={styles.logoIcon}>SS</div>
-              <span className={styles.logoText}>시와소프트</span>
             </div>
           </div>
         )}
         <nav className={styles.topNav}>
+          <a
+            href="/news"
+            className={`${styles.topNavItem} ${activeNav === 'news' ? styles.topNavItemActive : ''}`}
+          >
+            NEWS
+          </a>
           <a
             href="/company"
             className={`${styles.topNavItem} ${activeNav === 'company' ? styles.topNavItemActive : ''}`}
@@ -167,18 +206,86 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
           >
             AI LLM
           </a>
-          <a
-            href="/aiocr"
-            className={`${styles.topNavItem} ${activeNav === 'ocr' ? styles.topNavItemActive : ''}`}
+          <div
+            className={styles.rpaNavItemWrapper}
+            onMouseEnter={() => setShowNotificationPopup(true)}
+            onMouseLeave={() => setShowNotificationPopup(false)}
           >
-            AI OCR
-          </a>
-          <a
-            href="/rpa"
-            className={`${styles.topNavItem} ${activeNav === 'rpa' ? styles.topNavItemActive : ''}`}
-          >
-            RPA
-          </a>
+            <a
+              href="/rpa"
+              className={`${styles.topNavItem} ${activeNav === 'rpa' ? styles.topNavItemActive : ''}`}
+            >
+              RPA
+              {unreadCount > 0 && (
+                <span className={styles.notificationDot} aria-label={`${unreadCount}개의 읽지 않은 알림`}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </a>
+            {showNotificationPopup && unreadCount > 0 && (
+              <div className={styles.notificationPopup}>
+                <div className={styles.notificationPopupHeader}>
+                  <h3>RPA 알림 ({unreadCount})</h3>
+                  <button
+                    className={styles.markAllReadButton}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      try {
+                        const response = await fetch('/api/rpa/notifications', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ markAllAsRead: true })
+                        });
+                        if (response.ok) {
+                          fetchRpaNotifications();
+                        }
+                      } catch (error) {
+                        console.error('Failed to mark all as read:', error);
+                      }
+                    }}
+                  >
+                    모두 읽음
+                  </button>
+                </div>
+                <div className={styles.notificationList}>
+                  {rpaNotifications.slice(0, 10).map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`${styles.notificationItem} ${!notification.read ? styles.notificationItemUnread : ''}`}
+                      onClick={async () => {
+                        if (notification.projectId) {
+                          window.location.href = `/rpa/${notification.projectId}`;
+                        }
+                      }}
+                    >
+                      <div className={styles.notificationItemContent}>
+                        <div className={styles.notificationItemTitle}>{notification.title}</div>
+                        <div className={styles.notificationItemMessage}>{notification.message}</div>
+                        <div className={styles.notificationItemTime}>
+                          {new Date(notification.createdAt).toLocaleString('ko-KR', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {rpaNotifications.length === 0 && (
+                    <div className={styles.notificationEmpty}>알림이 없습니다.</div>
+                  )}
+                </div>
+                {rpaNotifications.length > 10 && (
+                  <div className={styles.notificationFooter}>
+                    <a href="/rpa" className={styles.viewAllLink}>
+                      모든 알림 보기
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <a
             href="/inquiry"
             className={`${styles.topNavItem} ${activeNav === 'inquiry' ? styles.topNavItemActive : ''}`}

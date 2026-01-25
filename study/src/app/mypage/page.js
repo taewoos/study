@@ -111,15 +111,26 @@ export default function HomePage() {
         description: '업무 자동화를 본격적으로 확장',
         status: '활성',
         showPaymentInfo: true,
-        amount: '₩149,000',
+        amount: '₩49,900',
         showPaymentButton: true,
         buttonText: '결제 관리'
       };
     } else if (role === 4) {
+      // Premium
+      return {
+        plan: 'Premium 플랜',
+        description: '프리미엄 기능 모두 이용 가능',
+        status: '활성',
+        showPaymentInfo: true,
+        amount: '₩149,000',
+        showPaymentButton: true,
+        buttonText: '결제 관리'
+      };
+    } else if (role === 5) {
       // Enterprise
       return {
         plan: 'Enterprise 플랜',
-        description: '프리미엄 기능 모두 이용 가능',
+        description: '맞춤형 솔루션',
         status: '활성',
         showPaymentInfo: true,
         amount: '문의',
@@ -132,27 +143,9 @@ export default function HomePage() {
   };
 
   const paymentInfo = getPaymentInfo();
-  const headerActions = (
-    <>
-      <button className={styles.headerButton}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-          <polyline points="22,6 12,13 2,6" />
-        </svg>
-        <span>문의하기</span>
-      </button>
-      <button className={styles.headerButton}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-        <span>알림 0</span>
-      </button>
-    </>
-  );
 
   return (
-    <AppShell styles={styles} title="MyPage" activeNav="mypage" headerActions={headerActions}>
+    <AppShell styles={styles} title="MyPage" activeNav="mypage" headerActions={null}>
       {/* Payment Status Section */}
           <section className={`${styles.section} ${styles.paymentSection}`}>
             <div className={styles.sectionHeader}>

@@ -54,8 +54,19 @@ npm install @portone/browser-sdk
 `.env.local` 파일에 추가:
 ```env
 NEXT_PUBLIC_PORTONE_STORE_ID=your_store_id
+NEXT_PUBLIC_PORTONE_CHANNEL_KEY=your_channel_key
 PORTONE_SECRET_KEY=your_secret_key
 ```
+
+**중요:**
+- `NEXT_PUBLIC_PORTONE_STORE_ID`: 포트원 관리자 콘솔의 V2 API 섹션에서 확인한 Store ID
+- `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`: 포트원 관리자 콘솔에서 발급받은 채널 키 (테스트용 또는 실서비스용)
+- `PORTONE_SECRET_KEY`: 포트원 관리자 콘솔의 V2 API 섹션에서 확인한 API Secret
+
+**채널 키 발급 방법:**
+1. 포트원 관리자 콘솔 (https://admin.portone.io/) 로그인
+2. 상점 설정 > 채널 관리에서 채널 생성 또는 기존 채널 확인
+3. 채널 키 복사하여 환경 변수에 추가
 
 ### 4단계: 클라이언트 코드 수정
 
@@ -87,11 +98,11 @@ const handlePayment = async () => {
     // 포트원 결제 요청
     const response = await PortOne.requestPayment({
       storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID,
-      channelKey: 'channel-key-xxxxx', // 채널 키
+      channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY,
       paymentId: `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       orderName: `${planInfo.name} 플랜 구독`,
       totalAmount: amount,
-      currency: 'KRW',
+      currency: 'CURRENCY_KRW',
       payMethod: 'CARD', // CARD, VIRTUAL_ACCOUNT, TRANSFER 등
       customer: {
         fullName: user.name || user.userId,
@@ -146,10 +157,10 @@ async function verifyPortOnePayment(paymentId, amount) {
   const PORTONE_SECRET_KEY = process.env.PORTONE_SECRET_KEY;
   
   try {
-    const response = await fetch(`https://api.portone.io/payments/v1/payments/${paymentId}`, {
+    const response = await fetch(`https://api.portone.io/payments/v2/payments/${paymentId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${PORTONE_SECRET_KEY}`,
+        'Authorization': `PortOne ${PORTONE_SECRET_KEY}`,
         'Content-Type': 'application/json'
       }
     });
@@ -157,7 +168,7 @@ async function verifyPortOnePayment(paymentId, amount) {
     const data = await response.json();
     
     // 결제 검증
-    if (data.status === 'PAID' && data.amount === amount) {
+    if (data.status === 'PAID' && data.amount.total === amount) {
       return {
         success: true,
         transactionId: data.transactionId,
@@ -369,9 +380,22 @@ export default async function handler(req, res) {
 ## 🧪 테스트 방법
 
 ### 포트원 테스트 카드
+포트원 테스트 환경에서는 다음 테스트 카드를 사용할 수 있습니다:
+
+**성공 테스트 카드:**
 - 카드번호: `1234-5678-9012-3456`
-- 만료일: 미래 날짜
-- CVV: 임의의 3자리
+- 만료일: 미래 날짜 (예: 12/25)
+- CVV: 임의의 3자리 (예: 123)
+- 카드 비밀번호: 임의의 2자리 (예: 12)
+
+**실패 테스트 카드:**
+- 카드번호: `1111-1111-1111-1111` (결제 실패)
+- 기타 테스트 카드는 포트원 관리자 콘솔의 테스트 가이드 참조
+
+**참고:** 
+- 테스트 환경에서는 실제 결제가 발생하지 않습니다
+- 테스트 카드로 결제를 진행하면 항상 성공으로 처리됩니다
+- 포트원 관리자 콘솔에서 테스트 결제 내역을 확인할 수 있습니다
 
 ### Stripe 테스트 카드
 - 카드번호: `4242 4242 4242 4242`
