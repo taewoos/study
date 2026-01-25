@@ -227,6 +227,7 @@
 }
 
 .createAccountButton {
+  display: block;
   width: 100%;
   padding: 14px;
   background-color: #ffffff;
@@ -237,6 +238,8 @@
   font-weight: 500;
   cursor: pointer;
   margin-top: 8px;
+  text-align: center;
+  text-decoration: none;
   transition: background-color 0.2s, border-color 0.2s;
 }
 

@@ -79,10 +79,10 @@ const pricingPlans = [
   {
     key: 'starter',
     name: 'Starter',
-    price: '₩49,000',
+    price: '₩19,000',
     period: '/월',
     description: '개인/소규모 팀을 위한 시작 플랜',
-    features: ['기본 LLM 기능', '문서 요약/번역', '기본 템플릿', '이메일 지원'],
+    features: ['기본 LLM 기능', '캔버스 작업 영역', '기본 템플릿',],
     tone: 'pink',
   },
   {
@@ -91,7 +91,7 @@ const pricingPlans = [
     price: '₩149,000',
     period: '/월',
     description: '업무 자동화를 본격적으로 확장',
-    features: ['고급 LLM 기능', '워크플로우 자동화', '팀 공유/권한', '우선 지원'],
+    features: ['기본Starter 플랜 +','Ai Agent 기능', 'Ai OCR 기능', '음성인식 기능', '팀 공유/권한'],
     tone: 'blue',
     highlight: true,
   },
@@ -101,7 +101,7 @@ const pricingPlans = [
     price: '문의',
     period: '',
     description: '보안/연동/커스텀 요구사항 대응',
-    features: ['온프레미스/전용 배포', 'SSO/권한관리', '커스텀 모델/파인튜닝', '전담 지원'],
+    features: ['온프레미스/전용 배포', 'RPA', '커스텀 모델/파인튜닝', '전담 지원'],
     tone: 'purple',
   },
 ];
@@ -132,6 +132,223 @@ const credentialItems = [
   { title: '특허 출원', subtitle: '워크플로우 추천 엔진', imageSrc: '/uploads/aillm.png' },
   { title: '자격증', subtitle: '정보보안/클라우드', imageSrc: '/uploads/aillm.png' },
   { title: '인증', subtitle: '품질/ISMS 준비', imageSrc: '/uploads/aillm.png' },
+];
+
+const customerReviews = [
+  { quote: '“반복 업무가 사라지니, 팀이 ‘중요한 일’에 집중할 수 있게 됐어요.”', meta: '운영팀장' },
+  { quote: '“처리 속도는 빨라졌는데 품질은 더 좋아졌습니다. 고객 응대가 달라졌어요.”', meta: 'CS 매니저' },
+  { quote: '“도입이 어렵지 않았고, 결과가 빨리 보여서 내부 설득이 쉬웠습니다.”', meta: '기획팀' },
+  { quote: '“문서 흐름이 표준화되면서 누락이 줄었고, 새로 온 인력도 바로 따라오더라고요.”', meta: '백오피스 리드' },
+  { quote: '“조회→정리→보고까지 걸리던 시간이 짧아지니 의사결정이 빨라졌습니다.”', meta: '관리/경영지원' },
+  { quote: '“예외 케이스만 사람이 처리하고 대부분은 자동으로 끝나니, 야근이 눈에 띄게 줄었어요.”', meta: '운영 담당자' },
+  { quote: '“업무별로 맞는 템플릿이 있으니, 결과물이 매번 일정해서 협업이 편해졌습니다.”', meta: 'PM' },
+  { quote: '“데이터 근거가 같이 남으니까 감사 대응이 훨씬 쉬워졌습니다.”', meta: '컴플라이언스' },
+  { quote: '“상담부터 구축까지 커뮤니케이션이 명확해서 현업 스트레스가 줄었습니다.”', meta: '현업 오너' },
+  { quote: '“요청이 들어오면 처리 흐름이 자동으로 정리돼서, 팀 간 핑퐁이 확 줄었어요.”', meta: '운영' },
+  { quote: '“정책/권한이 적용된 상태로만 답변이 나오니 내부 공유가 훨씬 안전해졌습니다.”', meta: '보안/IT' },
+  { quote: '“업무가 몰리는 피크 타임에도 응대 품질이 유지돼 만족도가 올라갔습니다.”', meta: '고객지원' },
+  { quote: '“정산/마감이 자동화되니 오류가 줄고, 마감 시간도 앞당겨졌습니다.”', meta: '재무' },
+  { quote: '“업무 기준이 ‘사람’에서 ‘프로세스’로 바뀌면서 운영이 안정화됐습니다.”', meta: '운영리더' },
+  { quote: '“기록과 로그가 남아서 문제 발생 시 원인 추적이 빨라졌습니다.”', meta: '개발/운영' },
+  { quote: '“새로운 업무도 템플릿으로 빠르게 적용돼 확장 속도가 빨라요.”', meta: 'PMO' },
+  { quote: '“현업이 원하는 형태로 결과물이 나와서, 재작업이 거의 없어졌습니다.”', meta: '기획' },
+  { quote: '“작게 시작해서 성과 보고 확장하는 방식이라, 내부 합의가 쉬웠습니다.”', meta: '프로덕트' },
+];
+
+const aiLlmDefinitionSteps = ['질문/요청 입력', '문맥 검색(RAG)', '추론/생성', '검증/정제', '답변/산출물 제공'];
+const aiLlmDemoVideoSrc = '/uploads/aillm-demo.mp4';
+
+const aiLlmUseCases = [
+  {
+    title: '사내 문서 RAG',
+    desc: '규정/가이드/업무 문서를 근거로 답변을 제공합니다.',
+    videoSrc: '/uploads/aillm-case-01.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['질문', '권한 필터', 'RAG 검색(Vector DB)', 'LLM 생성', '근거 포함 답변'],
+      components: ['LLM', 'Vector DB', '문서 커넥터(Drive/Notion/Wiki)', '권한/정책', '로그/피드백'],
+    },
+  },
+  {
+    title: '문서보안 임베딩',
+    desc: '해당 문서또는 페이지에 권한에따라 접근 가능하게 합니다.',
+    videoSrc: '/uploads/aillm-case-02.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['문서 업로드', '파싱', '요약/추출', '템플릿 적용', '다운로드/공유'],
+      components: ['LLM', '문서 파서', '템플릿', '스토리지', '공유(메일/드라이브)'],
+    },
+  },
+  {
+    title: 'PDF Parser',
+    desc: 'Ai OCR 기술을 활용하여 PDF 문서를 파싱하고 추출합니다.',
+    videoSrc: '/uploads/aillm-case-03.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['요청', '컨텍스트 입력', '초안 생성', '검토/수정', '발송/저장'],
+      components: ['LLM', '프롬프트/템플릿', 'HITL(옵션)', '메일/문서 시스템', '로그'],
+    },
+  },
+  {
+    title: '음성인식 시스템',
+    desc: '문의 내용을 분류하고 답변 초안을 제안합니다.',
+    videoSrc: '/uploads/aillm-case-04.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['문의', '분류', '지식 검색', '답변 생성', '검토/전송'],
+      components: ['LLM', '분류기(옵션)', '지식베이스/RAG', 'HITL', 'CRM/헬프데스크'],
+    },
+  },
+];
+
+const aiOcrDefinitionSteps = ['문서 입력', '전처리', '레이아웃 분석', 'OCR 인식', '필드 추출', '검증/후처리', '내보내기/API'];
+const aiOcrDemoVideoSrc = '/uploads/aiocr-demo.mp4';
+const aiOcrUseCases = [
+  {
+    title: '세금계산서/청구서 추출',
+    desc: '공급자/공급받는자/금액/품목 등 주요 필드를 자동 추출합니다.',
+    videoSrc: '/uploads/aiocr-case-01.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['이미지/PDF', '전처리', '레이아웃 분석', 'OCR', '필드 추출', '검증', 'ERP/DB 저장'],
+      components: ['OCR 엔진', '레이아웃 모델', '필드 추출기', '룰/검증', '스토리지', 'API'],
+    },
+  },
+  {
+    title: '계약서/문서 분류',
+    desc: '문서 유형 자동 분류 후 필요한 항목만 골라 추출합니다.',
+    videoSrc: '/uploads/aiocr-case-02.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['문서 업로드', '분류', 'OCR', '키워드/필드 추출', '요약/인덱싱', '내보내기'],
+      components: ['문서 분류기', 'OCR', '추출 파이프라인', '검색 인덱스', '권한/정책'],
+    },
+  },
+  {
+    title: '영수증/정산 자동화',
+    desc: '영수증 금액/날짜/가맹점/부가세 등 정산 데이터를 추출합니다.',
+    videoSrc: '/uploads/aiocr-case-03.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['촬영/업로드', '전처리', 'OCR', '라인아이템 추출', '검증', '정산 시스템 연동'],
+      components: ['OCR', '라인아이템 추출', '검증 규칙', '정산/회계 API', '로그'],
+    },
+  },
+  {
+    title: '신분증/증빙 서류 검증',
+    desc: '증빙 서류의 주요 필드 추출 및 기본 검증을 수행합니다.',
+    videoSrc: '/uploads/aiocr-case-04.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['이미지 입력', '전처리', 'OCR', '필드 추출', '규칙 검증', '저장/알림'],
+      components: ['OCR', '필드 추출기', '검증 룰', '저장소', '알림'],
+    },
+  },
+];
+
+const fineTuningDefinitionSteps = ['요구사항 정의', '데이터 수집', '정제/라벨링', '파인튜닝 학습', '평가', '배포', '모니터링/개선'];
+const fineTuningDemoVideoSrc = '/uploads/finetuning-demo.mp4';
+const fineTuningUseCases = [
+  {
+    title: '도메인 맞춤 Q&A',
+    desc: '사내/업종 용어와 문맥에 맞게 답변 품질을 높입니다.',
+    videoSrc: '/uploads/finetuning-case-01.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['데이터 수집', '정제/라벨링', '학습', '평가', '배포', 'A/B 테스트'],
+      components: ['학습 데이터', '튜닝 파이프라인', '평가 셋', '모델 레지스트리', '서빙'],
+    },
+  },
+  {
+    title: '업무 문서 작성 스타일 고정',
+    desc: '보고서/메일/문서 톤과 포맷을 조직 표준에 맞춥니다.',
+    videoSrc: '/uploads/finetuning-case-02.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['샘플 수집', '가이드라인 정리', '튜닝', '검수', '배포'],
+      components: ['템플릿/가이드', '튜닝 데이터', '검수(HITL)', '서빙 API', '로그'],
+    },
+  },
+  {
+    title: '분류/추출 성능 강화',
+    desc: '문의 분류, 태깅, 정보 추출 정확도를 개선합니다.',
+    videoSrc: '/uploads/finetuning-case-03.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['라벨 데이터', '훈련', '평가', '배포', '피드백 루프'],
+      components: ['라벨링 툴', '학습 파이프라인', '모니터링', '피드백 수집'],
+    },
+  },
+];
+
+const rpaDefinitionSteps = ['업무 선정', '프로세스 설계', '자동화 개발', '테스트', '배포', '운영/모니터링', '개선'];
+const rpaDemoVideoSrc = '/uploads/rpa-demo.mp4';
+const rpaUseCases = [
+  {
+    title: '반복 입력/전표 처리',
+    desc: 'ERP/그룹웨어의 반복 입력을 자동화합니다.',
+    videoSrc: '/uploads/rpa-case-01.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['트리거', '업무 규칙', 'RPA 실행', '결과 기록', '알림'],
+      components: ['RPA 봇', '업무 규칙', '대상 시스템(ERP/웹)', '로그', '알림'],
+    },
+  },
+  {
+    title: '메일/첨부 처리 자동화',
+    desc: '메일 수신→첨부 저장→분류/등록까지 자동 처리합니다.',
+    videoSrc: '/uploads/rpa-case-02.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['메일 수신', '첨부 추출', '저장', '등록', '완료 알림'],
+      components: ['메일 서버', 'RPA', '스토리지', '업무 시스템', '로그'],
+    },
+  },
+  {
+    title: '정산/마감 자동화',
+    desc: '정산 데이터 수집과 마감 리포트 생성/업로드를 자동화합니다.',
+    videoSrc: '/uploads/rpa-case-03.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['스케줄', '수집', '정합성 체크', '업로드', '리포트'],
+      components: ['스케줄러', 'RPA', 'DB/CSV', '리포트', '모니터링'],
+    },
+  },
+];
+
+const modelCustomDefinitionSteps = ['요구사항 정의', '데이터 분석', '모델 설계', '학습/튜닝', '평가', '배포', '운영/개선'];
+const modelCustomDemoVideoSrc = '/uploads/modelcustom-demo.mp4';
+const modelCustomUseCases = [
+  {
+    title: '전용 모델 설계/구축',
+    desc: '업무 요구에 맞는 전용 모델을 설계하고 구축합니다.',
+    videoSrc: '/uploads/modelcustom-case-01.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['요구 정의', '데이터 준비', '모델 설계', '학습', '평가', '배포'],
+      components: ['데이터 파이프라인', '학습 환경', '모델 레지스트리', '서빙', '모니터링'],
+    },
+  },
+  {
+    title: '멀티모달(문서+이미지) 처리',
+    desc: '문서/이미지 기반 업무에 최적화된 모델을 구축합니다.',
+    videoSrc: '/uploads/modelcustom-case-02.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['입력', '전처리', '모델 추론', '후처리', '결과 제공'],
+      components: ['전처리', '모델 서빙', '후처리', 'API', '로그'],
+    },
+  },
+  {
+    title: '내부 데이터 기반 추천/분석',
+    desc: '내부 데이터를 활용한 추천/예측 모델을 개발합니다.',
+    videoSrc: '/uploads/modelcustom-case-03.mp4',
+    arch: {
+      diagramSrc: '',
+      flow: ['데이터 수집', '특징 생성', '학습', '배포', '피드백'],
+      components: ['Feature Store', '학습 파이프라인', '서빙', '모니터링'],
+    },
+  },
 ];
 
 const aiAgentDefinitionSteps = ['목표를 입력받아', '계획', '도구 호출', '상태 갱신', '평가/수정', '자율 실행 루프'];
@@ -219,17 +436,211 @@ const aiAgentUseCases = [
 export default function CompanyPage() {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [floatingTexts, setFloatingTexts] = useState([]);
+  const [activeAiLlmUseCaseIndex, setActiveAiLlmUseCaseIndex] = useState(0);
+  const [activeAiOcrUseCaseIndex, setActiveAiOcrUseCaseIndex] = useState(0);
+  const [activeFineTuningUseCaseIndex, setActiveFineTuningUseCaseIndex] = useState(0);
+  const [activeRpaUseCaseIndex, setActiveRpaUseCaseIndex] = useState(0);
+  const [activeModelCustomUseCaseIndex, setActiveModelCustomUseCaseIndex] = useState(0);
   const [activeAiAgentUseCaseIndex, setActiveAiAgentUseCaseIndex] = useState(0);
 
   const handleFeatureClick = (feature) => {
     setSelectedFeature(feature);
+    if (feature === 'aillm') {
+      setActiveAiLlmUseCaseIndex(0);
+    }
+    if (feature === 'aiocr') {
+      setActiveAiOcrUseCaseIndex(0);
+    }
+    if (feature === 'finetuning') {
+      setActiveFineTuningUseCaseIndex(0);
+    }
+    if (feature === 'rpa') {
+      setActiveRpaUseCaseIndex(0);
+    }
+    if (feature === 'modelcustom') {
+      setActiveModelCustomUseCaseIndex(0);
+    }
     if (feature === 'aiagent') {
       setActiveAiAgentUseCaseIndex(0);
     }
   };
 
+  const testimonialRows = 3;
+  const getTestimonialRowItems = (rowIndex) => customerReviews.filter((_, idx) => idx % testimonialRows === rowIndex);
+
   const renderModalBody = () => {
     if (!selectedFeature) return null;
+
+    const renderStructuredModal = ({
+      definitionSteps,
+      useCases,
+      activeIndex,
+      setActiveIndex,
+      demoVideoSrc,
+      useCaseHeading,
+      ariaLabel,
+    }) => {
+      const activeUseCase = useCases[activeIndex] || useCases[0];
+      const activeVideoSrc = activeUseCase?.videoSrc || demoVideoSrc;
+      const activeArch = activeUseCase?.arch || {
+        diagramSrc: '',
+        flow: ['입력', '처리', '출력'],
+        components: [],
+      };
+
+      return (
+        <>
+          <h3>정의 및 구성요소</h3>
+          <div className={styles.agentStepper} aria-label={ariaLabel}>
+            {definitionSteps.map((step) => (
+              <div key={step} className={styles.agentStep}>
+                {step}
+              </div>
+            ))}
+          </div>
+
+          <h3>{useCaseHeading}</h3>
+          <div className={styles.useCaseGrid}>
+            {useCases.map((c, idx) => (
+              <button
+                key={c.title}
+                type="button"
+                className={`${styles.useCaseCard} ${idx === activeIndex ? styles.useCaseCardActive : ''}`}
+                onClick={() => setActiveIndex(idx)}
+                aria-pressed={idx === activeIndex}
+              >
+                <div className={styles.useCaseTitle}>{c.title}</div>
+                <div className={styles.useCaseDesc}>{c.desc}</div>
+              </button>
+            ))}
+          </div>
+
+          <h3>사용 예시 영상</h3>
+          <div className={styles.modalVideoTitle}>
+            선택된 예시: <strong>{activeUseCase?.title}</strong>
+          </div>
+          <div className={styles.modalVideoWrap}>
+            <video key={activeVideoSrc} className={styles.modalVideo} controls playsInline preload="metadata">
+              <source src={activeVideoSrc} type="video/mp4" />
+              브라우저가 video 태그를 지원하지 않습니다.
+            </video>
+          </div>
+
+          <h3>아키텍처</h3>
+          <div className={styles.agentArchWrap}>
+            <div className={styles.agentArchHeader}>
+              <div className={styles.agentArchHeaderTitle}>{activeUseCase?.title}</div>
+              <div className={styles.agentArchHeaderSub}>선택된 예시에 따라 구성/흐름이 바뀝니다.</div>
+            </div>
+
+            <div className={styles.agentArchGrid}>
+              <div className={styles.agentArchPanel}>
+                <div className={styles.agentArchPanelTitle}>Flow</div>
+                {activeArch.diagramSrc ? (
+                  <div className={styles.agentArchDiagramWrap}>
+                    <a
+                      className={styles.agentArchDiagramLink}
+                      href={activeArch.diagramSrc}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <img
+                        className={styles.agentArchDiagram}
+                        src={activeArch.diagramSrc}
+                        alt={`${activeUseCase?.title || 'Feature'} 플로우 다이어그램`}
+                      />
+                    </a>
+                    <div className={styles.agentArchDiagramHint}>이미지를 클릭하면 크게 볼 수 있어요.</div>
+                  </div>
+                ) : (
+                  <div className={styles.agentArchFlow} aria-label="Architecture flow">
+                    {activeArch.flow.map((step, idx) => (
+                      <div key={`${step}-${idx}`} className={styles.agentArchFlowItem}>
+                        <div className={styles.agentArchNode}>{step}</div>
+                        {idx < activeArch.flow.length - 1 && (
+                          <div className={styles.agentArchArrow} aria-hidden="true">
+                            →
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.agentArchPanel}>
+                <div className={styles.agentArchPanelTitle}>Components</div>
+                <ul className={styles.agentArchList}>
+                  {activeArch.components.map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    if (selectedFeature === 'aillm') {
+      return renderStructuredModal({
+        definitionSteps: aiLlmDefinitionSteps,
+        useCases: aiLlmUseCases,
+        activeIndex: activeAiLlmUseCaseIndex,
+        setActiveIndex: setActiveAiLlmUseCaseIndex,
+        demoVideoSrc: aiLlmDemoVideoSrc,
+        useCaseHeading: 'AI LLM 사용 예시',
+        ariaLabel: 'AI LLM steps',
+      });
+    }
+
+    if (selectedFeature === 'aiocr') {
+      return renderStructuredModal({
+        definitionSteps: aiOcrDefinitionSteps,
+        useCases: aiOcrUseCases,
+        activeIndex: activeAiOcrUseCaseIndex,
+        setActiveIndex: setActiveAiOcrUseCaseIndex,
+        demoVideoSrc: aiOcrDemoVideoSrc,
+        useCaseHeading: 'AI OCR 사용 예시',
+        ariaLabel: 'AI OCR steps',
+      });
+    }
+
+    if (selectedFeature === 'finetuning') {
+      return renderStructuredModal({
+        definitionSteps: fineTuningDefinitionSteps,
+        useCases: fineTuningUseCases,
+        activeIndex: activeFineTuningUseCaseIndex,
+        setActiveIndex: setActiveFineTuningUseCaseIndex,
+        demoVideoSrc: fineTuningDemoVideoSrc,
+        useCaseHeading: 'Fine-tuning 사용 예시',
+        ariaLabel: 'Fine-tuning steps',
+      });
+    }
+
+    if (selectedFeature === 'rpa') {
+      return renderStructuredModal({
+        definitionSteps: rpaDefinitionSteps,
+        useCases: rpaUseCases,
+        activeIndex: activeRpaUseCaseIndex,
+        setActiveIndex: setActiveRpaUseCaseIndex,
+        demoVideoSrc: rpaDemoVideoSrc,
+        useCaseHeading: 'RPA 사용 예시',
+        ariaLabel: 'RPA steps',
+      });
+    }
+
+    if (selectedFeature === 'modelcustom') {
+      return renderStructuredModal({
+        definitionSteps: modelCustomDefinitionSteps,
+        useCases: modelCustomUseCases,
+        activeIndex: activeModelCustomUseCaseIndex,
+        setActiveIndex: setActiveModelCustomUseCaseIndex,
+        demoVideoSrc: modelCustomDemoVideoSrc,
+        useCaseHeading: 'Model Custom 사용 예시',
+        ariaLabel: 'Model Custom steps',
+      });
+    }
 
     if (selectedFeature === 'aiagent') {
       const activeUseCase =
@@ -898,25 +1309,28 @@ export default function CompanyPage() {
                 <p className={styles.pricingExtraSub}>현장에서 느끼는 변화는 ‘숫자’보다 먼저 체감됩니다.</p>
               </div>
 
-              <div className={styles.testimonialGrid}>
-                <figure className={styles.testimonialCard}>
-                  <blockquote className={styles.testimonialQuote}>
-                    “반복 업무가 사라지니, 팀이 ‘중요한 일’에 집중할 수 있게 됐어요.”
-                  </blockquote>
-                  <figcaption className={styles.testimonialMeta}>운영팀장</figcaption>
-                </figure>
-                <figure className={styles.testimonialCard}>
-                  <blockquote className={styles.testimonialQuote}>
-                    “처리 속도는 빨라졌는데 품질은 더 좋아졌습니다. 고객 응대가 달라졌어요.”
-                  </blockquote>
-                  <figcaption className={styles.testimonialMeta}>CS 매니저</figcaption>
-                </figure>
-                <figure className={styles.testimonialCard}>
-                  <blockquote className={styles.testimonialQuote}>
-                    “도입이 어렵지 않았고, 결과가 빨리 보여서 내부 설득이 쉬웠습니다.”
-                  </blockquote>
-                  <figcaption className={styles.testimonialMeta}>기획팀</figcaption>
-                </figure>
+              <div className={styles.testimonialMarquee} aria-label="Customer reviews marquee">
+                {Array.from({ length: testimonialRows }).map((_, rowIdx) => {
+                  const items = getTestimonialRowItems(rowIdx);
+                  const direction = rowIdx === 1 ? 'left' : 'right'; // 1st/3rd right, 2nd left
+                  return (
+                    <div
+                      key={`testimonial-row-${rowIdx}`}
+                      className={`${styles.testimonialMarqueeRow} ${
+                        direction === 'left' ? styles.testimonialMarqueeRowLeft : styles.testimonialMarqueeRowRight
+                      }`}
+                    >
+                      <div className={styles.testimonialMarqueeTrack}>
+                        {[...items, ...items].map((t, idx) => (
+                          <figure className={styles.testimonialMarqueeCard} key={`${rowIdx}-${idx}-${t.meta}`}>
+                            <blockquote className={styles.testimonialQuote}>{t.quote}</blockquote>
+                            <figcaption className={styles.testimonialMeta}>{t.meta}</figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           </div>
@@ -958,7 +1372,7 @@ export default function CompanyPage() {
                       </button>
                     ) : (
                       <button className={styles.pricingButtonPrimary} type="button">
-                        시작하기
+                        {plan.name} 시작 <span className={styles.arrowUpRight}>↗</span>
                       </button>
                     )}
                   </div>
@@ -1003,12 +1417,6 @@ export default function CompanyPage() {
                     예: 월 5,000건 × 건당 2분 절감 = <strong>166시간/월</strong>
                   </div>
                   <div className={styles.roiNote}>* 예시는 업무/프로세스/처리량에 따라 달라질 수 있습니다.</div>
-
-                  <div className={styles.pricingCtaRow}>
-                    <Link href="/inquiry" className={styles.pricingButtonPrimary}>
-                      상담 요청
-                    </Link>
-                  </div>
                 </div>
               </div>
             </div>

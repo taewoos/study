@@ -1,12 +1,57 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import styles from './page.module.css';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      alert('이메일과 비밀번호를 입력해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: email, // 이메일 또는 아이디로 로그인 가능
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // 로그인 성공 - 토큰 저장 (간단하게 localStorage 사용)
+        localStorage.setItem('token', JSON.stringify(data.user));
+        sessionStorage.setItem('token', JSON.stringify(data.user));
+        
+        alert('로그인 성공!');
+        // 메인 페이지로 이동
+        window.location.href = '/company';
+      } else {
+        alert(data.error || '로그인에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('로그인 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -109,8 +154,12 @@ export default function LoginPage() {
         </div>
 
         {/* Sign In Button */}
-        <button className={styles.signInButton}>
-          Sign In
+        <button 
+          className={styles.signInButton}
+          onClick={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? '로그인 중...' : 'Sign In'}
         </button>
 
         {/* Forgot Password Link */}
@@ -120,9 +169,9 @@ export default function LoginPage() {
         </div>
 
         {/* Create Free Account Button */}
-        <button className={styles.createAccountButton}>
+        <Link href="/signup" className={styles.createAccountButton}>
           Create Free Account
-        </button>
+        </Link>
       </div>
     </div>
   );

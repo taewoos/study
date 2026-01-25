@@ -1,7 +1,24 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
 export function AppShell({ styles, title, activeNav, headerActions, children, showLogo = true }) {
   const year = new Date().getFullYear();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // 로그인 상태 확인 (localStorage 또는 sessionStorage에서 확인)
+    const checkLoginStatus = () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      setIsLoggedIn(!!token);
+    };
+    
+    checkLoginStatus();
+    // 로그인 상태 변경 감지를 위한 이벤트 리스너 (선택사항)
+    window.addEventListener('storage', checkLoginStatus);
+    return () => window.removeEventListener('storage', checkLoginStatus);
+  }, []);
 
   // Ensure the footer stays at the bottom even when individual page CSS differs.
   const shellLayoutStyle = {
@@ -134,11 +151,14 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
             MYPAGE
           </a>
         </nav>
-        {headerActions && (
-          <div className={styles.headerRight}>
-            {headerActions}
-          </div>
-        )}
+        <div className={styles.headerRight}>
+          {!isLoggedIn && (
+            <Link href="/login" className={styles.loginButton}>
+              로그인
+            </Link>
+          )}
+          {headerActions && headerActions}
+        </div>
       </header>
 
       {/* Main Content */}
