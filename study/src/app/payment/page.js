@@ -29,6 +29,7 @@ export default function PaymentPage() {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
+  const [selectedPlanRole, setSelectedPlanRole] = useState(null); // 임시로 선택된 플랜 (DB 저장 전)
 
   useEffect(() => {
     setIsMounted(true);
@@ -107,21 +108,28 @@ export default function PaymentPage() {
         return;
       }
 
-      // 결제 금액 계산
+      // 결제 금액 계산 (선택된 플랜 우선 사용)
+      const planRole = selectedPlanRole !== null ? selectedPlanRole : user?.role;
       let amount = 0;
       let planName = '';
-      if (user?.role === 2) {
+      let planKey = '';
+      
+      if (planRole === 2) {
         amount = 19000;
         planName = 'Starter';
-      } else if (user?.role === 3) {
+        planKey = 'starter';
+      } else if (planRole === 3) {
         amount = 49900;
         planName = 'Pro';
-      } else if (user?.role === 4) {
+        planKey = 'pro';
+      } else if (planRole === 4) {
         amount = 149000;
         planName = 'Premium';
-      } else if (user?.role === 5) {
+        planKey = 'premium';
+      } else if (planRole === 5) {
         amount = 0;
         planName = 'Enterprise';
+        planKey = 'enterprise';
       } else {
         alert('플랜을 먼저 선택해주세요.');
         setIsProcessing(false);
@@ -140,7 +148,8 @@ export default function PaymentPage() {
         },
         body: JSON.stringify({
           amount: amount,
-          plan: user?.role === 2 ? 'starter' : user?.role === 3 ? 'pro' : user?.role === 4 ? 'premium' : 'enterprise',
+          plan: planKey,
+          planRole: planRole, // 플랜 role 정보 추가
           paymentId: paymentId,
           transactionId: paymentId,
           paymentType: 'bank_transfer',
@@ -150,6 +159,8 @@ export default function PaymentPage() {
       });
 
       if (serverResponse.ok) {
+        // 결제 제출 성공 시 선택된 플랜 초기화 (관리자 확인 후 DB에 저장됨)
+        setSelectedPlanRole(null);
         alert('입금 정보가 제출되었습니다.\n관리자 확인 후 플랜이 활성화됩니다.');
         setShowBankTransferForm(false);
         setShowAccountInfo(false);
@@ -174,41 +185,10 @@ export default function PaymentPage() {
   };
 
 
-  const handleSelectPlan = async (planRole) => {
-    try {
-      const token = getToken();
-      if (!token) {
-        alert('로그인이 필요합니다.');
-        return;
-      }
-
-      const response = await fetch('/api/user/plan', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ role: planRole }),
-      });
-
-      if (response.ok) {
-        const updatedUser = { ...user, role: planRole };
-        setUser(updatedUser);
-        // localStorage도 업데이트
-        const currentUser = getUser();
-        if (currentUser) {
-          localStorage.setItem('user', JSON.stringify({ ...currentUser, role: planRole }));
-        }
-        setShowPlanModal(false);
-        alert('플랜이 선택되었습니다.');
-      } else {
-        const errorData = await response.json().catch(() => ({ error: '플랜 선택에 실패했습니다.' }));
-        alert(errorData.error || '플랜 선택에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('Failed to select plan:', error);
-      alert('플랜 선택 중 오류가 발생했습니다.');
-    }
+  const handleSelectPlan = (planRole) => {
+    // DB에 저장하지 않고 로컬 상태만 업데이트 (실제 저장은 결제 시에만 수행)
+    setSelectedPlanRole(planRole);
+    setShowPlanModal(false);
   };
 
   const plans = [
@@ -223,12 +203,12 @@ export default function PaymentPage() {
   }
 
   const getPlanInfo = () => {
-    if (!user) return null;
-    const role = user.role;
-    if (role === 2) return { name: 'Starter', amount: 19000 };
-    if (role === 3) return { name: 'Pro', amount: 49900 };
-    if (role === 4) return { name: 'Premium', amount: 149000 };
-    if (role === 5) return { name: 'Enterprise', amount: 0 };
+    // 선택된 플랜이 있으면 우선 사용, 없으면 기존 user.role 사용
+    const role = selectedPlanRole !== null ? selectedPlanRole : (user?.role || null);
+    if (role === 2) return { name: 'Starter', amount: 19000, role: 2 };
+    if (role === 3) return { name: 'Pro', amount: 49900, role: 3 };
+    if (role === 4) return { name: 'Premium', amount: 149000, role: 4 };
+    if (role === 5) return { name: 'Enterprise', amount: 0, role: 5 };
     return null;
   };
 
@@ -262,7 +242,19 @@ export default function PaymentPage() {
               title="플랜 변경"
             >
               <div className={styles.planInfo}>
-                <h3 className={styles.planName}>{planInfo.name} 플랜</h3>
+                <h3 className={styles.planName}>
+                  {planInfo.name} 플랜
+                  {selectedPlanRole !== null && selectedPlanRole !== user?.role && (
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: '#4CAF50', 
+                      marginLeft: '8px',
+                      fontWeight: 'normal'
+                    }}>
+                      (선택됨)
+                    </span>
+                  )}
+                </h3>
                 <div className={styles.planAmount}>
                   {planInfo.amount > 0 ? `₩${planInfo.amount.toLocaleString()}/월` : '문의'}
                 </div>
@@ -310,9 +302,18 @@ export default function PaymentPage() {
                   <span className={styles.accountValue}>{bankAccountInfo.accountHolder}</span>
                 </div>
                 <div className={styles.accountNotice}>
-                  <p>⚠️ 위 계좌로 정확한 금액을 입금해주세요.</p>
-                  <p style={{ color: 'red' }}>⚠️ 입금자명은 회원가입 시 입력한 이름과 동일해야 합니다.</p>
-                  <p>입금 후 아래 정보를 입력해주세요.</p>
+                  <p>
+                    <span style={{ fontSize: '1.1em', marginRight: '0.5rem' }}>⚠️</span>
+                    위 계좌로 정확한 금액을 입금해주세요.
+                  </p>
+                  <p>
+                    <span style={{ fontSize: '1.1em', marginRight: '0.5rem' }}>⚠️</span>
+                    입금자명은 회원가입 시 입력한 이름과 동일해야 합니다.
+                  </p>
+                  <p>
+                    <span style={{ fontSize: '1.1em', marginRight: '0.5rem' }}>📝</span>
+                    입금 후 아래 정보를 입력해주세요.
+                  </p>
                 </div>
               </div>
             </div>
@@ -323,8 +324,14 @@ export default function PaymentPage() {
             <div className={styles.cardFormCard}>
               <h3>무통장 입금 정보</h3>
               <div className={styles.accountNotice}>
-                <p>⚠️ 입금 후 아래 정보를 입력해주세요.</p>
-                <p>관리자 확인 후 플랜이 활성화됩니다.</p>
+                <p>
+                  <span style={{ fontSize: '1.1em', marginRight: '0.5rem' }}>⚠️</span>
+                  입금 후 아래 정보를 입력해주세요.
+                </p>
+                <p>
+                  <span style={{ fontSize: '1.1em', marginRight: '0.5rem' }}>⏳</span>
+                  관리자 확인 후 플랜이 활성화됩니다.
+                </p>
               </div>
               <div className={styles.formGroup}>
                 <label>입금자명 *</label>
@@ -491,21 +498,37 @@ export default function PaymentPage() {
                 </button>
               </div>
               <div className={styles.planOptions}>
-                {plans.map((plan) => (
-                  <div 
-                    key={plan.role} 
-                    className={styles.planOption}
-                    onClick={() => handleSelectPlan(plan.role)}
-                  >
-                    <div className={styles.planOptionHeader}>
-                      <h4 className={styles.planOptionName}>{plan.name}</h4>
-                      <div className={styles.planOptionAmount}>
-                        {plan.amount > 0 ? `₩${plan.amount.toLocaleString()}/월` : '문의'}
+                {plans.map((plan) => {
+                  const isSelected = selectedPlanRole === plan.role || 
+                    (selectedPlanRole === null && user?.role === plan.role);
+                  return (
+                    <div 
+                      key={plan.role} 
+                      className={`${styles.planOption} ${isSelected ? styles.planOptionSelected : ''}`}
+                      onClick={() => handleSelectPlan(plan.role)}
+                    >
+                      <div className={styles.planOptionHeader}>
+                        <h4 className={styles.planOptionName}>
+                          {plan.name}
+                          {isSelected && (
+                            <span style={{ 
+                              fontSize: '12px', 
+                              color: '#4CAF50', 
+                              marginLeft: '8px',
+                              fontWeight: 'normal'
+                            }}>
+                              {selectedPlanRole === plan.role && selectedPlanRole !== user?.role ? '(선택됨)' : '(현재)'}
+                            </span>
+                          )}
+                        </h4>
+                        <div className={styles.planOptionAmount}>
+                          {plan.amount > 0 ? `₩${plan.amount.toLocaleString()}/월` : '문의'}
+                        </div>
                       </div>
+                      <p className={styles.planOptionDescription}>{plan.description}</p>
                     </div>
-                    <p className={styles.planOptionDescription}>{plan.description}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import styles from './page.module.css';
 import { AppShell } from '../components/AppShell';
 import { RichTextEditor } from '../../components/RichTextEditor';
-import { getToken } from '@/utils/auth';
+import { getToken, getUser } from '@/utils/auth';
 
 export default function AillmPage() {
   // Left panel state
@@ -101,11 +101,11 @@ export default function AillmPage() {
   const [memoPadDragStart, setMemoPadDragStart] = useState({ x: 0, y: 0 });
   
   // Conversation list state
-  const [conversations, setConversations] = useState([
-    { id: 1, title: '대화목록1', lastMessage: '최근 메시지...' }
-  ]);
+  const [conversations, setConversations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeConversation, setActiveConversation] = useState(null);
+  const [editingConversationId, setEditingConversationId] = useState(null);
+  const [editingConversationTitle, setEditingConversationTitle] = useState('');
   
   // Custom mode state
   const [isCustomMode, setIsCustomMode] = useState(false);
@@ -227,114 +227,210 @@ export default function AillmPage() {
       }));
     }
     
-    // Load saved memos from localStorage
-    const savedMemos = localStorage.getItem('aillmMemos');
-    if (savedMemos) {
-      try {
-        const parsedMemos = JSON.parse(savedMemos);
-        if (parsedMemos && parsedMemos.length > 0) {
-          const normalizedMemos = parsedMemos.map((memo) => ({
+    // Load data from API
+    loadConversations();
+    loadCanvasData();
+    loadMemos();
+    loadTemplates();
+  }, []);
+
+  // Load conversations from API
+  const loadConversations = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      const response = await fetch('/api/aillm/conversations', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // MongoDB _id를 id로 변환
+        const formatted = data.map((conv) => ({
+          id: conv._id.toString(),
+          title: conv.title,
+          lastMessage: conv.lastMessage || '',
+        }));
+        setConversations(formatted);
+      }
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+    }
+  };
+
+  // Save conversations to API
+  const saveConversations = async (conversationsToSave) => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      // 각 대화방을 업데이트 (id가 있는 경우만)
+      for (const conv of conversationsToSave) {
+        if (conv.id) {
+          await fetch('/api/aillm/conversations', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              id: conv.id,
+              title: conv.title,
+              lastMessage: conv.lastMessage || '',
+            }),
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save conversations:', error);
+    }
+  };
+
+  // Load canvas data from API
+  const loadCanvasData = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      const response = await fetch('/api/aillm/canvas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.items) setCanvasItems(data.items);
+        if (data.links) setCanvasLinks(data.links);
+        if (data.groups) setCanvasGroups(data.groups);
+      }
+    } catch (error) {
+      console.error('Failed to load canvas data:', error);
+    }
+  };
+
+  // Save canvas data to API
+  const saveCanvasData = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      await fetch('/api/aillm/canvas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items: canvasItems,
+          links: canvasLinks,
+          groups: canvasGroups,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save canvas data:', error);
+    }
+  };
+
+  // Load memos from API
+  const loadMemos = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      const response = await fetch('/api/aillm/memos', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.memos && data.memos.length > 0) {
+          const initialWindowSize = { width: window.innerWidth, height: window.innerHeight };
+          const normalizedMemos = data.memos.map((memo) => ({
             ...memo,
             basePosition: memo.basePosition || memo.position,
             baseSize: memo.baseSize || memo.size,
-            baseWindowSize: memo.baseWindowSize || initialWindowSize
+            baseWindowSize: memo.baseWindowSize || initialWindowSize,
           }));
           setMemos(normalizedMemos);
         }
-      } catch (e) {
-        console.error('Failed to load saved memos:', e);
       }
+    } catch (error) {
+      console.error('Failed to load memos:', error);
     }
-  }, []);
-  
-  // Save memos to localStorage whenever they change
+  };
+
+  // Save memos to API
+  const saveMemos = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      await fetch('/api/aillm/memos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ memos }),
+      });
+    } catch (error) {
+      console.error('Failed to save memos:', error);
+    }
+  };
+
+  // Save memos to API whenever they change (debounced)
   useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('aillmMemos', JSON.stringify(memos));
-    }
+    if (!isMounted) return;
+    const timer = setTimeout(() => {
+      saveMemos();
+    }, 1000); // 1초 후 저장 (debounce)
+    return () => clearTimeout(timer);
   }, [memos, isMounted]);
 
-  // Load saved canvas items from localStorage
+  // Save canvas data to API whenever it changes (debounced)
   useEffect(() => {
     if (!isMounted) return;
-    const savedCanvas = localStorage.getItem('aillmCanvasItems');
-    if (savedCanvas) {
-      try {
-        const parsed = JSON.parse(savedCanvas);
-        if (Array.isArray(parsed)) {
-          setCanvasItems(parsed);
-        }
-      } catch (e) {
-        console.error('Failed to load canvas items:', e);
+    const timer = setTimeout(() => {
+      saveCanvasData();
+    }, 1000); // 1초 후 저장 (debounce)
+    return () => clearTimeout(timer);
+  }, [canvasItems, canvasLinks, canvasGroups, isMounted]);
+
+  // Save conversations to API whenever they change (debounced)
+  useEffect(() => {
+    if (!isMounted || conversations.length === 0) return;
+    const timer = setTimeout(() => {
+      saveConversations(conversations);
+    }, 1000); // 1초 후 저장 (debounce)
+    return () => clearTimeout(timer);
+  }, [conversations, isMounted]);
+
+  // Load templates from API
+  const loadTemplates = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      const response = await fetch('/api/aillm/templates', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSavedTemplates(data);
       }
+    } catch (error) {
+      console.error('Failed to load templates:', error);
     }
-  }, [isMounted]);
-
-  useEffect(() => {
-    if (!isMounted) return;
-    const savedLinks = localStorage.getItem('aillmCanvasLinks');
-    if (savedLinks) {
-      try {
-        const parsed = JSON.parse(savedLinks);
-        if (Array.isArray(parsed)) {
-          setCanvasLinks(parsed);
-        }
-      } catch (e) {
-        console.error('Failed to load canvas links:', e);
-      }
-    }
-  }, [isMounted]);
-
-  // Save canvas items to localStorage
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('aillmCanvasItems', JSON.stringify(canvasItems));
-    }
-  }, [canvasItems, isMounted]);
-
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('aillmCanvasLinks', JSON.stringify(canvasLinks));
-    }
-  }, [canvasLinks, isMounted]);
-
-  // Load / Save canvas groups to localStorage
-  useEffect(() => {
-    if (!isMounted) return;
-    const savedGroups = localStorage.getItem('aillmCanvasGroups');
-    if (savedGroups) {
-      try {
-        const parsed = JSON.parse(savedGroups);
-        if (Array.isArray(parsed)) {
-          setCanvasGroups(parsed);
-        }
-      } catch (e) {
-        console.error('Failed to load canvas groups:', e);
-      }
-    }
-  }, [isMounted]);
-
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('aillmCanvasGroups', JSON.stringify(canvasGroups));
-    }
-  }, [canvasGroups, isMounted]);
-
-  // Load saved templates from localStorage
-  useEffect(() => {
-    if (!isMounted) return;
-    const savedTemplatesRaw = localStorage.getItem('aillmTemplates');
-    if (savedTemplatesRaw) {
-      try {
-        const parsedTemplates = JSON.parse(savedTemplatesRaw);
-        if (Array.isArray(parsedTemplates)) {
-          setSavedTemplates(parsedTemplates);
-        }
-      } catch (e) {
-        console.error('Failed to load saved templates:', e);
-      }
-    }
-  }, [isMounted]);
+  };
 
   // Calculate responsive positions based on saved window size (with rounding for clean values)
   const getResponsivePosition = (savedPos, savedWindowSize, isCentered = false, leftPanelWidth = 0, savedLeftPanelWidth = 0) => {
@@ -3068,12 +3164,129 @@ export default function AillmPage() {
     });
   };
 
-  const handleNewConversation = () => {
-    const newId = conversations.length + 1;
-    setConversations([
-      ...conversations,
-      { id: newId, title: `대화목록${newId}`, lastMessage: '' }
-    ]);
+  const handleNewConversation = async () => {
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const newId = conversations.length + 1;
+      const newTitle = `대화목록${newId}`;
+
+      const response = await fetch('/api/aillm/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          lastMessage: '',
+        }),
+      });
+
+      if (response.ok) {
+        const newConv = await response.json();
+        setConversations([
+          ...conversations,
+          { id: newConv._id.toString(), title: newConv.title, lastMessage: newConv.lastMessage || '' }
+        ]);
+      } else {
+        alert('대화방 생성에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to create conversation:', error);
+      alert('대화방 생성 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleEditConversation = (conv) => {
+    setEditingConversationId(conv.id);
+    setEditingConversationTitle(conv.title);
+  };
+
+  const handleSaveConversationTitle = async (convId) => {
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const trimmedTitle = editingConversationTitle.trim();
+      if (!trimmedTitle) {
+        alert('대화방 이름을 입력해주세요.');
+        return;
+      }
+
+      const response = await fetch('/api/aillm/conversations', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: convId,
+          title: trimmedTitle,
+        }),
+      });
+
+      if (response.ok) {
+        setConversations(conversations.map(conv => 
+          conv.id === convId ? { ...conv, title: trimmedTitle } : conv
+        ));
+        setEditingConversationId(null);
+        setEditingConversationTitle('');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '대화방 이름 수정에 실패했습니다.' }));
+        alert(errorData.error || '대화방 이름 수정에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to update conversation title:', error);
+      alert('대화방 이름 수정 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleCancelEditConversation = () => {
+    setEditingConversationId(null);
+    setEditingConversationTitle('');
+  };
+
+  const handleDeleteConversation = async (convId) => {
+    if (!confirm('정말 이 대화방을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const response = await fetch(`/api/aillm/conversations?id=${convId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setConversations(conversations.filter(conv => conv.id !== convId));
+        if (activeConversation === convId) {
+          setActiveConversation(null);
+        }
+        alert('대화방이 삭제되었습니다.');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '대화방 삭제에 실패했습니다.' }));
+        alert(errorData.error || '대화방 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+      alert('대화방 삭제 중 오류가 발생했습니다.');
+    }
   };
   
   const handleAddMemo = () => {
@@ -3190,30 +3403,57 @@ export default function AillmPage() {
     ];
   };
 
-  const handleSaveTemplate = () => {
+  const handleSaveTemplate = async () => {
     const name = templateName.trim();
-    if (!name) return;
-    const positions = getCurrentPositions();
-    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
-    const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
-    const templateWindowSize = { width: windowWidth, height: windowHeight };
-    const memosForTemplate = memos.map((memo) =>
-      normalizeMemoForTemplate(memo, templateWindowSize)
-    );
-    const newTemplate = {
-      id: Date.now(),
-      name,
-      positions,
-      memos: memosForTemplate,
-      createdAt: new Date().toISOString()
-    };
-    const updatedTemplates = [...savedTemplates, newTemplate];
-    setSavedTemplates(updatedTemplates);
-    localStorage.setItem('aillmTemplates', JSON.stringify(updatedTemplates));
-    setTemplateName('');
+    if (!name) {
+      alert('템플릿 이름을 입력해주세요.');
+      return;
+    }
+
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const positions = getCurrentPositions();
+      const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+      const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
+      const templateWindowSize = { width: windowWidth, height: windowHeight };
+      const memosForTemplate = memos.map((memo) =>
+        normalizeMemoForTemplate(memo, templateWindowSize)
+      );
+
+      const response = await fetch('/api/aillm/templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          positions,
+          memos: memosForTemplate,
+        }),
+      });
+
+      if (response.ok) {
+        const newTemplate = await response.json();
+        setSavedTemplates([...savedTemplates, newTemplate]);
+        setTemplateName('');
+        alert('템플릿이 저장되었습니다.');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '템플릿 저장에 실패했습니다.' }));
+        alert(errorData.error || '템플릿 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to save template:', error);
+      alert('템플릿 저장 중 오류가 발생했습니다.');
+    }
   };
 
-  const handleApplyTemplate = (template) => {
+  const handleApplyTemplate = async (template) => {
     const normalized = normalizePositions({
       ...template.positions,
       presetId: template.id
@@ -3225,15 +3465,50 @@ export default function AillmPage() {
         normalizeMemoForTemplate(memo, normalized.windowSize)
       );
       setMemos(normalizedMemos);
-      localStorage.setItem('aillmMemos', JSON.stringify(normalizedMemos));
+      // 메모도 DB에 저장
+      await saveMemos();
     }
     setIsTemplateModalOpen(false);
   };
 
-  const handleDeleteTemplate = (templateId) => {
-    const updatedTemplates = savedTemplates.filter((template) => template.id !== templateId);
-    setSavedTemplates(updatedTemplates);
-    localStorage.setItem('aillmTemplates', JSON.stringify(updatedTemplates));
+  const handleDeleteTemplate = async (templateId) => {
+    // 샘플 템플릿은 삭제 불가
+    const template = savedTemplates.find((t) => t.id === templateId);
+    if (template && template.isSample) {
+      alert('샘플 템플릿은 삭제할 수 없습니다.');
+      return;
+    }
+
+    if (!confirm('정말 이 템플릿을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const response = await fetch(`/api/aillm/templates?id=${templateId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const updatedTemplates = savedTemplates.filter((template) => template.id !== templateId);
+        setSavedTemplates(updatedTemplates);
+        alert('템플릿이 삭제되었습니다.');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: '템플릿 삭제에 실패했습니다.' }));
+        alert(errorData.error || '템플릿 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to delete template:', error);
+      alert('템플릿 삭제 중 오류가 발생했습니다.');
+    }
   };
 
   // API 키 추가
@@ -3653,6 +3928,10 @@ export default function AillmPage() {
     conv.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const sampleTemplates = getSampleTemplates();
+  // 샘플 템플릿에 isSample 플래그 추가
+  const sampleTemplatesWithFlag = sampleTemplates.map(t => ({ ...t, isSample: true }));
+  // 샘플 템플릿과 사용자 템플릿 합치기 (샘플이 먼저)
+  const allTemplates = [...sampleTemplatesWithFlag, ...savedTemplates];
 
   return (
     <AppShell styles={styles} title="AI-LLM 대화방" activeNav="aillm" headerActions={null}>
@@ -3707,9 +3986,66 @@ export default function AillmPage() {
               className={`${styles.conversationItem} ${
                 activeConversation === conv.id ? styles.active : ''
               }`}
-              onClick={() => setActiveConversation(conv.id)}
             >
-              {conv.title}
+              {editingConversationId === conv.id ? (
+                <div className={styles.conversationEditForm} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="text"
+                    value={editingConversationTitle}
+                    onChange={(e) => setEditingConversationTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSaveConversationTitle(conv.id);
+                      } else if (e.key === 'Escape') {
+                        handleCancelEditConversation();
+                      }
+                    }}
+                    className={styles.conversationEditInput}
+                    autoFocus
+                  />
+                  <div className={styles.conversationEditActions}>
+                    <button
+                      className={styles.conversationEditSave}
+                      onClick={() => handleSaveConversationTitle(conv.id)}
+                      title="저장"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className={styles.conversationEditCancel}
+                      onClick={handleCancelEditConversation}
+                      title="취소"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div 
+                    className={styles.conversationItemContent}
+                    onClick={() => setActiveConversation(conv.id)}
+                  >
+                    {conv.title}
+                  </div>
+                  <div className={styles.conversationItemActions} onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className={styles.conversationEditBtn}
+                      onClick={() => handleEditConversation(conv)}
+                      title="이름 수정"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      className={styles.conversationDeleteBtn}
+                      onClick={() => handleDeleteConversation(conv.id)}
+                      title="삭제"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { AppShell } from '../components/AppShell';
+import { LoginModal } from '../components/LoginModal';
 import { getUser, getToken } from '@/utils/auth';
 
 export default function HomePage() {
@@ -12,15 +13,35 @@ export default function HomePage() {
   const [isMounted, setIsMounted] = useState(false);
   const [rpaProjects, setRpaProjects] = useState([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
 
   useEffect(() => {
     setIsMounted(true);
+    const token = getToken();
     const currentUser = getUser();
+    
+    // 로그인 체크: 토큰이 없거나 사용자 정보가 없으면 로그인 모달 표시
+    if (!token || !currentUser) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setUser(currentUser);
     
     // 로그인 상태 변경 감지
     const handleLoginChange = () => {
-      setUser(getUser());
+      const newToken = getToken();
+      const newUser = getUser();
+      if (!newToken || !newUser) {
+        setShowLoginModal(true);
+        setUser(null);
+        setConversations([]);
+      } else {
+        setUser(newUser);
+        fetchConversations();
+      }
     };
     window.addEventListener('loginStatusChange', handleLoginChange);
     window.addEventListener('storage', handleLoginChange);
@@ -28,6 +49,7 @@ export default function HomePage() {
     // RPA 프로젝트 목록 불러오기
     if (currentUser) {
       fetchRpaProjects();
+      fetchConversations();
     }
 
     return () => {
@@ -65,6 +87,44 @@ export default function HomePage() {
       setRpaProjects([]);
     } finally {
       setIsLoadingProjects(false);
+    }
+  };
+
+  const fetchConversations = async () => {
+    try {
+      setIsLoadingConversations(true);
+      const token = getToken();
+      if (!token) {
+        setIsLoadingConversations(false);
+        return;
+      }
+
+      const response = await fetch('/api/aillm/conversations', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // MongoDB _id를 id로 변환하고 최대 3개만 표시
+        const formatted = data
+          .slice(0, 3)
+          .map((conv) => ({
+            id: conv._id.toString(),
+            title: conv.title,
+            lastMessage: conv.lastMessage || '',
+            updatedAt: conv.updatedAt || conv.createdAt,
+          }));
+        setConversations(formatted);
+      } else {
+        setConversations([]);
+      }
+    } catch (error) {
+      console.error('대화방 로드 오류:', error);
+      setConversations([]);
+    } finally {
+      setIsLoadingConversations(false);
     }
   };
 
@@ -144,8 +204,18 @@ export default function HomePage() {
 
   const paymentInfo = getPaymentInfo();
 
+  // 로그인하지 않은 경우 콘텐츠를 렌더링하지 않음
+  const isLoggedIn = isMounted && getToken() && user;
+
   return (
-    <AppShell styles={styles} title="MyPage" activeNav="mypage" headerActions={null}>
+    <>
+    <AppShell styles={styles} title="MyPage" activeNav="mypage" headerActions={null} onLoginClick={() => setShowLoginModal(true)}>
+      {!isLoggedIn ? (
+        <div style={{ padding: '2rem', textAlign: 'center', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p style={{ color: '#666', fontSize: '1.1rem' }}>로그인이 필요합니다.</p>
+        </div>
+      ) : (
+        <>
       {/* Payment Status Section */}
           <section className={`${styles.section} ${styles.paymentSection}`}>
             <div className={styles.sectionHeader}>
@@ -269,71 +339,53 @@ export default function HomePage() {
                   </p>
                   <div className={styles.recentSection}>
                     <h4 className={styles.recentTitle}>최근 대화방</h4>
-                    <div className={styles.recentItem}>
-                      <div className={styles.recentItemIndicator}></div>
-                      <div className={styles.recentItemContent}>
-                        <p className={styles.recentItemTitle}>워크빌더 db 연결방법 알려줘</p>
-                        <p className={styles.recentItemDesc}>Let's produce answer. 워크빌더에서 DB에 ...</p>
-                        <div className={styles.recentItemMeta}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                          </svg>
-                          <span>1월 6일</span>
-                          <span>→</span>
-                        </div>
+                    {isLoadingConversations ? (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#999', fontSize: '0.875rem' }}>
+                        로딩 중...
                       </div>
-                    </div>
+                    ) : conversations.length > 0 ? (
+                      conversations.map((conv) => (
+                        <div 
+                          key={conv.id} 
+                          className={styles.recentItem}
+                          onClick={() => router.push('/aillm')}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className={styles.recentItemIndicator}></div>
+                          <div className={styles.recentItemContent}>
+                            <p className={styles.recentItemTitle}>{conv.title}</p>
+                            <p className={styles.recentItemDesc}>
+                              {conv.lastMessage 
+                                ? (conv.lastMessage.length > 50 
+                                    ? conv.lastMessage.substring(0, 50) + '...' 
+                                    : conv.lastMessage)
+                                : '메시지가 없습니다.'}
+                            </p>
+                            <div className={styles.recentItemMeta}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                              </svg>
+                              <span>
+                                {new Date(conv.updatedAt).toLocaleDateString('ko-KR', {
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </span>
+                              <span>→</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#999', fontSize: '0.875rem' }}>
+                        대화방이 없습니다.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* OCR Card */}
-              <div className={`${styles.serviceCard} ${styles.serviceCardOcr}`}>
-                <div className={styles.serviceCardPattern}></div>
-                <div className={styles.serviceCardContent}>
-                  <div className={styles.serviceCardHeader}>
-                    <div className={`${styles.serviceIcon} ${styles.serviceIconOcr}`}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className={styles.serviceCardTitle}>AI-OCR 문서 목록</h3>
-                      <div className={styles.serviceCardStatus}>
-                        <span className={styles.statusDot}></span>
-                        <span>고정밀 인식</span>
-                      </div>
-                    </div>
-                  </div>
-                  <p className={styles.serviceCardDescription}>
-                    문서 이미지를 업로드하고 텍스트를 자동으로 추출하세요.
-                  </p>
-                  <div className={styles.recentSection}>
-                    <h4 className={styles.recentTitle}>최근 OCR 작업</h4>
-                    <div className={styles.recentItem}>
-                      <div className={styles.ocrTag}>IMG</div>
-                      <div className={styles.ocrItemContent}>
-                        <div className={styles.ocrItemHeader}>
-                          <span className={styles.ocrDate}>12월 10일</span>
-                          <span className={styles.ocrFileName}>image.png</span>
-                        </div>
-                        <p className={styles.ocrItemText}>[ {`{ "partNumber": "", "itemCategory": ...`}</p>
-                        <div className={styles.recentItemMeta}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                          </svg>
-                          <span>12월 10일</span>
-                          <span>→</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </section>
 
@@ -422,6 +474,31 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+        </>
+      )}
     </AppShell>
+    <LoginModal
+      isOpen={showLoginModal}
+      onClose={() => {
+        setShowLoginModal(false);
+        // 모달을 닫을 때 로그인되지 않았으면 홈으로 리다이렉트
+        const token = getToken();
+        if (!token) {
+          router.push('/company');
+        }
+      }}
+      onSuccess={() => {
+        // 로그인 성공 후 사용자 정보 업데이트
+        const currentUser = getUser();
+        setUser(currentUser);
+        setShowLoginModal(false);
+        // RPA 프로젝트와 대화방 다시 불러오기
+        if (currentUser) {
+          fetchRpaProjects();
+          fetchConversations();
+        }
+      }}
+    />
+  </>
   );
 }

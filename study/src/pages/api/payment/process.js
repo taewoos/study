@@ -78,7 +78,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: userCheck.error || '인증이 필요합니다.' });
     }
 
-    const { amount, plan, paymentId, transactionId, paymentType, status, virtualAccount, bankTransferInfo } = req.body;
+    const { amount, plan, planRole, paymentId, transactionId, paymentType, status, virtualAccount, bankTransferInfo } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: '올바른 결제 금액을 입력해주세요.' });
@@ -119,10 +119,21 @@ export default async function handler(req, res) {
 
     await paymentsCollection.insertOne(payment);
 
-    // 결제 완료된 경우에만 사용자의 다음 결제일 업데이트 (1개월 후)
+    // 결제 완료된 경우에만 사용자의 다음 결제일 및 플랜 업데이트 (1개월 후)
     if (paymentStatus === 'completed') {
       const nextPaymentDate = new Date();
       nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+
+      const updateData = {
+        nextPaymentDate: nextPaymentDate,
+        lastPaymentDate: new Date(),
+        updatedAt: new Date()
+      };
+
+      // planRole이 제공된 경우 사용자의 role도 업데이트
+      if (planRole && [2, 3, 4, 5].includes(planRole)) {
+        updateData.role = planRole;
+      }
 
       await usersCollection.updateOne(
         { 
@@ -132,11 +143,7 @@ export default async function handler(req, res) {
           ]
         },
         { 
-          $set: { 
-            nextPaymentDate: nextPaymentDate,
-            lastPaymentDate: new Date(),
-            updatedAt: new Date()
-          } 
+          $set: updateData
         }
       );
     }

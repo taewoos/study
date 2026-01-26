@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getUser, getToken } from '@/utils/auth';
 
-export function AppShell({ styles, title, activeNav, headerActions, children, showLogo = true }) {
+export function AppShell({ styles, title, activeNav, headerActions, children, showLogo = true, onLoginClick }) {
   const year = new Date().getFullYear();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
@@ -96,8 +96,8 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
       // 로그인 상태 변경 이벤트 발생
       window.dispatchEvent(new Event('loginStatusChange'));
       
-      // 로그인 페이지로 이동
-      window.location.href = '/login';
+      // 회사 소개 페이지로 이동
+      window.location.href = '/company';
     }
   };
 
@@ -293,7 +293,7 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
             INQUIRY
           </a>
           <a
-            href="/settings"
+            href="/setting"
             className={`${styles.topNavItem} ${activeNav === 'settings' ? styles.topNavItemActive : ''}`}
           >
             SETTING
@@ -311,9 +311,15 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
               로그아웃
             </button>
           ) : (
-            <Link href="/login" className={styles.loginButton}>
-              로그인
-            </Link>
+            onLoginClick ? (
+              <button onClick={onLoginClick} className={styles.loginButton} style={{ cursor: 'pointer', border: 'none', background: 'none' }}>
+                로그인
+              </button>
+            ) : (
+              <Link href="/login" className={styles.loginButton}>
+                로그인
+              </Link>
+            )
           )}
           {headerActions && headerActions}
         </div>
@@ -354,7 +360,7 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
             <a href="/inquiry" className={styles.footerLink} style={footerLinkStyle}>
               문의하기
             </a>
-            <a href="/settings" className={styles.footerLink} style={footerLinkStyle}>
+            <a href="/setting" className={styles.footerLink} style={footerLinkStyle}>
               설정
             </a>
             <a href="/mypage" className={styles.footerLink} style={footerLinkStyle}>

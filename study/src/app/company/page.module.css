@@ -184,7 +184,7 @@
 /* Custom Ai 포커스 섹션 */
 .customAiSection {
   background: #ffffff;
-  padding: 80px 32px 60px;
+  padding: 120px 32px 80px;
   margin-top: 60px;
 }
 
@@ -194,9 +194,11 @@
   text-align: left;
 }
 
+/*3번째 섹션 간격 조정 위치*/
 .customAiTopSection {
   position: relative;
-  margin-bottom: 40px;
+  margin-top: 80px;
+  margin-bottom: 120px; /* 경계선 하단 공백 증가 */
 }
 
 .customAiBorderLine {
@@ -206,47 +208,75 @@
   margin: 0 auto;
   margin-bottom: 0;
 }
-
+/* Why"Custom Ai Should I start "now" */
 .customAiTopText {
   position: absolute;
-  top: -45px;
-  right: 270px;
-  padding: 0 12px;
+  top: -70px; /* 경계선과의 간격 증가 */
+  right: 50px;
+  padding: 8px 12px; /* 상하 패딩 추가로 간격 증가 */
   background: #ffffff;
-  font-size: 16px;
+  font-size: 32px; /* "Custom Ai를"과 동일한 크기 */
   color: rgba(26, 26, 26, 0.6);
 }
 
 .customAiFocus {
+  margin-top: 0.5rem; /* 상단 0.5 간격 */
   margin-bottom: 40px;
   margin-left: 200px;
   text-align: left;
 }
-
+/*"Custom Ai를" 간격수정*/
 .customAiLabel {
-  font-size: 18px;
+  font-size: 32px; /* "Custom Ai 제공되는 다양기능을 만나보세요"와 동일한 크기 */
   font-weight: 600;
   color: rgba(26, 26, 26, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin: 0 0 16px 0;
+  margin: 0 0 30px 0; /* 1.5cm 간격 (약 57px) */
 }
-
+/*"Why"
+지금 시작해야하는가? 간격수정*/
 .customAiTitle {
-  font-size: 36px;
+  font-size: 64px; /* 슬로건과 동일한 크기 */
   font-weight: 800;
   color: #1a1a1a;
   letter-spacing: -0.03em;
-  margin: 0 0 16px 0;
+  margin: 0 0 2.0rem 0; /* 하단 간격 - 원하는 만큼 조정 가능 */
   line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem; /* 줄바꿈 간격 - 원하는 만큼 조정 가능 */
+}
+
+.customAiTitleLine1 {
+  display: block;
+}
+
+.customAiTitleLine2 {
+  display: block;
 }
 
 .customAiSubtext {
-  font-size: 11px;
+  font-size: 20px; /* 슬로건 하단 텍스트와 동일한 크기 */
   font-weight: 400;
   color: rgba(26, 26, 26, 0.6);
   margin: 0;
   line-height: 1.6;
+  max-width: 500px; /* 2줄로 표시되도록 너비 제한 */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* 줄간격 - 원하는 만큼 조정 가능 */
+}
+
+.customAiSubtextLine1 {
+  display: block;
+}
+
+.customAiSubtextLine2 {
+  display: block;
+  margin-left: 6rem;
+  margin-top: 1.0rem;
+  margin-bottom: 2rem; /* 두 번째 줄만 오른쪽으로 이동 */
 }
 
 .customAiDescription {
@@ -270,16 +300,102 @@
 }
 
 .customAiImagePlaceholder {
-  width: 100%;
+  width: 85%; /* 빨간색 표시만큼 크기 감소 (100% -> 85%) */
   min-height: 400px;
-  background: #f5f5f5;
-  border: 2px dashed #e5e5e5;
+  background: #eef0f1; 
+  border: none;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(26, 26, 26, 0.4);
-  font-size: 16px;
+  padding: 40px 20px;
+  margin: 0 auto; /* 중앙 정렬 */
+}
+
+.whyNowVisualization {
+  background: transparent; /* 배경색 제거 */
+  border-radius: 16px;
+  padding: 48px 40px;
+  box-shadow: none; /* 그림자 제거 */
+  border: none; /* 테두리 제거 */
+  width: 100%;
+  max-width: 1020px; /* 빨간색 표시만큼 크기 감소 (1200px -> 1020px, 약 15% 감소) */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.visualizationItem {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.visualizationDivider {
+  width: 1px;
+  height: 180px;
+  background: linear-gradient(to bottom, transparent, #e5e5e5, transparent);
+  flex-shrink: 0;
+}
+
+.visualizationIcon {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.visualizationIcon svg {
+  width: 100%;
+  height: 100%;
+  max-width: 120px;
+  max-height: 120px;
+}
+
+.visualizationTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.visualizationDesc {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 968px) {
+  .whyNowVisualization {
+    flex-direction: column;
+    padding: 32px 24px;
+    gap: 32px;
+  }
+  
+  .visualizationDivider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e5e5e5, transparent);
+  }
+  
+  .visualizationIcon {
+    height: 120px;
+    margin-bottom: 20px;
+  }
+  
+  .visualizationTitle {
+    font-size: 18px;
+  }
+  
+  .visualizationDesc {
+    font-size: 13px;
+  }
 }
 
 /* Custom Ai 다양기능 섹션 */
@@ -507,21 +623,22 @@
   margin: 0 auto;
   width: 100%;
 }
-
+/*2번째 섹션 간격 조정 위치*/
 .mainDescriptionTitle {
   font-size: 32px;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 48px 0;
+  margin: 160px 0 150px 0;
   letter-spacing: -0.02em;
   text-align: center;
 }
 
-/* Feature Cards Grid */
+/* Feature Cards Grid 2번째 섹션 카드 간격 조정 위치 */
 .featureCardsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  column-gap: 30px;
+  row-gap: 40px; /* 2cm 간격 */
   margin-left: -80px;
   margin-right: -80px;
   max-width: calc(100% + 160px);
@@ -640,6 +757,125 @@
   margin: 0;
   letter-spacing: -0.02em;
   text-align: center;
+}
+
+/* Why Section - 카드 아래, 요금제 바로 전 */
+.whySection {
+  background: #ffffff;
+  padding: 80px 32px;
+  margin-top: 60px;
+}
+
+.whyContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 메인 타이틀 섹션 */
+.whyTitleSection {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.whyMainTitle {
+  font-size: 42px;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.03em;
+  margin: 0 0 20px 0;
+  line-height: 1.2;
+}
+
+.whyMainSubtitle {
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(26, 26, 26, 0.7);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 이미지 왼쪽, 텍스트 오른쪽 (2컬럼) */
+.whyImageTextRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  margin-bottom: 60px;
+  align-items: center;
+}
+
+.whyImageColumn {
+  width: 100%;
+}
+
+.whyImagePlaceholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #ddd;
+}
+
+.whyImageContent {
+  width: 100%;
+  height: 100%;
+  /* 추후 이미지 추가 예정 */
+}
+
+.whyTextColumn {
+  width: 100%;
+}
+
+.whyTextContent {
+  width: 100%;
+  min-height: 200px;
+}
+
+.whyTextContent p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: rgba(26, 26, 26, 0.8);
+  margin: 0 0 20px 0;
+}
+
+.whyTextContent p:last-child {
+  margin-bottom: 0;
+}
+
+/* 하단 2컬럼 텍스트 */
+.whyBottomTextRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.whyBottomTextColumn {
+  width: 100%;
+}
+
+.whyBottomTextContent {
+  width: 100%;
+  min-height: 150px;
+}
+
+.whyBottomTextContent h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+.whyBottomTextContent p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(26, 26, 26, 0.7);
+  margin: 0 0 16px 0;
+}
+
+.whyBottomTextContent p:last-child {
+  margin-bottom: 0;
 }
 
 /* Pricing Section */
@@ -2161,8 +2397,52 @@
     font-size: 16px;
   }
 
+  .whySection {
+    padding: 60px 20px;
+  }
+
+  .whyMainTitle {
+    font-size: 32px;
+  }
+
+  .whyMainSubtitle {
+    font-size: 16px;
+  }
+
+  .whyImageTextRow {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .whyBottomTextRow {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
   .customAiImagePlaceholder {
     min-height: 300px;
+    padding: 24px 16px;
+  }
+  
+  .whyNowVisualization {
+    gap: 20px;
+  }
+  
+  .visualizationCard {
+    padding: 20px 16px;
+  }
+  
+  .visualizationIcon {
+    height: 100px;
+    margin-bottom: 16px;
+  }
+  
+  .visualizationTitle {
+    font-size: 18px;
+  }
+  
+  .visualizationDesc {
+    font-size: 13px;
   }
 
   .customAiFeaturesSection {

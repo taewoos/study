@@ -1492,7 +1492,7 @@ export default function CompanyPage() {
 
   return (
     <>
-    <AppShell styles={styles} title="" activeNav="company" headerActions={null} showLogo={false}>
+    <AppShell styles={styles} title="" activeNav="company" headerActions={null} showLogo={false} onLoginClick={() => setShowLoginModal(true)}>
       {/* 상단 슬로건 영역 - GPT 스타일 */}
       <div className={styles.sloganSection}>
         {/* 수정하기/저장/편집 종료 버튼 - 슬로건 섹션 오른쪽 상단 */}
@@ -1673,7 +1673,21 @@ export default function CompanyPage() {
             </>
           )}
           <div className={styles.sloganActions}>
-            <Link href="/aillm" className={styles.sloganButtonPrimary}>시작하기 <span className={styles.chevron}>›</span></Link>
+            <button 
+              onClick={() => {
+                const token = getToken();
+                if (token) {
+                  // 로그인된 경우 aillm 페이지로 이동
+                  router.push('/aillm');
+                } else {
+                  // 로그인되지 않은 경우 모달 열기
+                  setShowLoginModal(true);
+                }
+              }}
+              className={styles.sloganButtonPrimary}
+            >
+              시작하기 <span className={styles.chevron}>›</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1759,21 +1773,93 @@ export default function CompanyPage() {
               <div className={styles.customAiTopSection}>
                 <div className={styles.customAiBorderLine}></div>
                 <div className={styles.customAiTopText}>
-                  내용 준비중입니다
+                "Why"Custom Ai Should I start "now"?
                 </div>
               </div>
               <div className={styles.customAiFocus}>
                 <p className={styles.customAiLabel}>Custom Ai를</p>
                 <h2 className={styles.customAiTitle}>
-                  "Why"<br />
-                  지금 시작해야하는가?
+                  <span className={styles.customAiTitleLine1}>비용을 줄여주는 설계도</span>
+                  <span className={styles.customAiTitleLine2}>부담 없이 도입 시작</span>
                 </h2>
                 <p className={styles.customAiSubtext}>
-                  ai 자동화는 "언젠가"가 아니라 "지금" 시작할수록 비용이 줄어듭니다
+                  <span className={styles.customAiSubtextLine1}>ai 자동화는 "언젠가"가 아니라</span>
+                  <span className={styles.customAiSubtextLine2}>"지금" 시작할수록 비용이 줄어듭니다</span>
                 </p>
               </div>
               <div className={styles.customAiImagePlaceholder}>
-                {/* 이미지 영역 - 추후 추가 예정 */}
+              </div>
+            </div>
+          </div>
+
+          {/* Why 섹션 - 3개 카드 아래, 요금제 바로 전 */}
+          <div className={styles.whySection}>
+            <div className={styles.whyContainer}>
+              {/* 메인 타이틀 */}
+              <div className={styles.whyTitleSection}>
+                <h2 className={styles.whyMainTitle}>
+                  내용 생각중입니다 들어갈거 생각해야함
+                </h2>         
+              </div>
+
+              {/* 이미지 왼쪽, 텍스트 오른쪽 (2컬럼) */}
+              <div className={styles.whyImageTextRow}>
+                <div className={styles.whyImageColumn}>
+                  <div className={styles.whyImagePlaceholder}>
+                    {/* 이미지 영역 - 추후 이미지 추가 예정 */}
+                    <div className={styles.whyImageContent}>
+                      {/* 인건비, 운영비, 생산성 차트 이미지 영역 */}
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.whyTextColumn}>
+                  <div className={styles.whyTextContent}>
+                    <p>
+                      AI 자동화를 도입하면 업무 효율성이 크게 향상됩니다. 반복적인 작업을 자동화하여 
+                      인력이 더 중요한 업무에 집중할 수 있게 됩니다. 이를 통해 생산성을 높이고 
+                      비용을 절감할 수 있습니다.
+                    </p>
+                    <p>
+                      초기 투자 비용이 있더라도 장기적으로 보면 인건비 절감과 업무 효율 향상으로 
+                      투자 대비 효과가 큽니다. 특히 업무량이 지속적으로 증가하는 환경에서는 
+                      자동화 도입이 필수적입니다.
+                    </p>
+                    <p>
+                      빠른 시장 변화에 대응하기 위해서는 신속한 의사결정과 업무 처리가 필요합니다. 
+                      AI 자동화는 이러한 요구사항을 충족시켜 경쟁력을 강화할 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 하단 2컬럼 텍스트 */}
+              <div className={styles.whyBottomTextRow}>
+                <div className={styles.whyBottomTextColumn}>
+                  <div className={styles.whyBottomTextContent}>
+                    <h3>비용 절감 효과</h3>
+                    <p>
+                      AI 자동화를 통해 반복 업무를 처리하면 인건비를 크게 절감할 수 있습니다. 
+                      특히 대량의 데이터 처리나 문서 작업에서 그 효과가 두드러집니다.
+                    </p>
+                    <p>
+                      자동화된 프로세스는 24시간 무인으로 작동할 수 있어 업무 처리 시간을 
+                      단축하고 인력 배치를 최적화할 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.whyBottomTextColumn}>
+                  <div className={styles.whyBottomTextContent}>
+                    <h3>생산성 향상</h3>
+                    <p>
+                      자동화를 통해 사람은 창의적이고 전략적인 업무에 집중할 수 있습니다. 
+                      이는 조직 전체의 생산성 향상으로 이어집니다.
+                    </p>
+                    <p>
+                      업무 처리 속도가 빨라지고 오류가 줄어들어 고객 만족도가 향상되고, 
+                      이를 통해 비즈니스 성장을 가속화할 수 있습니다.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2373,10 +2459,44 @@ export default function CompanyPage() {
       isOpen={showLoginModal}
       onClose={() => setShowLoginModal(false)}
       onSuccess={() => {
-        // 로그인 성공 후 마이페이지로 이동
-        router.push('/mypage');
+        // 로그인 성공 후 현재 페이지 유지
+        // 페이지 새로고침으로 로그인 상태 반영
+        window.location.reload();
       }}
     />
+    {selectedFeature && (
+      <div 
+        className={styles.modalOverlay}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setSelectedFeature(null);
+          }
+        }}
+      >
+        <div className={styles.modal}>
+          <button
+            className={styles.modalCloseButton}
+            onClick={() => setSelectedFeature(null)}
+            aria-label="닫기"
+          >
+            ×
+          </button>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalHeaderText}>
+                <p className={styles.modalEyebrow}>FEATURE</p>
+                <h2 className={styles.modalTitle}>
+                  {featureDescriptions[selectedFeature]?.title || selectedFeature}
+                </h2>
+              </div>
+            </div>
+            <div className={styles.modalBody}>
+              {renderModalBody()}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
   </>
   );
 }

@@ -292,16 +292,109 @@
   transition: background 0.2s;
   font-size: 14px;
   color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
 }
 
 .conversationItem:hover {
   background: #f5f5f5;
 }
 
+.conversationItem:hover .conversationItemActions {
+  opacity: 1;
+}
+
 .conversationItem.active {
   background: #E8F4FD;
   color: #4A90E2;
   font-weight: 500;
+}
+
+.conversationItemContent {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversationItemActions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.conversationEditBtn,
+.conversationDeleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  font-size: 14px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.conversationEditBtn:hover,
+.conversationDeleteBtn:hover {
+  opacity: 1;
+}
+
+.conversationEditForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.conversationEditInput {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #4A90E2;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  background: white;
+}
+
+.conversationEditInput:focus {
+  border-color: #357ABD;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+}
+
+.conversationEditActions {
+  display: flex;
+  gap: 4px;
+}
+
+.conversationEditSave,
+.conversationEditCancel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #4A90E2;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.conversationEditSave:hover {
+  background: #E8F4FD;
+  color: #357ABD;
+}
+
+.conversationEditCancel:hover {
+  background: #ffebee;
+  color: #d32f2f;
 }
 
 /* Resize Handle */

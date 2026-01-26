@@ -1,0 +1,809 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #fafafa;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Top Header with Navigation */
+.topHeader {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.loginButton {
+  padding: 8px 16px;
+  background: none;
+  color: #666;
+  text-decoration: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.loginButton:hover {
+  color: #1a1a1a;
+  background: #f5f5f5;
+}
+
+.logoIcon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+/* Top Navigation */
+.topNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.topNavItem {
+  padding: 8px 16px;
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.topNavItem:hover {
+  color: #1a1a1a;
+  background: #f5f5f5;
+}
+
+.topNavItemActive {
+  color: #4A90E2;
+  background: #e8f4fd;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 헤더의 로그인/로그아웃 버튼 스타일 (우선순위 높임) */
+.topHeader .loginButton {
+  padding: 8px 16px;
+  background: none !important;
+  color: #666 !important;
+  text-decoration: none;
+  border: none !important;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.topHeader .loginButton:hover {
+  color: #1a1a1a !important;
+  background: #f5f5f5 !important;
+}
+
+/* Main Content */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 64px; /* 헤더 높이만큼 여백 추가 */
+}
+
+/* Page Header (below top header) */
+.pageHeader {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 20px 32px;
+  position: sticky;
+  top: 64px;
+  z-index: 10;
+  margin-top: 0;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+/* Content Area */
+.content {
+  flex: 1;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 1800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Footer */
+.footer {
+  background: #ffffff;
+  border-top: 1px solid #e5e5e5;
+  padding: 24px 32px;
+  color: #666;
+}
+
+.footerInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footerBrand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footerLogoRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.footerLogoIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footerLogoText {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.footerMeta {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.footerLinks {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.footerLink {
+  color: #666;
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  color: #1a1a1a;
+}
+
+.inquiryContainer {
+  max-width: 95%;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  width: 100%;
+}
+
+/* 공지사항과 Q&A를 나란히 배치 */
+.topSectionsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  width: 100%;
+}
+
+/* 섹션 공통 스타일 */
+.noticeSection,
+.faqSection,
+.inquirySection {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.sectionTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 0.9375rem;
+  color: #666;
+  margin: 0.5rem 0 0 0;
+}
+
+/* 공지사항 스타일 */
+.noticeList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.noticeItem {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.noticeItem:hover {
+  border-color: #4A90E2;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+}
+
+.noticeItemImportant {
+  border-color: #ff9800;
+  background: #fff9e6;
+}
+
+.noticeHeader {
+  padding: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.noticeTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.importantBadge {
+  background: #ff9800;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.noticeTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  flex: 1;
+}
+
+.noticeMeta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.noticeDate {
+  font-size: 0.875rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.noticeToggle {
+  font-size: 0.75rem;
+  color: #999;
+  cursor: pointer;
+}
+
+.noticeContent {
+  padding: 0 1.25rem 1.25rem 1.25rem;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.noticeText {
+  padding-top: 1rem;
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+/* 빠른 Q&A 스타일 */
+.faqSearch {
+  margin-bottom: 1.5rem;
+}
+
+.faqSearchInput {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  transition: border-color 0.2s;
+}
+
+.faqSearchInput:focus {
+  outline: none;
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faqItem {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.faqItem:hover {
+  border-color: #4A90E2;
+}
+
+.faqItemExpanded {
+  border-color: #4A90E2;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+}
+
+.faqQuestion {
+  padding: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #ffffff;
+}
+
+.faqQ {
+  background: #4A90E2;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.faqQuestionText {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.faqToggle {
+  font-size: 0.75rem;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.faqAnswer {
+  padding: 1.25rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  gap: 1rem;
+}
+
+.faqA {
+  background: #4CAF50;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.faqAnswerText {
+  flex: 1;
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+/* 문의 내역 스타일 */
+.newInquiryButton {
+  padding: 0.75rem 1.5rem;
+  background: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.newInquiryButton:hover {
+  background: #357ABD;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.inquiryFormCard {
+  background: #f8f9fa;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.formTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 1.5rem 0;
+}
+
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.formInput,
+.formTextarea {
+  width: 100%;
+  padding: 0.875rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.submitButton {
+  padding: 0.75rem 2rem;
+  background: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submitButton:hover {
+  background: #357ABD;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.inquiryList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inquiryItem {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.inquiryItem:hover {
+  border-color: #4A90E2;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+}
+
+.inquiryItemSelected {
+  border-color: #4A90E2;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+}
+
+.inquiryHeader {
+  padding: 1.25rem;
+  cursor: pointer;
+  background: #ffffff;
+}
+
+.inquiryTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.inquiryTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  flex: 1;
+}
+
+.statusBadge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statusPending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.statusAnswered {
+  background: #d4edda;
+  color: #155724;
+}
+
+.inquiryMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inquiryDate {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.inquiryToggle {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.inquiryContent {
+  padding: 1.25rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inquiryQuestion,
+.inquiryAnswer {
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #4A90E2;
+}
+
+.inquiryAnswer {
+  border-left-color: #4CAF50;
+}
+
+.contentLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #666;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.contentText,
+.answerText {
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+.answerDate {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: #999;
+  text-align: right;
+}
+
+.inquiryNoAnswer {
+  padding: 2rem;
+  text-align: center;
+  color: #999;
+}
+
+.inquiryNoAnswer p {
+  margin: 0.5rem 0;
+}
+
+/* 로그인 프롬프트 */
+.loginPrompt {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.loginPrompt p {
+  margin-bottom: 1.5rem;
+  font-size: 1.125rem;
+}
+
+.loginPrompt .loginButton {
+  padding: 0.875rem 2rem;
+  background: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.loginPrompt .loginButton:hover {
+  background: #357ABD;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+/* 공통 스타일 */
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #999;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  color: #999;
+}
+
+.emptyState p {
+  margin: 0.5rem 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .inquiryContainer {
+    padding: 1rem;
+    gap: 2rem;
+  }
+
+  .topSectionsRow {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .noticeSection,
+  .faqSection,
+  .inquirySection {
+    padding: 1.5rem;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .newInquiryButton {
+    width: 100%;
+  }
+
+  .noticeHeader,
+  .inquiryHeader {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .inquiryTitleRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
