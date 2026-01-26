@@ -343,23 +343,16 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
         <div className={styles.footerInner} style={footerInnerStyle}>
           <div className={styles.footerBrand} style={footerBrandStyle}>
             <div className={styles.footerLogoRow} style={footerLogoRowStyle}>
-              <span className={styles.footerLogoIcon} style={footerLogoIconStyle}>
-                SS
-              </span>
-              <span className={styles.footerLogoText}>시와소프트</span>
+
+              <span className={styles.footerLogoText}></span>
             </div>
             <div className={styles.footerMeta} style={footerMetaStyle}>
-              © {year} 시와소프트. All rights reserved.
+        
             </div>
           </div>
 
           <nav className={styles.footerLinks} style={footerLinksStyle} aria-label="Footer">
-            <a href="/company" className={styles.footerLink} style={footerLinkStyle}>
-              회사소개
-            </a>
-            <a href="/inquiry" className={styles.footerLink} style={footerLinkStyle}>
-              문의하기
-            </a>
+
 
           </nav>
         </div>

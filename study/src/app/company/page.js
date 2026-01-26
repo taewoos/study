@@ -1814,20 +1814,9 @@ export default function CompanyPage() {
                 </div>
                 <div className={styles.whyTextColumn}>
                   <div className={styles.whyTextContent}>
-                    <h3 className={styles.whyTextTitle}>AI 자동화의 효과</h3>
+                    <h3 className={styles.whyTextTitle}>내용 생각중입니다</h3>
                     <p>
-                      AI 자동화를 도입하면 업무 효율성이 크게 향상됩니다. 반복적인 작업을 자동화하여 
-                      인력이 더 중요한 업무에 집중할 수 있게 됩니다. 이를 통해 생산성을 높이고 
-                      비용을 절감할 수 있습니다.
-                    </p>
-                    <p>
-                      초기 투자 비용이 있더라도 장기적으로 보면 인건비 절감과 업무 효율 향상으로 
-                      투자 대비 효과가 큽니다. 특히 업무량이 지속적으로 증가하는 환경에서는 
-                      자동화 도입이 필수적입니다.
-                    </p>
-                    <p>
-                      빠른 시장 변화에 대응하기 위해서는 신속한 의사결정과 업무 처리가 필요합니다. 
-                      AI 자동화는 이러한 요구사항을 충족시켜 경쟁력을 강화할 수 있습니다.
+                  
                     </p>
                   </div>
                 </div>
@@ -1837,27 +1826,17 @@ export default function CompanyPage() {
               <div className={styles.whyBottomTextRow}>
                 <div className={styles.whyBottomTextColumn}>
                   <div className={styles.whyBottomTextContent}>
-                    <h3>비용 절감 효과</h3>
+                    <h3>내용 생각중입니다</h3>
                     <p>
-                      AI 자동화를 통해 반복 업무를 처리하면 인건비를 크게 절감할 수 있습니다. 
-                      특히 대량의 데이터 처리나 문서 작업에서 그 효과가 두드러집니다.
-                    </p>
-                    <p>
-                      자동화된 프로세스는 24시간 무인으로 작동할 수 있어 업무 처리 시간을 
-                      단축하고 인력 배치를 최적화할 수 있습니다.
+
                     </p>
                   </div>
                 </div>
                 <div className={styles.whyBottomTextColumn}>
                   <div className={styles.whyBottomTextContent}>
-                    <h3>생산성 향상</h3>
+                    <h3>내용 생각중입니다</h3>
                     <p>
-                      자동화를 통해 사람은 창의적이고 전략적인 업무에 집중할 수 있습니다. 
-                      이는 조직 전체의 생산성 향상으로 이어집니다.
-                    </p>
-                    <p>
-                      업무 처리 속도가 빨라지고 오류가 줄어들어 고객 만족도가 향상되고, 
-                      이를 통해 비즈니스 성장을 가속화할 수 있습니다.
+                  
                     </p>
                   </div>
                 </div>
