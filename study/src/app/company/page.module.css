@@ -204,7 +204,7 @@
 .customAiBorderLine {
   width: calc(100% - 160px);
   height: 1px;
-  background: #e5e5e5;
+  background: #111111;
   margin: 0 auto;
   margin-bottom: 0;
 }
@@ -637,8 +637,8 @@
 .featureCardsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  column-gap: 30px;
-  row-gap: 40px; /* 2cm 간격 */
+  column-gap: 0.5px;
+  row-gap: 10px; /* 2cm 간격 */
   margin-left: -80px;
   margin-right: -80px;
   max-width: calc(100% + 160px);
@@ -654,7 +654,7 @@
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  transform: scale(0.95);
+  transform: scale(0.90);
   height: 100%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
   position: relative;
@@ -775,16 +775,30 @@
 .whyTitleSection {
   text-align: center;
   margin-bottom: 60px;
+  position: relative;
+}
+
+.whyTitleSection::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 5px);
+  height: 6px;
+  background: #7e7d7d;
 }
 
 .whyMainTitle {
-  font-size: 42px;
-  font-weight: 800;
+  font-size: 64px;
+  font-weight: 700;
   color: #1a1a1a;
   letter-spacing: -0.03em;
   margin: 0 0 20px 0;
   line-height: 1.2;
 }
+
+
 
 .whyMainSubtitle {
   font-size: 18px;
@@ -800,7 +814,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 60px;
   margin-bottom: 60px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .whyImageColumn {
@@ -808,7 +822,7 @@
 }
 
 .whyImagePlaceholder {
-  width: 100%;
+  width: calc(100% - 2mm);
   aspect-ratio: 4 / 3;
   background: #f5f5f5;
   border-radius: 8px;
@@ -826,6 +840,7 @@
 
 .whyTextColumn {
   width: 100%;
+  margin-top: -3mm;
 }
 
 .whyTextContent {
@@ -833,8 +848,15 @@
   min-height: 200px;
 }
 
+.whyTextTitle {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+}
+
 .whyTextContent p {
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1.8;
   color: rgba(26, 26, 26, 0.8);
   margin: 0 0 20px 0;
@@ -857,18 +879,19 @@
 
 .whyBottomTextContent {
   width: 100%;
+  max-width: 99%;
   min-height: 150px;
 }
 
 .whyBottomTextContent h3 {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 600;
   color: #1a1a1a;
   margin: 0 0 16px 0;
 }
 
 .whyBottomTextContent p {
-  font-size: 15px;
+  font-size: 20px;
   line-height: 1.7;
   color: rgba(26, 26, 26, 0.7);
   margin: 0 0 16px 0;
@@ -881,8 +904,9 @@
 /* Pricing Section */
 .pricingSection {
   margin-top: 56px;
+  margin-bottom: 50px;
   background: #ffffff;
-  padding: 40px 0;
+  padding: 40px 0 80px 0;
 }
 
 .pricingHeader {

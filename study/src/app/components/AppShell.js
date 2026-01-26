@@ -113,9 +113,9 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
   };
 
   const footerStyle = {
-    background: '#ffffff',
+    background: '#f5f5f5',
     borderTop: '1px solid #e5e5e5',
-    padding: '24px 32px',
+    padding: '60px 45px',
     color: '#666',
   };
 
@@ -360,12 +360,7 @@ export function AppShell({ styles, title, activeNav, headerActions, children, sh
             <a href="/inquiry" className={styles.footerLink} style={footerLinkStyle}>
               문의하기
             </a>
-            <a href="/setting" className={styles.footerLink} style={footerLinkStyle}>
-              설정
-            </a>
-            <a href="/mypage" className={styles.footerLink} style={footerLinkStyle}>
-              마이페이지
-            </a>
+
           </nav>
         </div>
       </footer>
