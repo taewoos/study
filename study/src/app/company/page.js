@@ -13,16 +13,16 @@ const sloganTexts = [
   'AI로 업무 자동화 실현',
   '스마트한 디지털 전환',
   '효율적인 업무 프로세스',
-  '혁신적인 AI 솔루션',
+  '혁신적인 Ai 솔루션',
   '지능형 자동화 시스템',
   '빠르고 정확한 처리',
   '비즈니스 성장 가속화',
-  '차세대 AI 기술',
+  '차세대 Ai 기술',
   '업무 혁신의 시작'
 ];
 
 const featureDescriptions = {
-  'aillm': {
+  'Aillm': {
     title: 'Ai LLM',
     description: [
       '대규모 언어 모델을 활용한 지능형 AI 솔루션입니다.',
@@ -31,7 +31,7 @@ const featureDescriptions = {
       '실시간 학습과 개인화된 응답으로 업무 효율성을 극대화합니다.'
     ]
   },
-  'aiagent': {
+  'Aiagent': {
     title: 'Ai Agent',
     description: [
       '지능형 AI 에이전트로 업무 자동화를 한 단계 업그레이드합니다.',
@@ -40,7 +40,7 @@ const featureDescriptions = {
       '학습 기능을 통해 지속적으로 성능이 향상됩니다.'
     ]
   },
-  'aiocr': {
+  'Aiocr': {
     title: 'Ai OCR',
     description: [
       '고정밀 AI 기반 문서 인식 기술로 모든 문서를 디지털화합니다.',
@@ -85,7 +85,7 @@ const pricingPlans = [
     price: '19,000',
     period: '/월',
     description: '개인/소규모 팀을 위한 시작 플랜',
-    features: ['기본 임배딩', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)'],
+    features: ['기본 임베딩', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)'],
   },
   {
     key: 'pro',
@@ -717,7 +717,7 @@ export default function CompanyPage() {
                       <img
                         className={styles.agentArchDiagram}
                         src={activeArch.diagramSrc}
-                        alt={`${activeUseCase?.title || 'AI Agent'} 플로우 다이어그램`}
+                        alt={`${activeUseCase?.title || 'Ai Agent'} 플로우 다이어그램`}
                       />
                     </a>
                     <div className={styles.agentArchDiagramHint}>이미지를 클릭하면 크게 볼 수 있어요.</div>
@@ -1698,7 +1698,7 @@ export default function CompanyPage() {
           {isEditMode && isAdminUser ? (
             <input
               type="text"
-              value={pageContent?.mainDescriptionTitle || 'Custom Ai 제공되는 다양기능을 만나보세요'}
+              value={pageContent?.mainDescriptionTitle || '“Custom AI로 제공되는 다양한 기능을 만나보세요”'}
               onChange={(e) => {
                 const newContent = { ...pageContent, mainDescriptionTitle: e.target.value };
                 setPageContent(newContent);
@@ -1709,7 +1709,7 @@ export default function CompanyPage() {
             />
           ) : (
             <h2 className={styles.mainDescriptionTitle}>
-              {pageContent?.mainDescriptionTitle || 'Custom Ai 제공되는 다양기능을 만나보세요'}
+              {pageContent?.mainDescriptionTitle || '“Custom AI로 제공되는 다양한 기능을 만나보세요”'}
             </h2>
           )}
           <div className={styles.featureCardsGrid}>
@@ -1773,11 +1773,11 @@ export default function CompanyPage() {
               <div className={styles.customAiTopSection}>
                 <div className={styles.customAiBorderLine}></div>
                 <div className={styles.customAiTopText}>
-                "Why"Custom Ai Should I start "now"?
+                “Why start Custom AI now?
                 </div>
               </div>
               <div className={styles.customAiFocus}>
-                <p className={styles.customAiLabel}>Custom Ai를</p>
+                <p className={styles.customAiLabel}>Custom Ai</p>
                 <h2 className={styles.customAiTitle}>
                   <span className={styles.customAiTitleLine1}>비용을 줄여주는 설계도</span>
                   <span className={styles.customAiTitleLine2}>부담 없이 도입 시작</span>
@@ -1798,7 +1798,7 @@ export default function CompanyPage() {
               {/* 메인 타이틀 */}
               <div className={styles.whyTitleSection}>
                 <h2 className={styles.whyMainTitle}>
-                  내용 생각중입니다 들어갈거 생각해야함
+                 실무 운영을 고려한 확장 설계 
                 </h2>         
               </div>
 
@@ -1814,9 +1814,9 @@ export default function CompanyPage() {
                 </div>
                 <div className={styles.whyTextColumn}>
                   <div className={styles.whyTextContent}>
-                    <h3 className={styles.whyTextTitle}>내용 생각중입니다</h3>
+                    <h3 className={styles.whyTextTitle}>효율성을 높이는 Agent</h3>
                     <p>
-                  
+    
                     </p>
                   </div>
                 </div>
@@ -1826,7 +1826,7 @@ export default function CompanyPage() {
               <div className={styles.whyBottomTextRow}>
                 <div className={styles.whyBottomTextColumn}>
                   <div className={styles.whyBottomTextContent}>
-                    <h3>내용 생각중입니다</h3>
+                    <h3>비용절감 최적화 RPA</h3>
                     <p>
 
                     </p>
@@ -1834,7 +1834,7 @@ export default function CompanyPage() {
                 </div>
                 <div className={styles.whyBottomTextColumn}>
                   <div className={styles.whyBottomTextContent}>
-                    <h3>내용 생각중입니다</h3>
+                    <h3>안전성을 보장하는 Ai LLM</h3>
                     <p>
                   
                     </p>
