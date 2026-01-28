@@ -442,6 +442,15 @@ export default function CompanyPage() {
   const [editingRiskRemoval, setEditingRiskRemoval] = useState(false);
   const [editingPricing, setEditingPricing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [flippedCardKeys, setFlippedCardKeys] = useState(new Set());
+  const toggleCardFlip = (key) => {
+    setFlippedCardKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const handleFeatureClick = (feature) => {
     setSelectedFeature(feature);
@@ -2062,13 +2071,22 @@ export default function CompanyPage() {
                 const hasPremium = savedPlans?.some(p => p.key === 'premium');
                 const hasFourPlans = savedPlans?.length >= 4;
                 const currentPlans = (savedPlans && hasFourPlans && hasPremium) ? savedPlans : pricingPlans;
+                const isFlipped = flippedCardKeys.has(plan.key);
                 return (
-                <div
-                  key={plan.key}
-                  className={`${styles.pricingCard} ${
-                    plan.highlight ? styles.pricingCardHighlight : ''
-                  } ${plan.key === 'starter' ? styles.pricingCardStarter : ''} ${plan.key === 'pro' ? styles.pricingCardPro : ''}`}
-                >
+                <div key={plan.key} className={styles.pricingCardFlipWrapper}>
+                  <div
+                    className={styles.pricingCardFlipInner}
+                    onClick={() => { if (!editingPricing) toggleCardFlip(plan.key); }}
+                    style={{ transform: `rotateY(${isFlipped ? 180 : 0}deg)` }}
+                    role="button"
+                    tabIndex={editingPricing ? -1 : 0}
+                    onKeyDown={(e) => { if (!editingPricing && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleCardFlip(plan.key); } }}
+                  >
+                    <div
+                      className={`${styles.pricingCard} ${styles.pricingCardFront} ${
+                        plan.highlight ? styles.pricingCardHighlight : ''
+                      } ${plan.key === 'starter' ? styles.pricingCardStarter : ''} ${plan.key === 'pro' ? styles.pricingCardPro : ''} ${plan.key === 'premium' ? styles.pricingCardPremium : ''} ${plan.key === 'enterprise' ? styles.pricingCardEnterprise : ''}`}
+                    >
                   <img src="/칩2.png" alt="" className={styles.pricingCardChip} />
                   <div className={styles.pricingCardTop}>
                     {editingPricing && isAdminUser ? (
@@ -2143,8 +2161,9 @@ export default function CompanyPage() {
                     )}
                   </div>
                   <div className={styles.pricingActions}>
+                    <span className={styles.pricingActionHint}> 상세설명 보기 Click </span>
                     {plan.key === 'enterprise' ? (
-                      <span className={styles.pricingActionUnderline} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}>
+                      <span className={styles.pricingActionUnderline} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }} onClick={(e) => e.stopPropagation()}>
                         상담 요청
                       </span>
                     ) : (
@@ -2153,7 +2172,8 @@ export default function CompanyPage() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           const currentUser = getUser();
                           if (currentUser) {
                             router.push('/payment');
@@ -2165,6 +2185,26 @@ export default function CompanyPage() {
                         {plan.name} 시작
                       </span>
                     )}
+                  </div>
+                    </div>
+                    <div
+                      className={`${styles.pricingCard} ${styles.pricingCardBack} ${
+                        plan.highlight ? styles.pricingCardHighlight : ''
+                      } ${plan.key === 'starter' ? styles.pricingCardStarter : ''} ${plan.key === 'pro' ? styles.pricingCardPro : ''} ${plan.key === 'premium' ? styles.pricingCardPremium : ''} ${plan.key === 'enterprise' ? styles.pricingCardEnterprise : ''}`}
+                    >
+                      <div className={styles.pricingCardBackInner}>
+                        <p className={styles.pricingCardBackText}>{plan.description || '상세설명'}</p>
+                        <span
+                          className={styles.pricingActionUnderline}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+                          onClick={(e) => { e.stopPropagation(); toggleCardFlip(plan.key); }}
+                        >
+                          앞면 보기
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 );

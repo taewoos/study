@@ -938,6 +938,49 @@
   max-width: calc(100% + 160px);
 }
 
+.pricingCardFlipWrapper {
+  aspect-ratio: 1 / 1.58;
+  min-height: 0;
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.pricingCardFlipInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+.pricingCardFront,
+.pricingCardBack {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.pricingCardBack {
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pricingCardBackInner {
+  text-align: center;
+  max-width: 100%;
+}
+
+.pricingCardBackText {
+  margin: 0 0 1rem 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(17, 24, 39, 0.85);
+}
+
 .pricingCard {
   position: relative;
   aspect-ratio: 1 / 1.58;
@@ -1005,6 +1048,40 @@
   z-index: 1;
 }
 
+.pricingCard.pricingCardFront,
+.pricingCard.pricingCardBack {
+  position: absolute;
+}
+
+.pricingCard.pricingCardBack::before,
+.pricingCard.pricingCardBack::after {
+  display: none !important;
+  background: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 뒷면은 판 배경만 (그라데이션 광택 제거) */
+.pricingCard.pricingCardBack.pricingCardStarter {
+  background: #b0b0b0;
+}
+.pricingCard.pricingCardBack.pricingCardPro {
+  background: #e8c858;
+}
+.pricingCard.pricingCardBack.pricingCardPremium {
+  background: #9ca1ac;
+}
+.pricingCard.pricingCardBack.pricingCardEnterprise {
+  background: #111827;
+}
+
+.pricingCardFlipInner:hover .pricingCardFront {
+  transform: none;
+}
+.pricingCardFlipInner:hover .pricingCardBack {
+  transform: rotateY(180deg);
+}
+
 /* APS-H 27.9×18.6mm 비율 */
 .pricingCardChip {
   grid-area: chip;
@@ -1046,6 +1123,17 @@
 .pricingCard .pricingActions {
   grid-area: actions;
   margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.pricingActionHint {
+  margin-bottom: 2cm;
+  font-size: 12px;
+  color: rgba(17, 24, 39, 0.55);
+  font-weight: 500;
 }
 
 .pricingActionUnderline {
@@ -1083,11 +1171,149 @@
 }
 
 .pricingCardStarter {
-  background: #c0c0c0;
+  background:
+    radial-gradient(circle at 50% 45%,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0) 55%,
+      rgba(0, 0, 0, 0.14) 100%
+    ),
+    conic-gradient(from 0deg,
+      #C8C8C8 0deg,
+      #B8B8B8 30deg,
+      #E0E0E0 60deg,
+      #A8A8A8 90deg,
+      #D0D0D0 120deg,
+      #989898 150deg,
+      #909090 180deg,
+      #C0C0C0 210deg,
+      #A0A0A0 240deg,
+      #D8D8D8 270deg,
+      #888888 300deg,
+      #B0B0B0 330deg,
+      #C8C8C8 360deg
+    );
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.18) inset,
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 6px 12px rgba(0, 0, 0, 0.06),
+    0 14px 28px rgba(0, 0, 0, 0.08);
 }
 
 .pricingCardPro {
-  background: #d4af37;
+  background:
+    radial-gradient(circle at 50% 45%,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0) 55%,
+      rgba(0, 0, 0, 0.14) 100%
+    ),
+    conic-gradient(from 0deg,
+      #EAC978 0deg,
+      #E2C26A 30deg,
+      #F8E99C 60deg,
+      #D9BC78 90deg,
+      #EFCC82 120deg,
+      #CDAB5E 150deg,
+      #C8AA5A 180deg,
+      #EBD080 210deg,
+      #D5B55E 240deg,
+      #F4D47E 270deg,
+      #C2A34D 300deg,
+      #D6B862 330deg,
+      #EAC978 360deg
+    );
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.18) inset,
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 6px 12px rgba(0, 0, 0, 0.06),
+    0 14px 28px rgba(0, 0, 0, 0.08);
+}
+
+/* Premium: Pro와 동일한 광택 구조(radial+conic+box-shadow), 색만 실버 */
+.pricingCardPremium {
+  background:
+    radial-gradient(circle at 50% 45%,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0) 55%,
+      rgba(0, 0, 0, 0.14) 100%
+    ),
+    conic-gradient(from 0deg,
+      #AEB3BC 0deg,
+      #B9C0C9 30deg,
+      #8B909A 60deg,
+      #9CA1AC 90deg,
+      #797F89 120deg,
+      #9CA1AA 150deg,
+      #9BA0AA 180deg,
+      #9298A0 210deg,
+      #B5BBC4 240deg,
+      #70747E 270deg,
+      #A6ACB5 300deg,
+      #9297A2 330deg,
+      #AEB3BC 360deg
+    );
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.18) inset,
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 6px 12px rgba(0, 0, 0, 0.06),
+    0 14px 28px rgba(0, 0, 0, 0.08);
+}
+
+/* Enterprise: Pro와 동일 구조, 색상만 검정 */
+.pricingCardEnterprise {
+  background:
+    radial-gradient(circle at 50% 45%,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0) 55%,
+      rgba(0, 0, 0, 0.14) 100%
+    ),
+    conic-gradient(from 0deg,
+      #1a1a1a 0deg,
+      #151515 30deg,
+      #252525 60deg,
+      #0d0d0d 90deg,
+      #1f1f1f 120deg,
+      #111111 150deg,
+      #0f0f0f 180deg,
+      #181818 210deg,
+      #121212 240deg,
+      #2a2a2a 270deg,
+      #0a0a0a 300deg,
+      #161616 330deg,
+      #1a1a1a 360deg
+    );
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.18) inset,
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 6px 12px rgba(0, 0, 0, 0.06),
+    0 14px 28px rgba(0, 0, 0, 0.08);
+}
+
+.pricingCardEnterprise .pricingCardName,
+.pricingCardEnterprise .pricingPrice,
+.pricingCardEnterprise .pricingCurrency,
+.pricingCardEnterprise .pricingPeriod {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.pricingCardEnterprise .pricingActionHint {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pricingCardEnterprise .pricingActionUnderline {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pricingCardEnterprise .pricingActionUnderline:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.pricingCardEnterprise .pricingCardBackText {
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .pricingBadge {

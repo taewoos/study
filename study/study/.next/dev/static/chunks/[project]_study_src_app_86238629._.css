@@ -911,10 +911,51 @@
   display: grid;
 }
 
+.page-module__QLaLcW__pricingCardFlipWrapper {
+  aspect-ratio: 1 / 1.58;
+  perspective: 1000px;
+  cursor: pointer;
+  min-height: 0;
+}
+
+.page-module__QLaLcW__pricingCardFlipInner {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .6s;
+  position: relative;
+}
+
+.page-module__QLaLcW__pricingCardFront, .page-module__QLaLcW__pricingCardBack {
+  backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+}
+
+.page-module__QLaLcW__pricingCardBack {
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  display: flex;
+  transform: rotateY(180deg);
+}
+
+.page-module__QLaLcW__pricingCardBackInner {
+  text-align: center;
+  max-width: 100%;
+}
+
+.page-module__QLaLcW__pricingCardBackText {
+  color: #111827d9;
+  margin: 0 0 1rem;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .page-module__QLaLcW__pricingCard {
   aspect-ratio: 1 / 1.58;
   background: #fafafa;
-  border: 1px solid #1118271f;
+  border: 1px solid #1118271a;
   border-radius: 14px;
   grid-template: "top top"
                  "chip chip"
@@ -928,19 +969,19 @@
   display: grid;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 24px #11182714, 0 2px 6px #1118270a;
+  box-shadow: inset 0 1px #fff9, 0 2px 4px #0000000f, 0 6px 12px #0000000f, 0 14px 28px #00000014;
 }
 
 .page-module__QLaLcW__pricingCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 22px 60px #11182724;
+  transform: translateY(-3px);
+  box-shadow: inset 0 1px #ffffff80, 0 4px 8px #00000014, 0 12px 24px #0000001a, 0 24px 48px #0000001f;
 }
 
 .page-module__QLaLcW__pricingCard:before {
   content: "";
-  opacity: 1;
   pointer-events: none;
-  background: none;
+  background: linear-gradient(135deg, #ffffff80 0%, #ffffff26 30%, #0000 48%, #0000000f 100%);
+  border-radius: 14px;
   position: absolute;
   inset: 0;
 }
@@ -962,16 +1003,33 @@
   position: relative;
 }
 
+.page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardFront, .page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack {
+  position: absolute;
+}
+
+.page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack:before, .page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack:after {
+  display: none;
+}
+
+.page-module__QLaLcW__pricingCardFlipInner:hover .page-module__QLaLcW__pricingCardFront {
+  transform: none;
+}
+
+.page-module__QLaLcW__pricingCardFlipInner:hover .page-module__QLaLcW__pricingCardBack {
+  transform: rotateY(180deg);
+}
+
 .page-module__QLaLcW__pricingCardChip {
   aspect-ratio: 27.9 / 18.6;
   object-fit: contain;
   mix-blend-mode: multiply;
   flex-shrink: 0;
   grid-area: chip;
-  justify-self: center;
+  justify-self: start;
   width: 28%;
   height: auto;
-  margin-top: 6px;
+  margin-top: -10px;
+  margin-left: 44%;
   transform: rotate(180deg);
 }
 
@@ -997,8 +1055,33 @@
 }
 
 .page-module__QLaLcW__pricingCard .page-module__QLaLcW__pricingActions {
+  flex-direction: column;
   grid-area: actions;
+  align-items: center;
+  gap: 0;
   margin-top: 0;
+  display: flex;
+}
+
+.page-module__QLaLcW__pricingActionHint {
+  color: #1118278c;
+  margin-bottom: 2cm;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.page-module__QLaLcW__pricingActionUnderline {
+  cursor: pointer;
+  text-underline-offset: 3px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  transition: color .15s;
+}
+
+.page-module__QLaLcW__pricingActionUnderline:hover {
+  color: #111827b3;
 }
 
 .page-module__QLaLcW__pricingCardTone_pink {
@@ -1019,6 +1102,47 @@
 
 .page-module__QLaLcW__pricingCardHighlight {
   outline: 2px solid #1118271f;
+}
+
+.page-module__QLaLcW__pricingCardStarter {
+  background: radial-gradient(circle at 50% 45%, #ffffff47 0%, #fff0 55%, #00000024 100%), conic-gradient(#c8c8c8 0deg, #b8b8b8 30deg, #e0e0e0 60deg, #a8a8a8 90deg, #d0d0d0 120deg, #989898 150deg, #909090 180deg, silver 210deg, #a0a0a0 240deg, #d8d8d8 270deg, #888 300deg, #b0b0b0 330deg, #c8c8c8 360deg);
+  box-shadow: inset 0 6px 18px #0000002e, inset 0 1px #ffffffd9, 0 2px 4px #0000000f, 0 6px 12px #0000000f, 0 14px 28px #00000014;
+}
+
+.page-module__QLaLcW__pricingCardPro {
+  background: radial-gradient(circle at 50% 45%, #ffffff47 0%, #fff0 55%, #00000024 100%), conic-gradient(#eac978 0deg, #e2c26a 30deg, #f8e99c 60deg, #d9bc78 90deg, #efcc82 120deg, #cdab5e 150deg, #c8aa5a 180deg, #ebd080 210deg, #d5b55e 240deg, #f4d47e 270deg, #c2a34d 300deg, #d6b862 330deg, #eac978 360deg);
+  box-shadow: inset 0 6px 18px #0000002e, inset 0 1px #ffffffd9, 0 2px 4px #0000000f, 0 6px 12px #0000000f, 0 14px 28px #00000014;
+}
+
+.page-module__QLaLcW__pricingCardPremium {
+  background: radial-gradient(circle at 72% 18%, #f5fcfef2 0%, #f5fcfe73 18%, #f5fcfe00 48%), radial-gradient(circle, #fff0 62%, #f8fbf8b3 90%, #f8fbf800 100%), radial-gradient(circle, #0000 0%, #0000000f 65%, #00000029 100%), conic-gradient(from 322deg, #aeb3bc 0deg, #b9c0c9 30deg, #8b909a 60deg, #9ca1ac 90deg, #797f89 120deg, #9ca1aa 150deg, #9ba0aa 180deg, #9298a0 210deg, #b5bbc4 240deg, #70747e 270deg, #a6acb5 300deg, #9297a2 330deg, #aeb3bc 360deg);
+  box-shadow: inset 0 0 0 1px #0000001a, 0 6px 18px #0000001a, 0 2px 4px #0000000f, 0 14px 28px #00000014;
+}
+
+.page-module__QLaLcW__pricingCardEnterprise {
+  color: #ffffffeb;
+  background: radial-gradient(circle at 50% 45%, #ffffff47 0%, #fff0 55%, #00000024 100%), conic-gradient(#1a1a1a 0deg, #151515 30deg, #252525 60deg, #0d0d0d 90deg, #1f1f1f 120deg, #111 150deg, #0f0f0f 180deg, #181818 210deg, #121212 240deg, #2a2a2a 270deg, #0a0a0a 300deg, #161616 330deg, #1a1a1a 360deg);
+  box-shadow: inset 0 6px 18px #0000002e, inset 0 1px #ffffffd9, 0 2px 4px #0000000f, 0 6px 12px #0000000f, 0 14px 28px #00000014;
+}
+
+.page-module__QLaLcW__pricingCardEnterprise .page-module__QLaLcW__pricingCardName, .page-module__QLaLcW__pricingCardEnterprise .page-module__QLaLcW__pricingPrice, .page-module__QLaLcW__pricingCardEnterprise .page-module__QLaLcW__pricingCurrency, .page-module__QLaLcW__pricingCardEnterprise .page-module__QLaLcW__pricingPeriod {
+  color: #fffffff2;
+}
+
+.page-module__QLaLcW__pricingCardEnterprise .page-module__QLaLcW__pricingActionHint {
+  color: #fff9;
+}
+
+.page-module__QLaLcW__pricingCardEnterprise .page-module__QLaLcW__pricingActionUnderline {
+  color: #ffffffe6;
+}
+
+.page-module__QLaLcW__pricingCardEnterprise .page-module__QLaLcW__pricingActionUnderline:hover {
+  color: #ffffffbf;
+}
+
+.page-module__QLaLcW__pricingCardEnterprise .page-module__QLaLcW__pricingCardBackText {
+  color: #ffffffe0;
 }
 
 .page-module__QLaLcW__pricingBadge {
