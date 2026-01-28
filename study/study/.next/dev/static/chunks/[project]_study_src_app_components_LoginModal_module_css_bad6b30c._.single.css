@@ -1,0 +1,340 @@
+/* [project]/study/src/app/components/LoginModal.module.css [app-client] (css) */
+.LoginModal-module__AWZeca__modalOverlay {
+  z-index: 10000;
+  background-color: #00000080;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  animation: .2s ease-out LoginModal-module__AWZeca__fadeIn;
+  display: flex;
+  position: fixed;
+  inset: 0;
+}
+
+@keyframes LoginModal-module__AWZeca__fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.LoginModal-module__AWZeca__modal {
+  background: #fff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  padding: 40px 32px;
+  animation: .3s ease-out LoginModal-module__AWZeca__slideUp;
+  position: relative;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px #00000026;
+}
+
+@keyframes LoginModal-module__AWZeca__slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.LoginModal-module__AWZeca__closeButton {
+  cursor: pointer;
+  color: #000;
+  z-index: 1;
+  background: none;
+  border: none;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  transition: opacity .2s;
+  display: flex;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.LoginModal-module__AWZeca__closeButton:hover {
+  opacity: .7;
+}
+
+.LoginModal-module__AWZeca__logoSection {
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+  margin-bottom: 32px;
+  display: flex;
+}
+
+.LoginModal-module__AWZeca__logoPlaceholder {
+  color: #999;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  height: 80px;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+}
+
+.LoginModal-module__AWZeca__socialLogin {
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  display: flex;
+}
+
+.LoginModal-module__AWZeca__socialButton {
+  cursor: pointer;
+  background: none;
+  border: none;
+  flex-direction: column;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  display: flex;
+}
+
+.LoginModal-module__AWZeca__socialIcon {
+  color: #fff;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+}
+
+.LoginModal-module__AWZeca__socialIcon.LoginModal-module__AWZeca__naver {
+  background-color: #03c75a;
+}
+
+.LoginModal-module__AWZeca__socialIcon.LoginModal-module__AWZeca__kakao {
+  color: #000;
+  background-color: #fee500;
+}
+
+.LoginModal-module__AWZeca__socialIcon.LoginModal-module__AWZeca__google {
+  color: #000;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+}
+
+.LoginModal-module__AWZeca__socialLabel {
+  color: #000;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.LoginModal-module__AWZeca__divider {
+  text-align: center;
+  margin: 24px 0;
+  position: relative;
+}
+
+.LoginModal-module__AWZeca__divider:before {
+  content: "";
+  background-color: #e0e0e0;
+  height: 1px;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+}
+
+.LoginModal-module__AWZeca__dividerText {
+  color: #999;
+  background-color: #fff;
+  padding: 0 16px;
+  font-size: 14px;
+  position: relative;
+}
+
+.LoginModal-module__AWZeca__inputGroup {
+  margin-bottom: 20px;
+}
+
+.LoginModal-module__AWZeca__label {
+  color: #000;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+}
+
+.LoginModal-module__AWZeca__input {
+  color: #000;
+  box-sizing: border-box;
+  background-color: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  transition: border-color .2s, background-color .2s;
+}
+
+.LoginModal-module__AWZeca__input:focus {
+  background-color: #fff;
+  border-color: #000;
+  outline: none;
+}
+
+.LoginModal-module__AWZeca__input::placeholder {
+  color: #999;
+}
+
+.LoginModal-module__AWZeca__passwordWrapper {
+  position: relative;
+}
+
+.LoginModal-module__AWZeca__passwordToggle {
+  cursor: pointer;
+  color: #666;
+  background: none;
+  border: none;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+  transition: color .2s;
+  display: flex;
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+}
+
+.LoginModal-module__AWZeca__passwordToggle:hover {
+  color: #000;
+}
+
+.LoginModal-module__AWZeca__signInButton {
+  color: #fff;
+  cursor: pointer;
+  background-color: #000;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color .2s;
+}
+
+.LoginModal-module__AWZeca__signInButton:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.LoginModal-module__AWZeca__signInButton:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.LoginModal-module__AWZeca__forgotPassword {
+  text-align: center;
+  color: #666;
+  margin: 16px 0;
+  font-size: 14px;
+}
+
+.LoginModal-module__AWZeca__resetLink {
+  color: #06c;
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.LoginModal-module__AWZeca__resetLink:hover {
+  color: #0052a3;
+  text-decoration: underline;
+}
+
+.LoginModal-module__AWZeca__createAccountButton {
+  color: #000;
+  cursor: pointer;
+  text-align: center;
+  box-sizing: border-box;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color .2s, border-color .2s;
+  display: block;
+}
+
+.LoginModal-module__AWZeca__createAccountButton:hover {
+  background-color: #fafafa;
+  border-color: #ccc;
+}
+
+.LoginModal-module__AWZeca__closeIcon {
+  fill: none;
+  width: 24px;
+  height: 24px;
+}
+
+.LoginModal-module__AWZeca__closeIconPath {
+  stroke: currentColor;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.LoginModal-module__AWZeca__socialSvgIcon {
+  fill: none;
+  width: 20px;
+  height: 20px;
+}
+
+.LoginModal-module__AWZeca__kakaoIconPath {
+  fill: currentColor;
+}
+
+.LoginModal-module__AWZeca__googleIconPath1 {
+  fill: #4285f4;
+}
+
+.LoginModal-module__AWZeca__googleIconPath2 {
+  fill: #34a853;
+}
+
+.LoginModal-module__AWZeca__googleIconPath3 {
+  fill: #fbbc05;
+}
+
+.LoginModal-module__AWZeca__googleIconPath4 {
+  fill: #ea4335;
+}
+
+.LoginModal-module__AWZeca__passwordToggleIcon {
+  fill: none;
+  width: 20px;
+  height: 20px;
+}
+
+.LoginModal-module__AWZeca__passwordTogglePath {
+  stroke: currentColor;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*# sourceMappingURL=%5Bproject%5D_study_src_app_components_LoginModal_module_css_bad6b30c._.single.css.map*/
