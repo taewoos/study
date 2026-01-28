@@ -83,7 +83,7 @@ const pricingPlans = [
     key: 'starter',
     name: 'Starter',
     price: '19,000',
-    period: '/월',
+    period: 'month',
     description: '개인/소규모 팀을 위한 시작 플랜',
     features: ['기본 임베딩', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)'],
   },
@@ -91,7 +91,7 @@ const pricingPlans = [
     key: 'pro',
     name: 'Pro',
     price: '49,900',
-    period: '/월',
+    period: 'month',
     description: '업무 자동화를 본격적으로 확장',
     features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)', 'RPA 연동기능이 없는 Agent'],
     highlight: true,
@@ -100,7 +100,7 @@ const pricingPlans = [
     key: 'premium',
     name: 'Premium',
     price: '149,000',
-    period: '/월',
+    period: 'month',
     description: '고급 기능과 확장된 지원',
     features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)', '음성인식 (STT, TTS)', 'OCR (문서 파서기능)'],
   },
@@ -2067,51 +2067,30 @@ export default function CompanyPage() {
                   key={plan.key}
                   className={`${styles.pricingCard} ${
                     plan.highlight ? styles.pricingCardHighlight : ''
-                  }`}
+                  } ${plan.key === 'starter' ? styles.pricingCardStarter : ''} ${plan.key === 'pro' ? styles.pricingCardPro : ''}`}
                 >
-                  {plan.highlight && <div className={styles.pricingBadge}>추천</div>}
+                  <img src="/칩2.png" alt="" className={styles.pricingCardChip} />
                   <div className={styles.pricingCardTop}>
                     {editingPricing && isAdminUser ? (
-                      <>
-                        <input
-                          type="text"
-                          value={plan.name}
-                          onChange={(e) => {
-                            const newPlans = [...currentPlans];
-                            newPlans[planIdx] = { ...newPlans[planIdx], name: e.target.value };
-                            setPageContent({ 
-                              ...pageContent, 
-                              pricing: { 
-                                ...(pageContent?.pricing || {}), 
-                                plans: newPlans 
-                              } 
-                            });
-                          }}
-                          className={styles.editInput}
-                          style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
-                        />
-                        <textarea
-                          value={plan.description}
-                          onChange={(e) => {
-                            const newPlans = [...currentPlans];
-                            newPlans[planIdx] = { ...newPlans[planIdx], description: e.target.value };
-                            setPageContent({ 
-                              ...pageContent, 
-                              pricing: { 
-                                ...(pageContent?.pricing || {}), 
-                                plans: newPlans 
-                              } 
-                            });
-                          }}
-                          className={styles.editInput}
-                          style={{ width: '100%', minHeight: '40px', padding: '0.5rem', fontSize: '0.875rem' }}
-                        />
-                      </>
+                      <input
+                        type="text"
+                        value={plan.name}
+                        onChange={(e) => {
+                          const newPlans = [...currentPlans];
+                          newPlans[planIdx] = { ...newPlans[planIdx], name: e.target.value };
+                          setPageContent({ 
+                            ...pageContent, 
+                            pricing: { 
+                              ...(pageContent?.pricing || {}), 
+                              plans: newPlans 
+                            } 
+                          });
+                        }}
+                        className={styles.editInput}
+                        style={{ width: '100%', padding: '0.5rem', fontSize: '1.375rem', fontWeight: 'bold' }}
+                      />
                     ) : (
-                      <>
-                        <h3 className={styles.pricingCardName}>{plan.name}</h3>
-                        <p className={styles.pricingCardDesc}>{plan.description}</p>
-                      </>
+                      <h3 className={styles.pricingCardName}>{plan.name}</h3>
                     )}
                   </div>
                   <div className={styles.pricingPriceRow}>
@@ -2150,72 +2129,41 @@ export default function CompanyPage() {
                           }}
                           className={styles.editInput}
                           style={{ width: '60px', padding: '0.5rem', fontSize: '0.875rem' }}
-                          placeholder="/월"
+                          placeholder="month"
                         />
                       </>
                     ) : (
                       <>
-                        <span className={styles.pricingPrice}>{plan.price}</span>
-                        {plan.period && (
-                          <>
-                            <span className={styles.pricingCurrency}>₩</span>
-                            <span className={styles.pricingPeriod}>{plan.period}</span>
-                          </>
-                        )}
+                        <span className={styles.pricingPriceLine}>
+                          {plan.period && <span className={styles.pricingCurrency}>₩</span>}
+                          <span className={styles.pricingPrice}>{plan.price}</span>
+                        </span>
+                        {plan.period && <span className={styles.pricingPeriod}>{plan.period}</span>}
                       </>
                     )}
                   </div>
-                  <ul className={styles.pricingList}>
-                    {plan.features.map((f, featureIdx) => (
-                      <li key={featureIdx}>
-                        {editingPricing && isAdminUser ? (
-                          <input
-                            type="text"
-                            value={f}
-                            onChange={(e) => {
-                              const newPlans = [...currentPlans];
-                              const newFeatures = [...newPlans[planIdx].features];
-                              newFeatures[featureIdx] = e.target.value;
-                              newPlans[planIdx] = { ...newPlans[planIdx], features: newFeatures };
-                              setPageContent({ 
-                                ...pageContent, 
-                                pricing: { 
-                                  ...(pageContent?.pricing || {}), 
-                                  plans: newPlans 
-                                } 
-                              });
-                            }}
-                            className={styles.editInput}
-                            style={{ width: '100%', padding: '0.25rem', fontSize: '0.875rem', marginBottom: '0.25rem' }}
-                          />
-                        ) : (
-                          f
-                        )}
-                      </li>
-                    ))}
-                  </ul>
                   <div className={styles.pricingActions}>
                     {plan.key === 'enterprise' ? (
-                      <button className={styles.pricingButtonSecondary} type="button">
+                      <span className={styles.pricingActionUnderline} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}>
                         상담 요청
-                      </button>
+                      </span>
                     ) : (
-                      <button 
-                        className={styles.pricingButtonPrimary} 
-                        type="button"
+                      <span
+                        className={styles.pricingActionUnderline}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
                         onClick={() => {
                           const currentUser = getUser();
                           if (currentUser) {
-                            // 로그인한 경우 마이페이지로 이동
                             router.push('/payment');
                           } else {
-                            // 로그인하지 않은 경우 로그인 페이지로 이동
                             router.push('/login');
                           }
                         }}
                       >
-                        {plan.name} 시작 <span className={styles.arrowUpRight}>↗</span>
-                      </button>
+                        {plan.name} 시작
+                      </span>
                     )}
                   </div>
                 </div>

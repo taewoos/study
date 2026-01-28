@@ -158,6 +158,7 @@ __turbopack_context__.v({
   "pricingButtonPrimary": "page-module__QLaLcW__pricingButtonPrimary",
   "pricingButtonSecondary": "page-module__QLaLcW__pricingButtonSecondary",
   "pricingCard": "page-module__QLaLcW__pricingCard",
+  "pricingCardChip": "page-module__QLaLcW__pricingCardChip",
   "pricingCardDesc": "page-module__QLaLcW__pricingCardDesc",
   "pricingCardHighlight": "page-module__QLaLcW__pricingCardHighlight",
   "pricingCardName": "page-module__QLaLcW__pricingCardName",
@@ -165,6 +166,7 @@ __turbopack_context__.v({
   "pricingCardTone_green": "page-module__QLaLcW__pricingCardTone_green",
   "pricingCardTone_pink": "page-module__QLaLcW__pricingCardTone_pink",
   "pricingCardTone_purple": "page-module__QLaLcW__pricingCardTone_purple",
+  "pricingCardTop": "page-module__QLaLcW__pricingCardTop",
   "pricingCtaRow": "page-module__QLaLcW__pricingCtaRow",
   "pricingCurrency": "page-module__QLaLcW__pricingCurrency",
   "pricingExtra": "page-module__QLaLcW__pricingExtra",
@@ -179,6 +181,7 @@ __turbopack_context__.v({
   "pricingList": "page-module__QLaLcW__pricingList",
   "pricingPeriod": "page-module__QLaLcW__pricingPeriod",
   "pricingPrice": "page-module__QLaLcW__pricingPrice",
+  "pricingPriceLine": "page-module__QLaLcW__pricingPriceLine",
   "pricingPriceRow": "page-module__QLaLcW__pricingPriceRow",
   "pricingSection": "page-module__QLaLcW__pricingSection",
   "pricingSubtitle": "page-module__QLaLcW__pricingSubtitle",
@@ -1599,7 +1602,7 @@ const pricingPlans = [
         key: 'starter',
         name: 'Starter',
         price: '19,000',
-        period: '/월',
+        period: 'month',
         description: '개인/소규모 팀을 위한 시작 플랜',
         features: [
             '기본 임베딩',
@@ -1611,7 +1614,7 @@ const pricingPlans = [
         key: 'pro',
         name: 'Pro',
         price: '49,900',
-        period: '/월',
+        period: 'month',
         description: '업무 자동화를 본격적으로 확장',
         features: [
             '심화 임베딩(OCR 사용)',
@@ -1625,7 +1628,7 @@ const pricingPlans = [
         key: 'premium',
         name: 'Premium',
         price: '149,000',
-        period: '/월',
+        period: 'month',
         description: '고급 기능과 확장된 지원',
         features: [
             '심화 임베딩(OCR 사용)',
@@ -5147,101 +5150,55 @@ function CompanyPage() {
                                                 return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: `${__TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingCard} ${plan.highlight ? __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingCardHighlight : ''}`,
                                                     children: [
-                                                        plan.highlight && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingBadge,
-                                                            children: "추천"
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                                                            src: "/칩2.png",
+                                                            alt: "",
+                                                            className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingCardChip
                                                         }, void 0, false, {
                                                             fileName: "[project]/study/src/app/company/page.js",
                                                             lineNumber: 2072,
-                                                            columnNumber: 38
+                                                            columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingCardTop,
-                                                            children: editingPricing && isAdminUser ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                                                        type: "text",
-                                                                        value: plan.name,
-                                                                        onChange: (e)=>{
-                                                                            const newPlans = [
-                                                                                ...currentPlans
-                                                                            ];
-                                                                            newPlans[planIdx] = {
-                                                                                ...newPlans[planIdx],
-                                                                                name: e.target.value
-                                                                            };
-                                                                            setPageContent({
-                                                                                ...pageContent,
-                                                                                pricing: {
-                                                                                    ...pageContent?.pricing || {},
-                                                                                    plans: newPlans
-                                                                                }
-                                                                            });
-                                                                        },
-                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].editInput,
-                                                                        style: {
-                                                                            width: '100%',
-                                                                            marginBottom: '0.5rem',
-                                                                            padding: '0.5rem',
-                                                                            fontSize: '1.375rem',
-                                                                            fontWeight: 'bold'
+                                                            children: editingPricing && isAdminUser ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                                type: "text",
+                                                                value: plan.name,
+                                                                onChange: (e)=>{
+                                                                    const newPlans = [
+                                                                        ...currentPlans
+                                                                    ];
+                                                                    newPlans[planIdx] = {
+                                                                        ...newPlans[planIdx],
+                                                                        name: e.target.value
+                                                                    };
+                                                                    setPageContent({
+                                                                        ...pageContent,
+                                                                        pricing: {
+                                                                            ...pageContent?.pricing || {},
+                                                                            plans: newPlans
                                                                         }
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2076,
-                                                                        columnNumber: 25
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
-                                                                        value: plan.description,
-                                                                        onChange: (e)=>{
-                                                                            const newPlans = [
-                                                                                ...currentPlans
-                                                                            ];
-                                                                            newPlans[planIdx] = {
-                                                                                ...newPlans[planIdx],
-                                                                                description: e.target.value
-                                                                            };
-                                                                            setPageContent({
-                                                                                ...pageContent,
-                                                                                pricing: {
-                                                                                    ...pageContent?.pricing || {},
-                                                                                    plans: newPlans
-                                                                                }
-                                                                            });
-                                                                        },
-                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].editInput,
-                                                                        style: {
-                                                                            width: '100%',
-                                                                            minHeight: '40px',
-                                                                            padding: '0.5rem',
-                                                                            fontSize: '0.875rem'
-                                                                        }
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2093,
-                                                                        columnNumber: 25
-                                                                    }, this)
-                                                                ]
-                                                            }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingCardName,
-                                                                        children: plan.name
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2112,
-                                                                        columnNumber: 25
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingCardDesc,
-                                                                        children: plan.description
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2113,
-                                                                        columnNumber: 25
-                                                                    }, this)
-                                                                ]
-                                                            }, void 0, true)
+                                                                    });
+                                                                },
+                                                                className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].editInput,
+                                                                style: {
+                                                                    width: '100%',
+                                                                    padding: '0.5rem',
+                                                                    fontSize: '1.375rem',
+                                                                    fontWeight: 'bold'
+                                                                }
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/study/src/app/company/page.js",
+                                                                lineNumber: 2075,
+                                                                columnNumber: 23
+                                                            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                                className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingCardName,
+                                                                children: plan.name
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/study/src/app/company/page.js",
+                                                                lineNumber: 2093,
+                                                                columnNumber: 23
+                                                            }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/study/src/app/company/page.js",
                                                             lineNumber: 2073,
@@ -5279,7 +5236,7 @@ function CompanyPage() {
                                                                         }
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2120,
+                                                                        lineNumber: 2099,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -5307,96 +5264,53 @@ function CompanyPage() {
                                                                             padding: '0.5rem',
                                                                             fontSize: '0.875rem'
                                                                         },
-                                                                        placeholder: "/월"
+                                                                        placeholder: "month"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2137,
+                                                                        lineNumber: 2116,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingPrice,
-                                                                        children: plan.price
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2158,
-                                                                        columnNumber: 25
-                                                                    }, this),
-                                                                    plan.period && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingPriceLine,
                                                                         children: [
-                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            plan.period && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                 className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingCurrency,
                                                                                 children: "₩"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/study/src/app/company/page.js",
-                                                                                lineNumber: 2161,
-                                                                                columnNumber: 29
+                                                                                lineNumber: 2138,
+                                                                                columnNumber: 43
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingPeriod,
-                                                                                children: plan.period
+                                                                                className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingPrice,
+                                                                                children: plan.price
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/study/src/app/company/page.js",
-                                                                                lineNumber: 2162,
-                                                                                columnNumber: 29
+                                                                                lineNumber: 2139,
+                                                                                columnNumber: 27
                                                                             }, this)
                                                                         ]
-                                                                    }, void 0, true)
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/study/src/app/company/page.js",
+                                                                        lineNumber: 2137,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    plan.period && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingPeriod,
+                                                                        children: plan.period
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/study/src/app/company/page.js",
+                                                                        lineNumber: 2141,
+                                                                        columnNumber: 41
+                                                                    }, this)
                                                                 ]
                                                             }, void 0, true)
                                                         }, void 0, false, {
                                                             fileName: "[project]/study/src/app/company/page.js",
-                                                            lineNumber: 2117,
-                                                            columnNumber: 19
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
-                                                            className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingList,
-                                                            children: plan.features.map((f, featureIdx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
-                                                                    children: editingPricing && isAdminUser ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                                                        type: "text",
-                                                                        value: f,
-                                                                        onChange: (e)=>{
-                                                                            const newPlans = [
-                                                                                ...currentPlans
-                                                                            ];
-                                                                            const newFeatures = [
-                                                                                ...newPlans[planIdx].features
-                                                                            ];
-                                                                            newFeatures[featureIdx] = e.target.value;
-                                                                            newPlans[planIdx] = {
-                                                                                ...newPlans[planIdx],
-                                                                                features: newFeatures
-                                                                            };
-                                                                            setPageContent({
-                                                                                ...pageContent,
-                                                                                pricing: {
-                                                                                    ...pageContent?.pricing || {},
-                                                                                    plans: newPlans
-                                                                                }
-                                                                            });
-                                                                        },
-                                                                        className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].editInput,
-                                                                        style: {
-                                                                            width: '100%',
-                                                                            padding: '0.25rem',
-                                                                            fontSize: '0.875rem',
-                                                                            marginBottom: '0.25rem'
-                                                                        }
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2172,
-                                                                        columnNumber: 27
-                                                                    }, this) : f
-                                                                }, featureIdx, false, {
-                                                                    fileName: "[project]/study/src/app/company/page.js",
-                                                                    lineNumber: 2170,
-                                                                    columnNumber: 23
-                                                                }, this))
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/study/src/app/company/page.js",
-                                                            lineNumber: 2168,
+                                                            lineNumber: 2096,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5407,7 +5321,7 @@ function CompanyPage() {
                                                                 children: "상담 요청"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/study/src/app/company/page.js",
-                                                                lineNumber: 2199,
+                                                                lineNumber: 2147,
                                                                 columnNumber: 23
                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                 className: __TURBOPACK__imported__module__$5b$project$5d2f$study$2f$src$2f$app$2f$company$2f$page$2e$module$2e$css__$5b$app$2d$client$5d$__$28$css__module$29$__["default"].pricingButtonPrimary,
@@ -5430,18 +5344,18 @@ function CompanyPage() {
                                                                         children: "↗"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/study/src/app/company/page.js",
-                                                                        lineNumber: 2217,
+                                                                        lineNumber: 2165,
                                                                         columnNumber: 40
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/study/src/app/company/page.js",
-                                                                lineNumber: 2203,
+                                                                lineNumber: 2151,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/study/src/app/company/page.js",
-                                                            lineNumber: 2197,
+                                                            lineNumber: 2145,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
@@ -5489,7 +5403,7 @@ function CompanyPage() {
                 }
             }, void 0, false, {
                 fileName: "[project]/study/src/app/company/page.js",
-                lineNumber: 2230,
+                lineNumber: 2178,
                 columnNumber: 5
             }, this),
             selectedFeature && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5509,7 +5423,7 @@ function CompanyPage() {
                             children: "×"
                         }, void 0, false, {
                             fileName: "[project]/study/src/app/company/page.js",
-                            lineNumber: 2249,
+                            lineNumber: 2197,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5525,7 +5439,7 @@ function CompanyPage() {
                                                 children: "FEATURE"
                                             }, void 0, false, {
                                                 fileName: "[project]/study/src/app/company/page.js",
-                                                lineNumber: 2259,
+                                                lineNumber: 2207,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -5533,18 +5447,18 @@ function CompanyPage() {
                                                 children: featureDescriptions[selectedFeature]?.title || selectedFeature
                                             }, void 0, false, {
                                                 fileName: "[project]/study/src/app/company/page.js",
-                                                lineNumber: 2260,
+                                                lineNumber: 2208,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/study/src/app/company/page.js",
-                                        lineNumber: 2258,
+                                        lineNumber: 2206,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/study/src/app/company/page.js",
-                                    lineNumber: 2257,
+                                    lineNumber: 2205,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5552,24 +5466,24 @@ function CompanyPage() {
                                     children: renderModalBody()
                                 }, void 0, false, {
                                     fileName: "[project]/study/src/app/company/page.js",
-                                    lineNumber: 2265,
+                                    lineNumber: 2213,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/study/src/app/company/page.js",
-                            lineNumber: 2256,
+                            lineNumber: 2204,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/study/src/app/company/page.js",
-                    lineNumber: 2248,
+                    lineNumber: 2196,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/study/src/app/company/page.js",
-                lineNumber: 2240,
+                lineNumber: 2188,
                 columnNumber: 7
             }, this)
         ]
