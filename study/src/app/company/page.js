@@ -1737,6 +1737,7 @@ export default function CompanyPage() {
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>Ai Agent</h3>
+                <p className={styles.featureCardDescription}>업무를 이해하고 도구를 호출해 실행하는 에이전트</p>
               </div>
             </div>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('aiocr')}>
@@ -1745,6 +1746,7 @@ export default function CompanyPage() {
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>Ai OCR</h3>
+                <p className={styles.featureCardDescription}>PDF·이미지 문서에서 필요한 필드를 고정밀로 추출</p>
 
               </div>
             </div>
@@ -1754,6 +1756,7 @@ export default function CompanyPage() {
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>Fine-tuning</h3>
+                <p className={styles.featureCardDescription}>조직 데이터로 모델을 맞춤 학습</p>
               </div>
             </div>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('rpa')}>
@@ -1762,6 +1765,7 @@ export default function CompanyPage() {
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>RPA</h3>
+                <p className={styles.featureCardDescription}>반복 업무를 24시간 안정적으로 자동 처리</p>
               </div>
             </div>
             <div className={styles.featureCard} onClick={() => handleFeatureClick('modelcustom')}>
@@ -1770,6 +1774,7 @@ export default function CompanyPage() {
               </div>
               <div className={styles.featureCardText}>
                 <h3 className={styles.featureCardTitle}>Model Custom</h3>
+                <p className={styles.featureCardDescription}>비즈니스 요구에 맞춘 전용 모델을 설계·학습·배포</p>
               </div>
             </div>
           </div>
