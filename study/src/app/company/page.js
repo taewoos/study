@@ -82,7 +82,7 @@ const pricingPlans = [
   {
     key: 'starter',
     name: 'Starter',
-    price: '19,000',
+    price: '20,000',
     period: 'month',
     description: '개인/소규모 팀을 위한 시작 플랜',
     features: ['기본 임베딩', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)'],
@@ -90,7 +90,7 @@ const pricingPlans = [
   {
     key: 'pro',
     name: 'Pro',
-    price: '49,900',
+    price: '50,000',
     period: 'month',
     description: '업무 자동화를 본격적으로 확장',
     features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)', 'RPA 연동기능이 없는 Agent'],
@@ -99,7 +99,7 @@ const pricingPlans = [
   {
     key: 'premium',
     name: 'Premium',
-    price: '149,000',
+    price: '150,000',
     period: 'month',
     description: '고급 기능과 확장된 지원',
     features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)', '음성인식 (STT, TTS)', 'OCR (문서 파서기능)'],
@@ -1787,7 +1787,7 @@ export default function CompanyPage() {
               <div className={styles.customAiTopSection}>
                 <div className={styles.customAiBorderLine}></div>
                 <div className={styles.customAiTopText}>
-                “Why start Custom AI now?
+                “Why start Custom AI now?”
                 </div>
               </div>
               <div className={styles.customAiFocus}>
@@ -2197,18 +2197,73 @@ export default function CompanyPage() {
                         plan.highlight ? styles.pricingCardHighlight : ''
                       } ${plan.key === 'starter' ? styles.pricingCardStarter : ''} ${plan.key === 'pro' ? styles.pricingCardPro : ''} ${plan.key === 'premium' ? styles.pricingCardPremium : ''} ${plan.key === 'enterprise' ? styles.pricingCardEnterprise : ''}`}
                     >
-                      <div className={styles.pricingCardBackInner}>
-                        <p className={styles.pricingCardBackText}>{plan.description || '상세설명'}</p>
-                        <span
-                          className={styles.pricingActionUnderline}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
-                          onClick={(e) => { e.stopPropagation(); toggleCardFlip(plan.key); }}
-                        >
-                          앞면 보기
-                        </span>
-                      </div>
+                      {plan.key === 'starter' ? (
+                        <div className={styles.pricingCardBackStarter}>
+                          <div className={styles.pricingCardBackStarterBar}></div>
+                          <div className={styles.pricingCardBackStarterContent}>
+                            <div className={styles.pricingCardBackStarterHeader}>Starter</div>
+                            <div className={styles.pricingCardBackStarterDescription}>
+                              <div className={styles.pricingCardBackStarterTitle}>개인 소규모팀을 위한 시작 플랜</div>
+                              <ul className={styles.pricingCardBackStarterFeatures}>
+                                <li>기본 llm 기능</li>
+                                <li>기본 임배딩</li>
+                                <li>기본 mcp 기능</li>
+                                <li>캔버스 작업</li>
+                              </ul>
+                            </div>
+                            <div className={styles.pricingCardBackStarterLink}>
+                              <span
+                                className={styles.pricingActionUnderline}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+                                onClick={(e) => { e.stopPropagation(); toggleCardFlip(plan.key); }}
+                              >
+                                Starter 시작
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : plan.key === 'enterprise' ? (
+                        <div className={styles.pricingCardBackStarter}>
+                          <div className={styles.pricingCardBackStarterBar}></div>
+                          <div className={styles.pricingCardBackStarterContent}>
+                            <div className={styles.pricingCardBackStarterHeader}>Enterprise</div>
+                            <div className={styles.pricingCardBackStarterDescription}>
+                              <div className={styles.pricingCardBackStarterTitle}>{plan.description || '보안/연동/커스텀 요구사항 대응'}</div>
+                              <ul className={styles.pricingCardBackStarterFeatures}>
+                                {plan.features && plan.features.map((feature, idx) => (
+                                  <li key={idx}>{feature}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className={styles.pricingCardBackStarterLink}>
+                              <span
+                                className={styles.pricingActionUnderline}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+                                onClick={(e) => { e.stopPropagation(); toggleCardFlip(plan.key); }}
+                              >
+                                Enterprise 시작
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={styles.pricingCardBackInner}>
+                          <p className={styles.pricingCardBackText}>{plan.description || '상세설명'}</p>
+                          <span
+                            className={styles.pricingActionUnderline}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+                            onClick={(e) => { e.stopPropagation(); toggleCardFlip(plan.key); }}
+                          >
+                            앞면 보기
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1063,7 +1063,11 @@
 
 /* 뒷면은 판 배경만 (그라데이션 광택 제거) */
 .pricingCard.pricingCardBack.pricingCardStarter {
-  background: #b0b0b0;
+  background: #E0E0E0;
+  padding: 0 !important;
+  align-items: stretch;
+  justify-content: flex-start;
+  inset: 0 !important;
 }
 .pricingCard.pricingCardBack.pricingCardPro {
   background: #e8c858;
@@ -1073,6 +1077,110 @@
 }
 .pricingCard.pricingCardBack.pricingCardEnterprise {
   background: #111827;
+  padding: 0 !important;
+  align-items: stretch;
+  justify-content: flex-start;
+  inset: 0 !important;
+}
+
+/* 스타터 카드 뒷면 특별 레이아웃 */
+.pricingCardBackStarter {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+}
+
+.pricingCardBackStarterBar {
+  position: absolute;
+  left: 16px;
+  top: 0;
+  bottom: 0;
+  width: 14%;
+  min-width: 20px;
+  background: #6b6b6b;
+  z-index: 1;
+}
+
+.pricingCardBackStarterContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 20px 20px calc(14% + 32px);
+  height: 100%;
+  justify-content: space-between;
+}
+
+.pricingCardBackStarterHeader {
+  font-size: 22px;
+  color: rgba(17, 24, 39, 0.85);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: auto;
+  padding-top: 4px;
+}
+
+.pricingCardBackStarterDescription {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 20px 0;
+  padding-left: 12px;
+}
+
+.pricingCardBackStarterTitle {
+  font-size: 14px;
+  color: rgba(17, 24, 39, 0.85);
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.pricingCardBackStarterFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pricingCardBackStarterFeatures li {
+  font-size: 13px;
+  color: rgba(17, 24, 39, 0.8);
+  line-height: 1.5;
+  position: relative;
+  padding-left: 12px;
+}
+
+.pricingCardBackStarterFeatures li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: rgba(17, 24, 39, 0.6);
+}
+
+.pricingCardBackStarterLink {
+  margin-top: auto;
+  padding-bottom: 4px;
+  text-align: center;
+}
+
+/* 엔터프라이즈 카드 뒷면 텍스트 색상 */
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterHeader,
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterTitle,
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterFeatures li {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterFeatures li::before {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingActionUnderline {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .pricingCardFlipInner:hover .pricingCardFront {
