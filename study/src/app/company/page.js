@@ -85,7 +85,7 @@ const pricingPlans = [
     price: '20,000',
     period: 'month',
     description: '개인/소규모 팀을 위한 시작 플랜',
-    features: ['기본 임베딩', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)'],
+    features: ['기본 임베딩', '멀티모달 질문', '기본 LLM 기능 제공'],
   },
   {
     key: 'pro',
@@ -93,7 +93,7 @@ const pricingPlans = [
     price: '50,000',
     period: 'month',
     description: '업무 자동화를 본격적으로 확장',
-    features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)', 'RPA 연동기능이 없는 Agent'],
+    features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공', 'RPA 연동기능이 없는 Agent'],
     highlight: true,
   },
   {
@@ -102,7 +102,7 @@ const pricingPlans = [
     price: '150,000',
     period: 'month',
     description: '고급 기능과 확장된 지원',
-    features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 (MCP, 화면커스텀)', '음성인식 (STT, TTS)', 'OCR (문서 파서기능)'],
+    features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 ', '음성인식 (STT, TTS)', 'OCR (문서 파서기능)'],
   },
   {
     key: 'enterprise',
@@ -2211,6 +2211,10 @@ export default function CompanyPage() {
                                 <li>캔버스 작업</li>
                               </ul>
                             </div>
+                            <div className={styles.pricingCardBackStarterSignature}>
+                              <div className={styles.pricingCardBackStarterSignatureLine} />
+                              <span className={styles.pricingCardBackStarterSignatureLabel}>Authorized Signature</span>
+                            </div>
                             <div className={styles.pricingCardBackStarterLink}>
                               <span
                                 className={styles.pricingActionUnderline}
@@ -2224,18 +2228,22 @@ export default function CompanyPage() {
                             </div>
                           </div>
                         </div>
-                      ) : plan.key === 'enterprise' ? (
+                      ) : plan.key === 'pro' || plan.key === 'premium' || plan.key === 'enterprise' ? (
                         <div className={styles.pricingCardBackStarter}>
                           <div className={styles.pricingCardBackStarterBar}></div>
                           <div className={styles.pricingCardBackStarterContent}>
-                            <div className={styles.pricingCardBackStarterHeader}>Enterprise</div>
+                            <div className={styles.pricingCardBackStarterHeader}>{plan.name}</div>
                             <div className={styles.pricingCardBackStarterDescription}>
-                              <div className={styles.pricingCardBackStarterTitle}>{plan.description || '보안/연동/커스텀 요구사항 대응'}</div>
+                              <div className={styles.pricingCardBackStarterTitle}>{plan.description || '상세설명'}</div>
                               <ul className={styles.pricingCardBackStarterFeatures}>
                                 {plan.features && plan.features.map((feature, idx) => (
                                   <li key={idx}>{feature}</li>
                                 ))}
                               </ul>
+                            </div>
+                            <div className={styles.pricingCardBackStarterSignature}>
+                              <div className={styles.pricingCardBackStarterSignatureLine} />
+                              <span className={styles.pricingCardBackStarterSignatureLabel}>Authorized Signature</span>
                             </div>
                             <div className={styles.pricingCardBackStarterLink}>
                               <span
@@ -2245,7 +2253,7 @@ export default function CompanyPage() {
                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
                                 onClick={(e) => { e.stopPropagation(); toggleCardFlip(plan.key); }}
                               >
-                                Enterprise 시작
+                                {plan.key === 'enterprise' ? 'Enterprise 시작' : `${plan.name} 시작`}
                               </span>
                             </div>
                           </div>

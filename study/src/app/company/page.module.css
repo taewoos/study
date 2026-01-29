@@ -1098,8 +1098,8 @@
   left: 16px;
   top: 0;
   bottom: 0;
-  width: 14%;
-  min-width: 20px;
+  width: 23%;
+  min-width: 28px;
   background: #6b6b6b;
   z-index: 1;
 }
@@ -1108,7 +1108,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px 20px 20px calc(14% + 32px);
+  padding: 20px 20px 20px calc(20% + 32px);
   height: 100%;
   justify-content: space-between;
 }
@@ -1128,6 +1128,7 @@
   flex-direction: column;
   justify-content: center;
   margin: 20px 0;
+  margin-top: -40px;
   padding-left: 12px;
 }
 
@@ -1162,6 +1163,39 @@
   color: rgba(17, 24, 39, 0.6);
 }
 
+/* 스타터 카드 뒷면 사인란 (신용카드 스타일) */
+.pricingCardBackStarterSignature {
+  margin-top: -90px;
+  margin-bottom: 110px;
+  margin-right: auto;
+  margin-left: 20px;
+  max-width: 80px;
+  padding: 6px 0 0;
+  width: 87%;
+  max-width: 100%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.06) 100%);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricingCardBackStarterSignatureLabel {
+  display: block;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(17, 24, 39, 0.5);
+  text-transform: uppercase;
+  margin-top: auto;
+  padding: 2px 0 0 2px;
+}
+
+.pricingCardBackStarterSignatureLine {
+  height: 28px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.25);
+  border-radius: 0 0 2px 2px;
+}
+
 .pricingCardBackStarterLink {
   margin-top: auto;
   padding-bottom: 4px;
@@ -1181,6 +1215,18 @@
 
 .pricingCard.pricingCardBack.pricingCardEnterprise .pricingActionUnderline {
   color: rgba(255, 255, 255, 0.9);
+}
+
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterSignature {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.12) 100%);
+}
+
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterSignatureLabel {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterSignatureLine {
+  border-bottom-color: rgba(255, 255, 255, 0.35);
 }
 
 .pricingCardFlipInner:hover .pricingCardFront {
