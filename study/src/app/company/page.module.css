@@ -1194,6 +1194,18 @@
   height: 28px;
   border-bottom: 1px solid rgba(17, 24, 39, 0.25);
   border-radius: 0 0 2px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 선 중앙 텍스트 (사인 느낌) */
+.pricingCardBackStarterSignatureText {
+  font-size: 14px;
+  font-weight: 300;
+  font-style: italic;
+  transform: skewX(-8deg);
+  color: rgba(17, 24, 39, 0.7);
 }
 
 .pricingCardBackStarterLink {
@@ -1221,12 +1233,21 @@
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.12) 100%);
 }
 
+.pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterSignatureText {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterSignatureLabel {
   color: rgba(255, 255, 255, 0.6);
 }
 
 .pricingCard.pricingCardBack.pricingCardEnterprise .pricingCardBackStarterSignatureLine {
   border-bottom-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Premium 카드 뒷면: 고급 기능과 확장된 지원 + 아래 텍스트를 아래로 */
+.pricingCard.pricingCardBack.pricingCardPremium .pricingCardBackStarterDescription {
+  margin-top: -30px;
 }
 
 .pricingCardFlipInner:hover .pricingCardFront {

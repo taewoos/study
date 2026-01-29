@@ -102,7 +102,7 @@ const pricingPlans = [
     price: '150,000',
     period: 'month',
     description: '고급 기능과 확장된 지원',
-    features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 ', '음성인식 (STT, TTS)', 'OCR (문서 파서기능)'],
+    features: ['심화 임베딩(OCR 사용)', '멀티모달 질문', '기본 LLM 기능 제공 ', '음성인식 (STT, TTS)', 'OCR (문서 파서기능)', '고급 Agent 제공'],
   },
   {
     key: 'enterprise',
@@ -2212,7 +2212,9 @@ export default function CompanyPage() {
                               </ul>
                             </div>
                             <div className={styles.pricingCardBackStarterSignature}>
-                              <div className={styles.pricingCardBackStarterSignatureLine} />
+                              <div className={styles.pricingCardBackStarterSignatureLine}>
+                                <span className={styles.pricingCardBackStarterSignatureText}>Starter 시작</span>
+                              </div>
                               <span className={styles.pricingCardBackStarterSignatureLabel}>Authorized Signature</span>
                             </div>
                             <div className={styles.pricingCardBackStarterLink}>
@@ -2242,7 +2244,11 @@ export default function CompanyPage() {
                               </ul>
                             </div>
                             <div className={styles.pricingCardBackStarterSignature}>
-                              <div className={styles.pricingCardBackStarterSignatureLine} />
+                              <div className={styles.pricingCardBackStarterSignatureLine}>
+                                <span className={styles.pricingCardBackStarterSignatureText}>
+                                  {plan.key === 'pro' ? 'Pro 시작' : plan.key === 'premium' ? 'Premium 시작' : 'Enterprise 시작'}
+                                </span>
+                              </div>
                               <span className={styles.pricingCardBackStarterSignatureLabel}>Authorized Signature</span>
                             </div>
                             <div className={styles.pricingCardBackStarterLink}>
