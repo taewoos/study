@@ -9,6 +9,145 @@
   margin: 0 auto;
 }
 
+.helloWorld {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+}
+
+/* News: 배너(2칸) + 2x2 그리드 */
+.newsWrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f0f2f5;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.banner {
+  width: 100%;
+  min-height: 600px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+}
+.gridSection {
+  flex: 1;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.gridInner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 24px;
+}
+@media (max-width: 768px) {
+  .gridInner {
+    grid-template-columns: 1fr;
+  }
+}
+.block {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8e8e8;
+  padding: 20px;
+  min-height: 180px;
+}
+.blockTitle {
+  margin: 0 0 12px 0;
+  padding-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  border-bottom: 2px solid #eee;
+}
+.blockSub {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+.blockList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+.blockList li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.blockList li:last-child {
+  border-bottom: none;
+}
+.blockList a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.blockList a:hover {
+  color: #2d5a87;
+  text-decoration: underline;
+}
+.imageBoardItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+}
+.imageBoardThumb {
+  flex: 1;
+  min-width: 0;
+  min-height: 56px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #e0e8f0 0%, #c5d4e8 100%);
+}
+.imageBoardTitle {
+  flex: 0 0 20%;
+  display: block;
+  font-size: 0.9rem;
+  color: #333;
+  text-decoration: none;
+  transition: color 0.15s;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.imageBoardTitle:hover {
+  color: #2d5a87;
+  text-decoration: underline;
+}
+.newsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.newsDate {
+  font-size: 0.8rem;
+  color: #888;
+  flex-shrink: 0;
+}
+.alertRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.alertText {
+  color: #333;
+  flex: 1;
+  min-width: 0;
+}
+.alertTime {
+  font-size: 0.8rem;
+  color: #888;
+  flex-shrink: 0;
+}
+
 .editInput {
   border: 2px solid #4CAF50;
   border-radius: 4px;

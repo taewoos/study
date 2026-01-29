@@ -1199,13 +1199,14 @@
   justify-content: center;
 }
 
-/* 선 중앙 텍스트 (사인 느낌) */
+/* 선 중앙 텍스트 (사인 느낌, 클릭 시 결제/로그인) */
 .pricingCardBackStarterSignatureText {
   font-size: 14px;
   font-weight: 300;
   font-style: italic;
   transform: skewX(-8deg);
   color: rgba(17, 24, 39, 0.7);
+  cursor: pointer;
 }
 
 .pricingCardBackStarterLink {

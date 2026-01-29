@@ -2213,7 +2213,23 @@ export default function CompanyPage() {
                             </div>
                             <div className={styles.pricingCardBackStarterSignature}>
                               <div className={styles.pricingCardBackStarterSignatureLine}>
-                                <span className={styles.pricingCardBackStarterSignatureText}>Starter 시작</span>
+                                <span
+                                  className={styles.pricingCardBackStarterSignatureText}
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentUser = getUser();
+                                    if (currentUser) {
+                                      router.push('/payment');
+                                    } else {
+                                      router.push('/login');
+                                    }
+                                  }}
+                                >
+                                  Starter 시작
+                                </span>
                               </div>
                               <span className={styles.pricingCardBackStarterSignatureLabel}>Authorized Signature</span>
                             </div>
@@ -2225,7 +2241,7 @@ export default function CompanyPage() {
                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
                                 onClick={(e) => { e.stopPropagation(); toggleCardFlip(plan.key); }}
                               >
-                                Starter 시작
+                                Custom AI
                               </span>
                             </div>
                           </div>
@@ -2245,7 +2261,21 @@ export default function CompanyPage() {
                             </div>
                             <div className={styles.pricingCardBackStarterSignature}>
                               <div className={styles.pricingCardBackStarterSignatureLine}>
-                                <span className={styles.pricingCardBackStarterSignatureText}>
+                                <span
+                                  className={styles.pricingCardBackStarterSignatureText}
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentUser = getUser();
+                                    if (currentUser) {
+                                      router.push('/payment');
+                                    } else {
+                                      router.push('/login');
+                                    }
+                                  }}
+                                >
                                   {plan.key === 'pro' ? 'Pro 시작' : plan.key === 'premium' ? 'Premium 시작' : 'Enterprise 시작'}
                                 </span>
                               </div>
@@ -2259,7 +2289,7 @@ export default function CompanyPage() {
                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
                                 onClick={(e) => { e.stopPropagation(); toggleCardFlip(plan.key); }}
                               >
-                                {plan.key === 'enterprise' ? 'Enterprise 시작' : `${plan.name} 시작`}
+                                Custom AI
                               </span>
                             </div>
                           </div>
