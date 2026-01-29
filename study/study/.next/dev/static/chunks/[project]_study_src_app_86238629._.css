@@ -1008,7 +1008,26 @@
 }
 
 .page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack:before, .page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack:after {
-  display: none;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  background: none !important;
+  display: none !important;
+}
+
+.page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack.page-module__QLaLcW__pricingCardStarter {
+  background: #b0b0b0;
+}
+
+.page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack.page-module__QLaLcW__pricingCardPro {
+  background: #e8c858;
+}
+
+.page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack.page-module__QLaLcW__pricingCardPremium {
+  background: #9ca1ac;
+}
+
+.page-module__QLaLcW__pricingCard.page-module__QLaLcW__pricingCardBack.page-module__QLaLcW__pricingCardEnterprise {
+  background: #111827;
 }
 
 .page-module__QLaLcW__pricingCardFlipInner:hover .page-module__QLaLcW__pricingCardFront {
@@ -1115,8 +1134,8 @@
 }
 
 .page-module__QLaLcW__pricingCardPremium {
-  background: radial-gradient(circle at 72% 18%, #f5fcfef2 0%, #f5fcfe73 18%, #f5fcfe00 48%), radial-gradient(circle, #fff0 62%, #f8fbf8b3 90%, #f8fbf800 100%), radial-gradient(circle, #0000 0%, #0000000f 65%, #00000029 100%), conic-gradient(from 322deg, #aeb3bc 0deg, #b9c0c9 30deg, #8b909a 60deg, #9ca1ac 90deg, #797f89 120deg, #9ca1aa 150deg, #9ba0aa 180deg, #9298a0 210deg, #b5bbc4 240deg, #70747e 270deg, #a6acb5 300deg, #9297a2 330deg, #aeb3bc 360deg);
-  box-shadow: inset 0 0 0 1px #0000001a, 0 6px 18px #0000001a, 0 2px 4px #0000000f, 0 14px 28px #00000014;
+  background: radial-gradient(circle at 50% 45%, #ffffff47 0%, #fff0 55%, #00000024 100%), conic-gradient(#aeb3bc 0deg, #b9c0c9 30deg, #8b909a 60deg, #9ca1ac 90deg, #797f89 120deg, #9ca1aa 150deg, #9ba0aa 180deg, #9298a0 210deg, #b5bbc4 240deg, #70747e 270deg, #a6acb5 300deg, #9297a2 330deg, #aeb3bc 360deg);
+  box-shadow: inset 0 6px 18px #0000002e, inset 0 1px #ffffffd9, 0 2px 4px #0000000f, 0 6px 12px #0000000f, 0 14px 28px #00000014;
 }
 
 .page-module__QLaLcW__pricingCardEnterprise {

@@ -2087,7 +2087,7 @@ export default function CompanyPage() {
                         plan.highlight ? styles.pricingCardHighlight : ''
                       } ${plan.key === 'starter' ? styles.pricingCardStarter : ''} ${plan.key === 'pro' ? styles.pricingCardPro : ''} ${plan.key === 'premium' ? styles.pricingCardPremium : ''} ${plan.key === 'enterprise' ? styles.pricingCardEnterprise : ''}`}
                     >
-                  <img src="/칩2.png" alt="" className={styles.pricingCardChip} />
+                  <img src="/chip.png" alt="" className={styles.pricingCardChip} />
                   <div className={styles.pricingCardTop}>
                     {editingPricing && isAdminUser ? (
                       <input
