@@ -65,8 +65,10 @@ export default function NewsPage() {
               <ul className={styles.blockList}>
                 {imageBoardItems.map((item) => (
                   <li key={item.id} className={styles.imageBoardItem}>
-                    <span className={styles.imageBoardThumb} />
-                    <a href="#" className={styles.imageBoardTitle}>{item.title}</a>
+                    <a href="#" className={styles.imageBoardLink}>
+                      <span className={styles.imageBoardThumb} />
+                      <span className={styles.imageBoardTitle}>{item.title}</span>
+                    </a>
                   </li>
                 ))}
               </ul>

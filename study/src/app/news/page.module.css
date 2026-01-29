@@ -90,35 +90,54 @@
   text-decoration: underline;
 }
 .imageBoardItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.imageBoardItem + .imageBoardItem {
+  margin-top: 12px;
+}
+.imageBoardLink {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 6 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
 }
 .imageBoardThumb {
-  flex: 1;
-  min-width: 0;
-  min-height: 56px;
-  border-radius: 8px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(145deg, #e0e8f0 0%, #c5d4e8 100%);
+  object-fit: cover;
 }
 .imageBoardTitle {
-  flex: 0 0 20%;
-  display: block;
-  font-size: 0.9rem;
-  color: #333;
-  text-decoration: none;
-  transition: color 0.15s;
-  min-width: 0;
-  max-width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 1;
 }
-.imageBoardTitle:hover {
+.imageBoardLink:hover .imageBoardTitle {
+  background: rgba(255, 255, 255, 0.95);
   color: #2d5a87;
-  text-decoration: underline;
 }
 .newsRow {
   display: flex;
